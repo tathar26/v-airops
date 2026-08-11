@@ -20,13 +20,55 @@
             </a>
         </li>
 
-        @if (auth()->check() && auth()->user()->hasRole('VA Owner'))
-        <!-- My Profile -->
-        <li>
-            <a href="{{ route('profile.show') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.show') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
-                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                My Profile
-            </a>
+        <!-- My Profile Dropdown -->
+        @php
+            $isProfileActive = request()->routeIs('profile.dashboard') || request()->routeIs('profile.map') || request()->routeIs('profile.statistics') || request()->routeIs('profile.awards') || request()->routeIs('profile.pireps') || request()->routeIs('profile.preferences') || request()->routeIs('profile.account');
+        @endphp
+        <li x-data="{ open: {{ $isProfileActive ? 'true' : 'false' }} }">
+            <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ $isProfileActive ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 {{ $isProfileActive ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    My Profile
+                </div>
+                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <ul x-show="open" x-transition class="mt-1 space-y-1 pl-11 pr-3 py-2">
+                <li>
+                    <a href="{{ route('profile.dashboard') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.dashboard') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.map') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.map') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Map
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.statistics') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.statistics') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Statistics
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.awards') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.awards') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Awards
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.pireps') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.pireps') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        PIREPs
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.preferences') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.preferences') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Preferences
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('profile.account') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.account') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Account Settings
+                    </a>
+                </li>
+            </ul>
         </li>
 
         <!-- Flight Centre -->
@@ -45,6 +87,7 @@
             </a>
         </li>
 
+        @if (auth()->check() && auth()->user()->hasRole('VA Owner'))
         <!-- Fleet Dropdown -->
         <li x-data="{ open: {{ request()->routeIs('fleet') || request()->routeIs('aircraft-types') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('fleet') || request()->routeIs('aircraft-types') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
@@ -73,6 +116,14 @@
             <a href="{{ route('routes') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('routes') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
                 <svg class="w-5 h-5 {{ request()->routeIs('routes') ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
                 Route Manager
+            </a>
+        </li>
+
+        <!-- PIREPs (Admin) -->
+        <li>
+            <a href="{{ route('pireps') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pireps') || request()->routeIs('pireps.show') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('pireps') || request()->routeIs('pireps.show') ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                PIREP Management
             </a>
         </li>
 

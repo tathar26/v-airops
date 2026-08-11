@@ -8,6 +8,9 @@
             <button wire:click="$set('activeTab', 'users')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'users' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
                 User Management
             </button>
+            <button wire:click="$set('activeTab', 'ranks')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'ranks' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+                Rank Management
+            </button>
         </div>
 
         <div class="p-6">
@@ -130,6 +133,10 @@
                         </table>
                     </div>
                 </div>
+            @endif
+
+            @if($activeTab === 'ranks')
+                <livewire:rank-manager />
             @endif
         </div>
     </div>

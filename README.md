@@ -53,6 +53,14 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Demo Accounts
+
+To access the demo data seeded in the application, you can use the following accounts (all passwords are `password`):
+
+- **System Admin**: `admin@vops.test` (Master Admin)
+- **VA Owner**: `owner@demo.vops.test` (VA Owner)
+- **Test Pilot**: `pilot@demo.vops.test` (Pilot)
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

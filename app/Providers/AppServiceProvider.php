@@ -19,6 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\Pirep::observe(\App\Observers\PirepObserver::class);
     }
 }

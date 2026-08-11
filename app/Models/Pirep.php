@@ -13,7 +13,7 @@ class Pirep extends Model
     protected $fillable = [
         'user_id', 'tenant_id', 'route_id', 'airframe_id',
         'block_fuel', 'zfw', 'cost_index', 'touchdown_rate_fpm',
-        'status', 'flight_log'
+        'status', 'flight_log', 'flight_time', 'points_awarded', 'created_at'
     ];
 
     protected $casts = [
@@ -33,5 +33,10 @@ class Pirep extends Model
     public function airframe()
     {
         return $this->belongsTo(Airframe::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(PirepComment::class);
     }
 }
