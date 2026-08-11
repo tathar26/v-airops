@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+use App\Models\Tenant;
+use App\Models\User;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+
+class TenantSettings extends Component
+{
+    use WithFileUploads;
+
+    public $activeTab = 'general';
+
+    // General Settings
+    public $name = '';
+    public $accent_color = '';
+    public $bg_color = '';
+    public $logo;
+
+    // User Management
+    public $showUserModal = false;
+    public $editingUserId = null;
+    public $userName = '';
+    public $userEmail = '';
+    public $userPassword = '';
+    public $userRole = 'Pilot';
+
+    public function mount()
+    {
+        $tenant = auth()->user()->tenant;
+        $this->name = $tenant->name;
+        $this->accent_color = $tenant->accent_color;
+        $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
+    }
+
+    public function saveSettings()
+    {
+        $tenant = auth()->user()->tenant;
+        
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'accent_color' => 'required|string|max:7',
+            'bg_color' => 'required|string|max:7',
+            'logo' => 'nullable|image|max:1024',
+        ]);
+
+        $tenant->name = $this->name;
+        $tenant->accent_color = $this->accent_color;
+        $tenant->bg_color = $this->bg_color;
+
+        if ($this->logo) {
+            if ($tenant->logo_path) {
+                Storage::disk('public')->delete($tenant->logo_path);
+            }
+            $tenant->logo_path = $this->logo->store('logos', 'public');
+        }
+
+        $tenant->save();
+
+        session()->flash('settings_message', 'Settings saved successfully.');
+    }
+
+    public function openUserModal()
+    {
+        $this->reset(['editingUserId', 'userName', 'userEmail', 'userPassword', 'userRole']);
+        $this->showUserModal = true;
+    }
+
+    public function editUser($id)
+    {
+        $user = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
+        $this->editingUserId = $user->id;
+        $this->userName = $user->name;
+        $this->userEmail = $user->email;
+        $this->userPassword = ''; // leave empty
+        $this->userRole = $user->roles->first()->name ?? 'Pilot';
+        $this->showUserModal = true;
+    }
+
+    public function saveUser()
+    {
+        $rules = [
+            'userName' => 'required|string|max:255',
+            'userEmail' => 'required|email|max:255|unique:users,email' . ($this->editingUserId ? ',' . $this->editingUserId : ''),
+            'userRole' => 'required|string|in:Pilot,VA Owner',
+        ];
+
+        if (!$this->editingUserId || $this->userPassword) {
+            $rules['userPassword'] = 'required|string|min:8';
+        }
+
+        $this->validate($rules);
+
+        if ($this->editingUserId) {
+            $user = User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingUserId);
+            $user->name = $this->userName;
+            $user->email = $this->userEmail;
+            if ($this->userPassword) {
+                $user->password = Hash::make($this->userPassword);
+            }
+            $user->save();
+            $user->syncRoles([$this->userRole]);
+        } else {
+            $user = User::create([
+                'tenant_id' => auth()->user()->tenant_id,
+                'name' => $this->userName,
+                'email' => $this->userEmail,
+                'password' => Hash::make($this->userPassword),
+            ]);
+            $user->assignRole($this->userRole);
+        }
+
+        $this->showUserModal = false;
+        session()->flash('user_message', 'User saved successfully.');
+    }
+
+    public function deleteUser($id)
+    {
+        if (auth()->id() == $id) {
+            session()->flash('user_message', 'You cannot delete yourself.');
+            return;
+        }
+
+        User::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id)->delete();
+        session()->flash('user_message', 'User deleted successfully.');
+    }
+
+    public function render()
+    {
+        $users = User::with('roles')->where('tenant_id', auth()->user()->tenant_id)->get();
+        return view('livewire.tenant-settings', [
+            'users' => $users
+        ])->layout('layouts.app');
+    }
+}
