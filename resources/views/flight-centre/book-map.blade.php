@@ -17,13 +17,13 @@
                     <div class="text-[10px] text-tenant-accent font-bold uppercase mb-1">Current Location</div>
                     <div class="text-white font-bold" x-text="currentAirport ? currentAirport.icao : '...'"></div>
                 </div>
-                <div class="flex-1 bg-black/40 rounded p-2 text-center transition-all" :class="selectedAirport ? 'border-l-4 border-green-400 opacity-100' : 'opacity-50'">
-                    <div class="text-[10px] text-green-400 font-bold uppercase mb-1">Arrival</div>
+                <div class="flex-1 bg-black/40 rounded p-2 text-center transition-all" :class="selectedAirport ? 'border-l-4 border-tenant-accent opacity-100' : 'opacity-50'">
+                    <div class="text-[10px] text-tenant-accent font-bold uppercase mb-1">Arrival</div>
                     <div class="text-white font-bold" x-text="selectedAirport ? selectedAirport.icao : 'Select Airport'"></div>
                 </div>
             </div>
 
-            <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-md transition mb-4 text-sm flex items-center justify-center">
+            <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-tenant-accent hover:opacity-80 text-white font-bold py-3 rounded-md transition mb-4 text-sm flex items-center justify-center shadow-lg">
                 <span class="mr-2">🛫</span> Book Flight to <span x-text="selectedAirport ? selectedAirport.icao : ''" class="ml-1"></span>
             </button>
 
