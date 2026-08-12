@@ -3,7 +3,7 @@ set -e
 
 # Wait for database if needed, then run migrations
 echo "Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "WARNING: Migrations failed (tables may already exist). Continuing boot process..."
 
 echo "Discovering packages..."
 php artisan package:discover --ansi
