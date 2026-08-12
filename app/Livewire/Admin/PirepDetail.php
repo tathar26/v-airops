@@ -27,12 +27,14 @@ class PirepDetail extends Component
     public function accept()
     {
         $this->pirep->update(['status' => 'Accepted']);
+        \App\Jobs\RecalculatePilotStatistics::dispatch($this->pirep->user_id);
         session()->flash('message', 'PIREP has been Accepted.');
     }
 
     public function invalidate()
     {
         $this->pirep->update(['status' => 'Invalidated']);
+        \App\Jobs\RecalculatePilotStatistics::dispatch($this->pirep->user_id);
         session()->flash('message', 'PIREP has been Invalidated.');
     }
 

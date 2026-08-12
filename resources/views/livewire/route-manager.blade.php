@@ -37,6 +37,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Departure</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Arrival</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Block Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Route Type</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Aircraft Types</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -59,6 +60,11 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                             {{ $route->block_time }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $route->route_type === 'Charter' ? 'bg-purple-900/50 text-purple-300' : ($route->route_type === 'Cargo' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-blue-900/50 text-blue-300') }}">
+                                {{ $route->route_type }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-400">
                             @forelse($route->aircraftTypes as $type)
@@ -91,10 +97,21 @@
         </x-slot>
 
         <x-slot name="content">
-            <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="flight_number" value="{{ __('Flight Number') }}" />
-                <x-input id="flight_number" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="flight_number" placeholder="e.g. EZY123" />
-                <x-input-error for="flight_number" class="mt-2" />
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-1">
+                    <x-label for="flight_number" value="{{ __('Flight Number') }}" />
+                    <x-input id="flight_number" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="flight_number" placeholder="e.g. EZY123" />
+                    <x-input-error for="flight_number" class="mt-2" />
+                </div>
+                <div class="col-span-1">
+                    <x-label for="route_type" value="{{ __('Route Type') }}" />
+                    <select id="route_type" wire:model="route_type" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm focus:border-tenant-accent focus:ring focus:ring-tenant-accent focus:ring-opacity-50">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Charter">Charter</option>
+                        <option value="Cargo">Cargo</option>
+                    </select>
+                    <x-input-error for="route_type" class="mt-2" />
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-4">

@@ -31,22 +31,43 @@
                             <x-input-error for="name" class="mt-2" />
                         </div>
 
-                        <div>
-                            <x-label for="accent_color" value="{{ __('Accent Color (Hex)') }}" />
-                            <div class="flex items-center gap-3 mt-1">
-                                <input id="accent_color_picker" type="color" class="h-10 w-10 border-0 rounded cursor-pointer bg-transparent" wire:model="accent_color" />
-                                <x-input id="accent_color" type="text" class="block w-full bg-[#212631] border-gray-600 text-white" wire:model="accent_color" />
+                        <!-- Base Theme Settings -->
+                        <div class="grid grid-cols-6 gap-6">
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="accent_color" value="{{ __('Accent Color (Hex)') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="accent_color_picker" type="color" wire:model="accent_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="accent_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white" wire:model="accent_color" placeholder="#f97316" />
+                                </div>
+                                <x-input-error for="accent_color" class="mt-2" />
                             </div>
-                            <x-input-error for="accent_color" class="mt-2" />
-                        </div>
 
-                        <div>
-                            <x-label for="bg_color" value="{{ __('Background Color (Hex)') }}" />
-                            <div class="flex items-center gap-3 mt-1">
-                                <input id="bg_color_picker" type="color" class="h-10 w-10 border-0 rounded cursor-pointer bg-transparent" wire:model="bg_color" />
-                                <x-input id="bg_color" type="text" class="block w-full bg-[#212631] border-gray-600 text-white" wire:model="bg_color" />
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="bg_color" value="{{ __('Background Color (Hex)') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="bg_color_picker" type="color" wire:model="bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white" wire:model="bg_color" placeholder="#1e1e1e" />
+                                </div>
+                                <x-input-error for="bg_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">This will change the body background of the Virtual Airline.</p>
                             </div>
-                            <x-input-error for="bg_color" class="mt-2" />
+
+                            <!-- Dispatch Settings -->
+                            <div class="col-span-6">
+                                <hr class="border-white/10 my-2">
+                                <h4 class="text-white font-bold text-sm mb-4">Dispatch Settings</h4>
+                            </div>
+
+                            <div class="col-span-6 sm:col-span-4">
+                                <x-label for="default_simbrief_ofp_format" value="{{ __('Default SimBrief OFP Format') }}" class="text-white" />
+                                <select id="default_simbrief_ofp_format" wire:model="default_simbrief_ofp_format" class="mt-1 block w-full bg-black/40 border border-white/10 text-white text-sm rounded focus:ring-tenant-accent focus:border-tenant-accent p-2.5">
+                                    @foreach($simbriefFormats as $key => $name)
+                                        <option value="{{ $key }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error for="default_simbrief_ofp_format" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">This format will be used for all pilots unless they override it in their personal preferences.</p>
+                            </div>
                         </div>
 
                         <div>

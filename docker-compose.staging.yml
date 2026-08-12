@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    image: tathar26/v-ops:devel
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - APP_NAME=V-Ops-Staging
+      - APP_ENV=staging
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=true
+      - APP_URL=http://staging.v-ops.local
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=vops_staging
+      - DB_USERNAME=vops
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: vops_staging
+      MYSQL_USER: vops
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - staging-mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      retries: 3
+      timeout: 5s
+
+volumes:
+  staging-mariadb:
+    driver: local

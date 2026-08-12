@@ -22,6 +22,7 @@ class TenantSettings extends Component
     public $accent_color = '';
     public $bg_color = '';
     public $logo;
+    public $default_simbrief_ofp_format = 'lido';
 
     // User Management
     public $showUserModal = false;
@@ -31,12 +32,45 @@ class TenantSettings extends Component
     public $userPassword = '';
     public $userRole = 'Pilot';
 
+    public $simbriefFormats = [];
+
     public function mount()
     {
         $tenant = auth()->user()->tenant;
         $this->name = $tenant->name;
         $this->accent_color = $tenant->accent_color;
         $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
+        $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
+
+        // Fetch simbrief formats and cache for 24 hours
+        $this->simbriefFormats = \Illuminate\Support\Facades\Cache::remember('simbrief_formats', 86400, function () {
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(5)->get('http://www.simbrief.com/api/inputs.list.json');
+                if ($response->successful()) {
+                    $layouts = $response->json('layouts');
+                    $formats = [];
+                    foreach ($layouts as $key => $layout) {
+                        $formats[$key] = $layout['name_long'];
+                    }
+                    asort($formats);
+                    return $formats;
+                }
+            } catch (\Exception $e) {
+                // Fallback
+            }
+
+            return [
+                'lido' => 'LIDO - SimBrief Default',
+                'ryr' => 'RYR - Ryanair',
+                'aal' => 'AAL - American Airlines',
+                'baw' => 'BAW - British Airways',
+                'dal' => 'DAL - Delta Air Lines',
+                'dlh' => 'DLH - Lufthansa',
+                'ezy' => 'EZY - easyJet',
+                'swa' => 'SWA - Southwest Airlines',
+                'ual' => 'UAL - United Airlines',
+            ];
+        });
     }
 
     public function saveSettings()
@@ -48,11 +82,13 @@ class TenantSettings extends Component
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
             'logo' => 'nullable|image|max:1024',
+            'default_simbrief_ofp_format' => 'required|string|max:20',
         ]);
 
         $tenant->name = $this->name;
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
+        $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
 
         if ($this->logo) {
             if ($tenant->logo_path) {

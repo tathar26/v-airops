@@ -16,7 +16,24 @@ class PilotProfile extends Model
         'rank_id',
         'flight_time',
         'points',
+        'use_imperial_units',
+        'prefer_honorary_rank',
+        'preferred_network',
+        'simbrief_ofp_format',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'use_imperial_units' => 'boolean',
+            'prefer_honorary_rank' => 'boolean',
+        ];
+    }
 
     public function user()
     {

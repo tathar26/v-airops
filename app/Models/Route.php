@@ -10,7 +10,7 @@ class Route extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'tenant_id'];
+    protected $fillable = ['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'tenant_id', 'route_type'];
 
     public function aircraftTypes()
     {

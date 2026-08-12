@@ -21,6 +21,7 @@ class RouteManager extends Component
     public $arrival_icao = '';
     public $block_time = '';
     public $route_string = '';
+    public $route_type = 'Scheduled';
     public $selectedAircraftTypes = [];
 
     public $csvFile;
@@ -31,13 +32,14 @@ class RouteManager extends Component
         'arrival_icao' => 'required|string|size:4',
         'block_time' => 'required|string|max:10', // e.g., '02:30'
         'route_string' => 'nullable|string|max:255',
+        'route_type' => 'required|string|in:Scheduled,Charter,Cargo',
         'selectedAircraftTypes' => 'array',
         'selectedAircraftTypes.*' => 'exists:aircraft_types,id',
     ];
 
     public function openAddModal()
     {
-        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'selectedAircraftTypes', 'editingId', 'editMode', 'csvFile']);
+        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'route_type', 'selectedAircraftTypes', 'editingId', 'editMode', 'csvFile']);
         $this->showAddModal = true;
     }
 
@@ -50,6 +52,7 @@ class RouteManager extends Component
         $this->arrival_icao = $route->arrival_icao;
         $this->block_time = $route->block_time;
         $this->route_string = $route->route_string;
+        $this->route_type = $route->route_type ?? 'Scheduled';
         $this->selectedAircraftTypes = $route->aircraftTypes->pluck('id')->toArray();
         $this->editMode = true;
         $this->showAddModal = true;
@@ -72,6 +75,7 @@ class RouteManager extends Component
                 'arrival_icao' => strtoupper($this->arrival_icao),
                 'block_time' => $this->block_time,
                 'route_string' => $this->route_string,
+                'route_type' => $this->route_type,
             ]);
             $route->aircraftTypes()->sync($this->selectedAircraftTypes);
         } else {
@@ -82,11 +86,12 @@ class RouteManager extends Component
                 'arrival_icao' => strtoupper($this->arrival_icao),
                 'block_time' => $this->block_time,
                 'route_string' => $this->route_string,
+                'route_type' => $this->route_type,
             ]);
             $route->aircraftTypes()->sync($this->selectedAircraftTypes);
         }
 
-        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'selectedAircraftTypes', 'showAddModal', 'editMode', 'editingId']);
+        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'route_type', 'selectedAircraftTypes', 'showAddModal', 'editMode', 'editingId']);
     }
 
     public function importCsv()
@@ -104,7 +109,8 @@ class RouteManager extends Component
                         [
                             'departure_icao' => strtoupper($data[1]),
                             'arrival_icao' => strtoupper($data[2]),
-                            'block_time' => $data[3]
+                            'block_time' => $data[3],
+                            'route_type' => isset($data[4]) ? $data[4] : 'Scheduled',
                         ]
                     );
                 }
@@ -118,7 +124,7 @@ class RouteManager extends Component
 
     public function downloadTemplate()
     {
-        $content = "flight_number,departure_icao,arrival_icao,block_time\nEZY123,EGLL,LFPG,01:30\n";
+        $content = "flight_number,departure_icao,arrival_icao,block_time,route_type\nEZY123,EGLL,LFPG,01:30,Scheduled\n";
         return response()->streamDownload(function() use ($content) {
             echo $content;
         }, 'routes_template.csv');

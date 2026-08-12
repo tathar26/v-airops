@@ -12,6 +12,7 @@ class Tenant extends Model
         'accent_color',
         'bg_color',
         'logo_path',
+        'default_simbrief_ofp_format',
     ];
 
     public function users()
