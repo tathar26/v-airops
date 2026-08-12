@@ -22,6 +22,30 @@ The production environment is built for stability and performance. It runs the o
 - **Image**: `tathar26/v-ops:latest` (or a specific version tag like `1.2.3`)
 - **Usage**: `docker compose -f docker-compose.prod.yml up -d`
 
+## Environment Configuration
+
+Before running the Staging or Production environments, you must create an `.env` file in the same directory as your `docker-compose.yml` file. Docker Compose uses this file to inject sensitive configuration into the containers.
+
+Create a `.env` file and populate it with the following:
+
+```env
+APP_URL=http://your-domain.com
+APP_KEY=
+DB_ROOT_PASSWORD=your_secure_root_password
+DB_PASSWORD=your_secure_database_password
+```
+
+### Generating an APP_KEY
+Laravel requires a 32-character base64 encoded string for the `APP_KEY` to secure sessions and encrypted data. 
+
+If you do not have PHP installed locally, you can generate a key using a temporary Docker container before fully starting the environment:
+
+```bash
+# Ensure your .env file is created first, then run:
+docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show
+```
+Copy the output (which will look like `base64:xX...`) and paste it into your `.env` file for the `APP_KEY` value.
+
 ## Demo Accounts
 
 To access the demo data seeded in the application, you can use the following accounts (all passwords are `password`):
