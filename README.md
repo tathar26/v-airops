@@ -38,8 +38,19 @@ DB_PASSWORD=your_secure_database_password
 ### Generating an APP_KEY
 Laravel requires a 32-character base64 encoded string for the `APP_KEY` to secure sessions and encrypted data. 
 
-If you do not have PHP installed locally, you can generate a key using a temporary Docker container before fully starting the environment:
+If you have PHP installed locally, you can simply run:
+```bash
+php artisan key:generate
+```
 
+If you do not have PHP installed locally, you can generate a key using a temporary Docker container before fully starting the environment. 
+
+Using standalone Docker:
+```bash
+docker run --rm tathar26/v-ops:latest php artisan key:generate --show
+```
+
+Or using Docker Compose:
 ```bash
 # Ensure your .env file is created first, then run:
 docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show
