@@ -19,6 +19,7 @@ class TenantSettings extends Component
 
     // General Settings
     public $name = '';
+    public $icao = '';
     public $accent_color = '';
     public $bg_color = '';
     public $logo;
@@ -38,6 +39,7 @@ class TenantSettings extends Component
     {
         $tenant = auth()->user()->tenant;
         $this->name = $tenant->name;
+        $this->icao = $tenant->icao;
         $this->accent_color = $tenant->accent_color;
         $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
@@ -79,6 +81,7 @@ class TenantSettings extends Component
         
         $this->validate([
             'name' => 'required|string|max:255',
+            'icao' => 'nullable|string|max:4',
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
             'logo' => 'nullable|image|max:1024',
@@ -86,6 +89,7 @@ class TenantSettings extends Component
         ]);
 
         $tenant->name = $this->name;
+        $tenant->icao = strtoupper($this->icao);
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;

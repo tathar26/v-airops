@@ -105,4 +105,10 @@ Route::middleware([
         Route::get('/preferences', \App\Livewire\Pilot\Preferences::class)->name('preferences');
         Route::get('/account', \App\Livewire\Pilot\AccountSettings::class)->name('account');
     });
+    Route::prefix('flight-centre')->name('flight-centre.')->middleware('role:VA Owner|Pilot')->group(function () {
+        Route::get('/', [\App\Http\Controllers\FlightCentreController::class, 'index'])->name('index');
+        Route::get('/book', [\App\Http\Controllers\FlightCentreController::class, 'bookFlightMap'])->name('book');
+        Route::get('/flights', [\App\Http\Controllers\FlightCentreController::class, 'flightsTable'])->name('flights');
+        Route::get('/destinations', [\App\Http\Controllers\FlightCentreController::class, 'destinationMap'])->name('destinations');
+    });
 });

@@ -9,6 +9,7 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'domain',
+        'icao',
         'accent_color',
         'bg_color',
         'logo_path',
@@ -18,5 +19,10 @@ class Tenant extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function hubs()
+    {
+        return $this->hasMany(TenantHub::class);
     }
 }

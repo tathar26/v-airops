@@ -72,11 +72,39 @@
         </li>
 
         <!-- Flight Centre -->
-        <li>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
-                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Flight Centre
-            </a>
+        @php
+            $isFlightCentreActive = request()->routeIs('flight-centre.*');
+        @endphp
+        <li x-data="{ open: {{ $isFlightCentreActive ? 'true' : 'false' }} }">
+            <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ $isFlightCentreActive ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 {{ $isFlightCentreActive ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Flight Centre
+                </div>
+                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <ul x-show="open" x-transition class="mt-1 space-y-1 pl-11 pr-3 py-2">
+                <li>
+                    <a href="{{ route('flight-centre.index') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.index') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('flight-centre.book') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.book') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Book a Flight
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('flight-centre.flights') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.flights') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Flights List
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('flight-centre.destinations') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.destinations') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        Destination Map
+                    </a>
+                </li>
+            </ul>
         </li>
 
         <!-- NOTAMs -->

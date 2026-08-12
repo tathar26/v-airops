@@ -25,10 +25,18 @@
                     @endif
 
                     <form wire:submit.prevent="saveSettings" class="space-y-6">
-                        <div>
-                            <x-label for="name" value="{{ __('Virtual Airline Name') }}" />
-                            <x-input id="name" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="name" />
-                            <x-input-error for="name" class="mt-2" />
+                        <div class="grid grid-cols-6 gap-6">
+                            <div class="col-span-6 md:col-span-4">
+                                <x-label for="name" value="{{ __('Virtual Airline Name') }}" />
+                                <x-input id="name" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="name" />
+                                <x-input-error for="name" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-2">
+                                <x-label for="icao" value="{{ __('Airline ICAO (e.g. EZY)') }}" />
+                                <x-input id="icao" type="text" maxlength="4" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="icao" />
+                                <x-input-error for="icao" class="mt-2" />
+                            </div>
                         </div>
 
                         <!-- Base Theme Settings -->

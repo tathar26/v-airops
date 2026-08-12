@@ -20,7 +20,13 @@ class PilotProfile extends Model
         'prefer_honorary_rank',
         'preferred_network',
         'simbrief_ofp_format',
+        'current_airport_id',
     ];
+
+    public function currentAirport()
+    {
+        return $this->belongsTo(Airport::class, 'current_airport_id');
+    }
 
     /**
      * Get the attributes that should be cast.

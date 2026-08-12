@@ -26,6 +26,7 @@
             }
             .bg-tenant-accent {
                 background-color: var(--tenant-accent) !important;
+                color: #ffffff !important;
             }
             .border-tenant-accent {
                 border-color: var(--tenant-accent) !important;
@@ -38,7 +39,7 @@
             body.theme-light {
                 color: #1a202c !important;
             }
-            body.theme-light .text-white, 
+            body.theme-light .text-white:not(.bg-tenant-accent), 
             body.theme-light .text-gray-200, 
             body.theme-light .text-gray-300, 
             body.theme-light .text-gray-400 {
