@@ -10,10 +10,43 @@ class FlightCentreApiController extends Controller
     public function destinations(Request $request)
     {
         $tenantId = $request->user()->tenant_id;
-        $currentAirportId = $request->user()->pilotProfile->current_airport_id;
+        $profile = $request->user()->pilotProfiles()->first();
+        if (!$profile) {
+            $profile = \App\Models\PilotProfile::create([
+                'user_id' => $request->user()->id,
+                'tenant_id' => $tenantId
+            ]);
+        }
+        $currentAirportId = $profile->current_airport_id;
         
         if (!$currentAirportId) {
-            return response()->json(['error' => 'No current location set'], 400);
+            // 1. Try to find last completed PIREP destination
+            $lastPirep = \App\Models\Pirep::where('user_id', $request->user()->id)
+                ->where('status', 'ACCEPTED')
+                ->latest('created_at')
+                ->first();
+
+            if ($lastPirep && $lastPirep->route) {
+                $airport = \App\Models\Airport::where('icao', $lastPirep->route->arrival_icao)->first();
+                if ($airport) {
+                    $currentAirportId = $airport->id;
+                }
+            }
+
+            // 2. Fallback to Tenant Base Hub
+            if (!$currentAirportId) {
+                $baseHub = \App\Models\TenantHub::where('tenant_id', $tenantId)->where('is_base', true)->first();
+                if ($baseHub) {
+                    $currentAirportId = $baseHub->airport_id;
+                }
+            }
+
+            if ($currentAirportId) {
+                $profile->current_airport_id = $currentAirportId;
+                $profile->save();
+            } else {
+                return response()->json(['error' => 'No current location set and no base hub defined.'], 400);
+            }
         }
 
         $currentAirport = \App\Models\Airport::find($currentAirportId);
@@ -55,7 +88,7 @@ class FlightCentreApiController extends Controller
     public function updateLocation(Request $request)
     {
         $request->validate(['airport_id' => 'required|exists:airports,id']);
-        $profile = $request->user()->pilotProfile;
+        $profile = $request->user()->pilotProfiles()->first();
         $profile->current_airport_id = $request->airport_id;
         $profile->save();
 

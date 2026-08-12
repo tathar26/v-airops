@@ -1,7 +1,11 @@
 <x-app-layout>
-    <div class="relative w-full h-[calc(100vh-64px)] overflow-hidden" x-data="flightMap('network')">
-        <!-- Map Container -->
-        <div id="map" class="absolute inset-0 z-0 bg-[#0f111a]"></div>
+    <div class="space-y-6 max-w-[1600px] mx-auto w-full">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white">Route Network</h2>
+        </div>
+        <div class="glass-panel overflow-hidden rounded-xl border border-white/10 relative w-full h-[75vh]" x-data="flightMap('network')">
+            <!-- Map Container -->
+            <div id="map" class="absolute inset-0 z-0 bg-black/20 rounded-xl"></div>
 
         <!-- Sidebar Overlay -->
         <div class="absolute top-4 left-4 z-10 w-80 glass-panel rounded-lg shadow-2xl p-4 max-h-[calc(100vh-96px)] overflow-y-auto">
@@ -34,16 +38,16 @@
                 </template>
             </div>
             
-            <button @click="resetMap()" class="w-full bg-[#1a1f2b] hover:bg-[#252b3b] text-gray-300 py-2 rounded-md transition text-sm flex items-center justify-center">
+            <button @click="resetMap()" class="w-full bg-white/5 hover:bg-white/10 text-gray-400 py-2 rounded-md transition text-sm flex items-center justify-center font-semibold">
                 <span class="mr-2">↺</span> Reset Map
             </button>
+        </div>
         </div>
     </div>
     
     @push('scripts')
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/leaflet.geodesic"></script>
         @vite('resources/js/flight-map.js')
     @endpush
 </x-app-layout>

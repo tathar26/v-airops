@@ -111,4 +111,10 @@ Route::middleware([
         Route::get('/flights', [\App\Http\Controllers\FlightCentreController::class, 'flightsTable'])->name('flights');
         Route::get('/destinations', [\App\Http\Controllers\FlightCentreController::class, 'destinationMap'])->name('destinations');
     });
+
+    Route::prefix('api/flight-centre')->group(function () {
+        Route::get('/destinations', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'destinations']);
+        Route::get('/network', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'network']);
+        Route::post('/current-location', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'updateLocation']);
+    });
 });

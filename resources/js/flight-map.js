@@ -11,6 +11,7 @@ document.addEventListener('alpine:init', () => {
         routes: [],
         hubs: [],
         airports: [], // for network mode
+        selectedAirport: null,
         
         toggles: [
             { id: 'routes', label: 'Flight Routes', icon: '〰️', active: true },
@@ -43,19 +44,36 @@ document.addEventListener('alpine:init', () => {
             this.destinationsLayer = L.layerGroup().addTo(this.map);
             this.routesLayer = L.layerGroup().addTo(this.map);
             this.hubsLayer = L.layerGroup().addTo(this.map);
+
+            this.map.on('click', () => {
+                this.selectedAirport = null;
+                this.renderRoutes();
+            });
         },
 
         async fetchData() {
             try {
                 let url = this.mode === 'book' ? '/api/flight-centre/destinations' : '/api/flight-centre/network';
                 let response = await fetch(url, {
+                    credentials: 'same-origin',
                     headers: {
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + document.querySelector('meta[name="csrf-token"]')?.content // For Sanctum cookie based auth, usually fetch handles it if same origin
+                        'Accept': 'application/json'
                     }
                 });
                 
                 let data = await response.json();
+
+                if (!response.ok) {
+                    console.error("Map Data Error:", data);
+                    alert("Could not load flight map: " + (data.message || data.error || "Unknown error"));
+                    return;
+                }
+
+                if (data.error) {
+                    console.error("Map Data Error:", data.error);
+                    alert("Could not load flight map: " + data.error);
+                    return;
+                }
 
                 if (this.mode === 'book') {
                     this.currentAirport = data.current;
@@ -94,13 +112,7 @@ document.addEventListener('alpine:init', () => {
                 this.drawMarker(airport, 'destination');
             });
 
-            // Draw routes (curved lines)
-            this.routes.forEach(route => {
-                let dest = this.getAirport(route.arrival_icao);
-                if (dest) {
-                    this.drawRoute(this.currentAirport, dest);
-                }
-            });
+            this.renderRoutes();
 
             // Fit bounds
             if (this.destinations.length > 0) {
@@ -118,18 +130,40 @@ document.addEventListener('alpine:init', () => {
                 this.drawMarker(airport, isHub ? 'hub' : 'destination');
             });
 
-            this.routes.forEach(route => {
-                let dep = this.getAirport(route.departure_icao);
-                let arr = this.getAirport(route.arrival_icao);
-                if (dep && arr) {
-                    this.drawRoute(dep, arr);
-                }
-            });
+            this.renderRoutes();
 
             if (this.airports.length > 0) {
                 let bounds = L.latLngBounds(this.airports.map(a => [a.lat, a.lon]));
                 this.map.fitBounds(bounds, { padding: [50, 50] });
             }
+        },
+
+        renderRoutes() {
+            this.routesLayer.clearLayers();
+
+            this.routes.forEach(route => {
+                let dep = this.getAirport(route.departure_icao);
+                let arr = this.getAirport(route.arrival_icao);
+                
+                if (dep && arr) {
+                    if (this.mode === 'book' && this.selectedAirport) {
+                        if (arr.icao !== this.selectedAirport.icao) return;
+                    } else if (this.mode === 'network' && this.selectedAirport) {
+                        if (dep.icao !== this.selectedAirport.icao && arr.icao !== this.selectedAirport.icao) return;
+                    }
+
+                    this.drawRoute(dep, arr);
+                }
+            });
+        },
+
+        selectAirport(airport, type) {
+            if (this.selectedAirport?.icao === airport.icao) {
+                this.selectedAirport = null;
+            } else {
+                this.selectedAirport = airport;
+            }
+            this.renderRoutes();
         },
 
         drawMarker(airport, type) {
@@ -149,6 +183,11 @@ document.addEventListener('alpine:init', () => {
             // Hover tooltip
             marker.on('mouseover', (e) => this.showTooltip(e, airport, type));
             marker.on('mouseout', () => this.hideTooltip());
+            
+            marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                this.selectAirport(airport, type);
+            });
 
             if (type === 'current') {
                 marker.addTo(this.currentLayer);
@@ -160,15 +199,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         drawRoute(from, to) {
-            // Using Leaflet.Geodesic for curved lines
-            let route = new L.Geodesic([
+            let route = L.polyline([
                 [from.lat, from.lon],
                 [to.lat, to.lon]
             ], {
                 weight: 2,
                 opacity: 0.3,
                 color: '#f97316',
-                steps: 50
+                dashArray: '5, 5' // Optional dashed look to make it nicer
             });
             route.addTo(this.routesLayer);
         },
@@ -229,6 +267,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         resetMap() {
+            this.selectedAirport = null;
+            this.renderRoutes();
+            
             if (this.mode === 'book' && this.currentAirport && this.destinations.length > 0) {
                 let bounds = L.latLngBounds([this.currentAirport.lat, this.currentAirport.lon]);
                 this.destinations.forEach(d => bounds.extend([d.lat, d.lon]));

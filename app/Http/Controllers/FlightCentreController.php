@@ -16,9 +16,38 @@ class FlightCentreController extends Controller
         return view('flight-centre.book-map');
     }
 
-    public function flightsTable()
+    public function flightsTable(Request $request)
     {
-        return view('flight-centre.flights-table');
+        $tenantId = $request->user()->tenant_id;
+        
+        $query = \App\Models\Route::where('tenant_id', $tenantId);
+
+        // Simple filtering if needed
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('callsign', 'like', "%{$search}%")
+                  ->orWhere('departure_icao', 'like', "%{$search}%")
+                  ->orWhere('arrival_icao', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('dep')) {
+            $query->where('departure_icao', $request->dep);
+        }
+
+        if ($request->has('arr')) {
+            $query->where('arrival_icao', $request->arr);
+        }
+
+        $routes = $query->paginate(15);
+        
+        // Get unique airports for dropdowns
+        $allRoutes = \App\Models\Route::where('tenant_id', $tenantId)->get();
+        $departureIcaos = $allRoutes->pluck('departure_icao')->unique()->sort();
+        $arrivalIcaos = $allRoutes->pluck('arrival_icao')->unique()->sort();
+
+        return view('flight-centre.flights-table', compact('routes', 'departureIcaos', 'arrivalIcaos'));
     }
 
     public function destinationMap()

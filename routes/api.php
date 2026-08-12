@@ -20,9 +20,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/routes', [\App\Http\Controllers\Api\RouteController::class, 'index']);
     Route::post('/routes', [\App\Http\Controllers\Api\RouteController::class, 'store']);
 
-    Route::prefix('flight-centre')->group(function () {
-        Route::get('/destinations', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'destinations']);
-        Route::get('/network', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'network']);
-        Route::post('/current-location', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'updateLocation']);
-    });
 });
