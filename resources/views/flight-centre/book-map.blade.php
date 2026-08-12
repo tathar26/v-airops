@@ -1,9 +1,9 @@
 <x-app-layout>
-    <div class="space-y-6 max-w-[1600px] mx-auto w-full">
+    <div class="space-y-6 max-w-[1600px] mx-auto w-full" x-data="flightMap('book')">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold text-white">Book a Flight</h2>
         </div>
-        <div class="glass-panel overflow-hidden rounded-xl border border-white/10 relative w-full h-[75vh]" x-data="flightMap('book')">
+        <div class="glass-panel overflow-hidden rounded-xl border border-white/10 relative w-full h-[75vh]">
             <!-- Map Container -->
             <div id="map" class="absolute inset-0 z-0 bg-black/20 rounded-xl"></div>
 
@@ -70,28 +70,25 @@
             <div class="mt-2 text-tenant-accent text-xs font-semibold uppercase text-center" id="tt-action">CLICK TO SELECT ARRIVAL</div>
         </div>
         </div>
-    </div>
-    
-    <!-- Booking Modal -->
     <div x-show="bookingModalOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div @click.outside="bookingModalOpen = false" class="bg-[#2B2B2B] rounded-xl shadow-2xl w-full max-w-md border border-white/10 overflow-hidden">
-            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#202020]">
+        <div @click.outside="bookingModalOpen = false" class="glass-panel rounded-xl shadow-2xl w-full max-w-md border border-white/10 overflow-hidden">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-black/20">
                 <h3 class="text-lg font-bold text-white">Select Route</h3>
                 <button @click="bookingModalOpen = false" class="text-gray-400 hover:text-white transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-gray-400 mb-4">Multiple routes available. Please select the specific flight you wish to book.</p>
+                <p class="text-sm text-gray-300 mb-4">Multiple routes available. Please select the specific flight you wish to book.</p>
                 <div class="space-y-3 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                     <template x-for="route in availableRoutes" :key="route.id">
                         <label class="flex items-center p-3 rounded-lg border cursor-pointer transition-colors"
-                            :class="selectedRouteId === route.id ? 'border-tenant-accent bg-tenant-accent/10' : 'border-white/10 hover:bg-white/5'">
+                            :class="selectedRouteId === route.id ? 'border-tenant-accent bg-tenant-accent/20' : 'border-white/10 bg-black/20 hover:bg-white/5'">
                             <input type="radio" :value="route.id" x-model="selectedRouteId" class="hidden">
                             <div class="flex-1">
                                 <div class="font-bold text-white flex justify-between items-center">
                                     <span x-text="route.callsign"></span>
-                                    <span class="text-xs font-normal text-tenant-accent bg-tenant-accent/20 px-2 py-0.5 rounded" x-text="route.flight_number"></span>
+                                    <span class="text-xs font-bold text-tenant-accent bg-tenant-accent/20 px-2 py-0.5 rounded" x-text="route.flight_number"></span>
                                 </div>
                             </div>
                             <div class="w-4 h-4 rounded-full border border-tenant-accent flex items-center justify-center ml-3" :class="selectedRouteId === route.id ? 'bg-tenant-accent' : ''"></div>
@@ -99,11 +96,12 @@
                     </template>
                 </div>
             </div>
-            <div class="p-4 border-t border-white/10 bg-[#202020] flex justify-end gap-3">
-                <button @click="bookingModalOpen = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
+            <div class="p-4 border-t border-white/10 bg-black/20 flex justify-end gap-3">
+                <button @click="bookingModalOpen = false" class="px-4 py-2 text-sm text-gray-300 hover:text-white transition">Cancel</button>
                 <button @click="confirmBooking()" :disabled="!selectedRouteId" class="px-4 py-2 text-sm bg-tenant-accent text-white font-bold rounded hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed">Confirm Booking</button>
             </div>
         </div>
+    </div>
     </div>
 
     @push('scripts')
