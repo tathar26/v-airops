@@ -21,6 +21,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    volumes:
+      - staging-storage:/var/www/html/storage
 
   mariadb:
     image: mariadb:11
@@ -39,4 +41,6 @@ services:
 
 volumes:
   staging-mariadb:
+    driver: local
+  staging-storage:
     driver: local

@@ -21,6 +21,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    volumes:
+      - prod-storage:/var/www/html/storage
 
   mariadb:
     image: mariadb:11
@@ -39,4 +41,6 @@ services:
 
 volumes:
   prod-mariadb:
+    driver: local
+  prod-storage:
     driver: local
