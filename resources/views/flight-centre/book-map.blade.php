@@ -23,7 +23,11 @@
                 </div>
             </div>
 
-            <button class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-md transition mb-6 text-sm">
+            <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-md transition mb-4 text-sm flex items-center justify-center">
+                <span class="mr-2">🛫</span> Book Flight to <span x-text="selectedAirport ? selectedAirport.icao : ''" class="ml-1"></span>
+            </button>
+
+            <button x-show="!selectedAirport" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-md transition mb-6 text-sm">
                 <span class="mr-2">↑↓</span> Pick Random Destination
             </button>
 
@@ -68,6 +72,40 @@
         </div>
     </div>
     
+    <!-- Booking Modal -->
+    <div x-show="bookingModalOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div @click.outside="bookingModalOpen = false" class="bg-[#2B2B2B] rounded-xl shadow-2xl w-full max-w-md border border-white/10 overflow-hidden">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#202020]">
+                <h3 class="text-lg font-bold text-white">Select Route</h3>
+                <button @click="bookingModalOpen = false" class="text-gray-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-400 mb-4">Multiple routes available. Please select the specific flight you wish to book.</p>
+                <div class="space-y-3 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    <template x-for="route in availableRoutes" :key="route.id">
+                        <label class="flex items-center p-3 rounded-lg border cursor-pointer transition-colors"
+                            :class="selectedRouteId === route.id ? 'border-tenant-accent bg-tenant-accent/10' : 'border-white/10 hover:bg-white/5'">
+                            <input type="radio" :value="route.id" x-model="selectedRouteId" class="hidden">
+                            <div class="flex-1">
+                                <div class="font-bold text-white flex justify-between items-center">
+                                    <span x-text="route.callsign"></span>
+                                    <span class="text-xs font-normal text-tenant-accent bg-tenant-accent/20 px-2 py-0.5 rounded" x-text="route.flight_number"></span>
+                                </div>
+                            </div>
+                            <div class="w-4 h-4 rounded-full border border-tenant-accent flex items-center justify-center ml-3" :class="selectedRouteId === route.id ? 'bg-tenant-accent' : ''"></div>
+                        </label>
+                    </template>
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/10 bg-[#202020] flex justify-end gap-3">
+                <button @click="bookingModalOpen = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
+                <button @click="confirmBooking()" :disabled="!selectedRouteId" class="px-4 py-2 text-sm bg-tenant-accent text-white font-bold rounded hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

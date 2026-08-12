@@ -94,4 +94,26 @@ class FlightCentreApiController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function book(Request $request)
+    {
+        $request->validate(['route_id' => 'required|exists:routes,id']);
+
+        $route = \App\Models\Route::findOrFail($request->route_id);
+        
+        // Ensure route belongs to tenant
+        if ($route->tenant_id !== $request->user()->tenant_id) {
+            return response()->json(['error' => 'Unauthorized route.'], 403);
+        }
+
+        // Create booking
+        $booking = \App\Models\Booking::create([
+            'user_id' => $request->user()->id,
+            'tenant_id' => $request->user()->tenant_id,
+            'route_id' => $route->id,
+            'status' => 'pending'
+        ]);
+
+        return response()->json(['success' => true, 'booking_id' => $booking->id]);
+    }
 }

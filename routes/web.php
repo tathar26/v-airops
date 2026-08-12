@@ -104,6 +104,7 @@ Route::middleware([
         Route::get('/pireps/{pirep}', \App\Livewire\Pilot\PirepDetail::class)->name('pireps.show');
         Route::get('/preferences', \App\Livewire\Pilot\Preferences::class)->name('preferences');
         Route::get('/account', \App\Livewire\Pilot\AccountSettings::class)->name('account');
+        Route::get('/dispatch/{booking}', \App\Livewire\Pilot\Dispatch::class)->name('dispatch');
     });
     Route::prefix('flight-centre')->name('flight-centre.')->middleware('role:VA Owner|Pilot')->group(function () {
         Route::get('/', [\App\Http\Controllers\FlightCentreController::class, 'index'])->name('index');
@@ -116,5 +117,6 @@ Route::middleware([
         Route::get('/destinations', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'destinations']);
         Route::get('/network', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'network']);
         Route::post('/current-location', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'updateLocation']);
+        Route::post('/book', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'book']);
     });
 });
