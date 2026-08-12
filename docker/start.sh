@@ -5,6 +5,11 @@ set -e
 echo "Running database migrations..."
 php artisan migrate --force || echo "WARNING: Migrations failed (tables may already exist). Continuing boot process..."
 
+if [ "$APP_ENV" = "staging" ]; then
+    echo "Staging environment detected. Seeding database with example data..."
+    php artisan db:seed --force || echo "WARNING: Seeding failed (data may already exist)."
+fi
+
 echo "Discovering packages..."
 php artisan package:discover --ansi
 
