@@ -5,6 +5,9 @@ set -e
 echo "Running database migrations..."
 php artisan migrate --force
 
+echo "Discovering packages..."
+php artisan package:discover --ansi
+
 echo "Caching configurations..."
 php artisan config:cache
 php artisan route:cache
