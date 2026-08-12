@@ -1,6 +1,14 @@
 #!/bin/sh
 set -e
 
+# Ensure storage directories exist and have correct permissions
+mkdir -p /var/www/html/storage/framework/cache/data
+mkdir -p /var/www/html/storage/framework/views
+mkdir -p /var/www/html/storage/framework/sessions
+mkdir -p /var/www/html/storage/logs
+mkdir -p /var/www/html/storage/app/public
+chown -R www-data:www-data /var/www/html/storage
+
 # Wait for database if needed, then run migrations
 echo "Running database migrations..."
 php artisan migrate --force || echo "WARNING: Migrations failed (tables may already exist). Continuing boot process..."

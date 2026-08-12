@@ -68,7 +68,14 @@ class DemoDataSeeder extends Seeder
             'name' => 'Boeing 737-800'
         ]);
 
-        Airframe::firstOrCreate([
+        $a320 = AircraftType::firstOrCreate([
+            'tenant_id' => $tenant->id,
+            'code' => 'A320',
+        ], [
+            'name' => 'Airbus A320-200'
+        ]);
+
+        $airframe1 = Airframe::firstOrCreate([
             'tenant_id' => $tenant->id,
             'registration' => 'G-DEMO',
         ], [
@@ -76,14 +83,77 @@ class DemoDataSeeder extends Seeder
             'name' => 'City of London'
         ]);
 
-        // 7. Create a Route
-        Route::firstOrCreate([
+        $airframe2 = Airframe::firstOrCreate([
             'tenant_id' => $tenant->id,
-            'flight_number' => 'DEMO101',
+            'registration' => 'F-DEMO',
         ], [
-            'departure_icao' => 'EGLL',
-            'arrival_icao' => 'EHAM',
-            'block_time' => '01:15:00'
+            'aircraft_type_id' => $a320->id,
+            'name' => 'City of Paris'
         ]);
+
+        // 7. Create Multiple Routes
+        $routes = [
+            ['flight_number' => 'DEMO101', 'departure_icao' => 'EGLL', 'arrival_icao' => 'EHAM', 'block_time' => '01:15:00'],
+            ['flight_number' => 'DEMO102', 'departure_icao' => 'EHAM', 'arrival_icao' => 'EDDF', 'block_time' => '01:05:00'],
+            ['flight_number' => 'DEMO103', 'departure_icao' => 'EDDF', 'arrival_icao' => 'LFPG', 'block_time' => '01:25:00'],
+            ['flight_number' => 'DEMO104', 'departure_icao' => 'LFPG', 'arrival_icao' => 'LEMD', 'block_time' => '02:10:00'],
+            ['flight_number' => 'DEMO105', 'departure_icao' => 'LEMD', 'arrival_icao' => 'LIRF', 'block_time' => '02:30:00'],
+        ];
+
+        foreach ($routes as $routeData) {
+            \App\Models\Route::firstOrCreate([
+                'tenant_id' => $tenant->id,
+                'flight_number' => $routeData['flight_number'],
+            ], [
+                'departure_icao' => $routeData['departure_icao'],
+                'arrival_icao' => $routeData['arrival_icao'],
+                'block_time' => $routeData['block_time']
+            ]);
+        }
+
+        // 8. Create More Pilots
+        $pilots = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $newPilot = User::firstOrCreate([
+                'email' => "pilot{$i}@demo.vops.test",
+            ], [
+                'name' => "Line Pilot {$i}",
+                'password' => bcrypt('password'),
+                'tenant_id' => $tenant->id,
+            ]);
+            $newPilot->assignRole($pilotRole);
+            $pilots[] = $newPilot;
+        }
+
+        // Add original test pilot to list
+        $pilots[] = $pilot;
+
+        // 9. Create PIREPs
+        $statuses = ['accepted', 'rejected', 'pending'];
+        foreach ($pilots as $p) {
+            // Give each pilot 3 PIREPs
+            for ($j = 0; $j < 3; $j++) {
+                $route = $routes[array_rand($routes)];
+                $airframe = rand(0, 1) ? $airframe1 : $airframe2;
+                
+                \App\Models\Pirep::firstOrCreate([
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $p->id,
+                    'flight_number' => $route['flight_number'] . '-' . $j,
+                ], [
+                    'departure_icao' => $route['departure_icao'],
+                    'arrival_icao' => $route['arrival_icao'],
+                    'aircraft_type_id' => $airframe->aircraft_type_id,
+                    'airframe_id' => $airframe->id,
+                    'status' => $statuses[array_rand($statuses)],
+                    'score' => rand(50, 100),
+                    'landing_rate' => rand(-50, -500),
+                    'flight_time' => rand(60, 180), // minutes
+                    'fuel_used' => rand(2000, 8000),
+                    'distance' => rand(200, 1500),
+                    'submitted_at' => now()->subDays(rand(1, 30)),
+                ]);
+            }
+        }
     }
 }
