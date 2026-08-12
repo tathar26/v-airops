@@ -1,6 +1,147 @@
-<div>
-    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Account Settings</h3>
-    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        Manage your account details and password here.
-    </p>
+<div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row gap-8">
+        <!-- Sidebar Navigation -->
+        <div class="w-full md:w-64 flex-shrink-0">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 px-3">Your Account</h2>
+            <nav class="space-y-1">
+                <button wire:click="$set('activeTab', 'account')" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'account' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                    Account Settings
+                </button>
+                <button wire:click="$set('activeTab', 'social')" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'social' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                    Social, Online & 3rd Party
+                </button>
+                <button wire:click="$set('activeTab', 'security')" class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'security' ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                    Password & 2FA
+                </button>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-grow">
+            @if($activeTab === 'account')
+                <div class="glass-panel p-6 mb-6">
+                    <h3 class="text-lg font-medium text-white mb-4">Account Details</h3>
+                    
+                    @if (session()->has('account_message'))
+                        <div class="mb-4 bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded relative">
+                            {{ session('account_message') }}
+                        </div>
+                    @endif
+
+                    <form wire:submit.prevent="saveAccount" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <x-label for="first_name" value="{{ __('First Name') }}" class="text-white" />
+                                <x-input id="first_name" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="first_name" placeholder="John" />
+                                <p class="text-xs text-gray-500 mt-1">Your full First Name.</p>
+                                <x-input-error for="first_name" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="last_name" value="{{ __('Last Name') }}" class="text-white" />
+                                <x-input id="last_name" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="last_name" placeholder="Doe" />
+                                <p class="text-xs text-gray-500 mt-1">Your full Last Name.</p>
+                                <x-input-error for="last_name" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="email" value="{{ __('Email Address') }}" class="text-white" />
+                                <x-input id="email" type="email" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="email" />
+                                <p class="text-xs text-gray-500 mt-1">Used for login and notifications.</p>
+                                <x-input-error for="email" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="name" value="{{ __('Name Display') }}" class="text-white" />
+                                <x-input id="name" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="name" required />
+                                <p class="text-xs text-gray-500 mt-1">How your name is displayed across the system.</p>
+                                <x-input-error for="name" class="mt-2" />
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <button type="submit" wire:loading.attr="disabled" class="w-full sm:w-auto bg-tenant-accent text-white px-6 py-2 rounded text-sm font-semibold hover:opacity-90 transition">
+                                Submit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+            @if($activeTab === 'social')
+                <div class="space-y-6">
+                    @if (session()->has('social_message'))
+                        <div class="mb-4 bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded relative">
+                            {{ session('social_message') }}
+                        </div>
+                    @endif
+
+                    <form wire:submit.prevent="saveSocial" class="space-y-6">
+                        <!-- Social Networks -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-medium text-white mb-2">Social Networks</h3>
+                            <p class="text-sm text-gray-400 mb-6">Social Network Integration will enable Youtube & Twitch buttons in your Pilot Profile linking to your accounts.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <x-label for="twitch_username" value="{{ __('Twitch Username') }}" class="text-white" />
+                                    <x-input id="twitch_username" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="twitch_username" />
+                                    <x-input-error for="twitch_username" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-label for="youtube_username" value="{{ __('Youtube Username / Channel Name') }}" class="text-white" />
+                                    <x-input id="youtube_username" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="youtube_username" />
+                                    <x-input-error for="youtube_username" class="mt-2" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Online Networks -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-medium text-white mb-2">Online Networks</h3>
+                            <p class="text-sm text-gray-400 mb-6">You can record your Online Network IDs here. Having them here will allow you to book flights on these networks, we may also track them and some VAs will award you extra points for flying online.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <x-label for="vatsim_id" value="{{ __('VATSIM ID') }}" class="text-white" />
+                                    <x-input id="vatsim_id" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="vatsim_id" />
+                                    <x-input-error for="vatsim_id" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-label for="ivao_id" value="{{ __('IVAO ID') }}" class="text-white" />
+                                    <x-input id="ivao_id" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="ivao_id" />
+                                    <x-input-error for="ivao_id" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-label for="poscon_id" value="{{ __('POSCON ID') }}" class="text-white" />
+                                    <x-input id="poscon_id" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="poscon_id" />
+                                    <x-input-error for="poscon_id" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-label for="apoc_cid" value="{{ __('APOC CID') }}" class="text-white" />
+                                    <x-input id="apoc_cid" type="text" class="mt-1 block w-full bg-black/40 border-white/10 text-white" wire:model="apoc_cid" />
+                                    <x-input-error for="apoc_cid" class="mt-2" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" wire:loading.attr="disabled" class="w-full bg-tenant-accent text-white px-6 py-2 rounded text-sm font-semibold hover:opacity-90 transition">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+            @if($activeTab === 'security')
+                <div class="space-y-6">
+                    <div class="glass-panel p-6">
+                        @livewire('profile.update-password-form')
+                    </div>
+
+                    <div class="glass-panel p-6">
+                        @livewire('profile.two-factor-authentication-form')
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
