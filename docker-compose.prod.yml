@@ -45,9 +45,18 @@ services:
       MYSQL_DATABASE: vops_prod
       MYSQL_USER: vops
       MYSQL_PASSWORD: ${DB_PASSWORD}
+    command: 
+      - --innodb_buffer_pool_size=4G
+      - --innodb_log_file_size=512M
+      - --innodb_flush_log_at_trx_commit=2
+      - --innodb_flush_method=O_DIRECT
+      - --max_connections=250
+      - --thread_cache_size=64
+      - --query_cache_type=0
+      - --query_cache_size=0
+      - --key_buffer_size=32M
     volumes:
       - prod-mariadb:/var/lib/mysql
-      - ./docker/mariadb.cnf:/etc/mysql/conf.d/custom.cnf:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       retries: 3
