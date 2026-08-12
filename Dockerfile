@@ -33,8 +33,13 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     mariadb-client \
+    linux-headers \
+    $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml \
+    && apk del $PHPIZE_DEPS linux-headers \
     && rm -rf /var/cache/apk/*
 
 # Configure Nginx

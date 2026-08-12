@@ -18,11 +18,24 @@ services:
       - DB_DATABASE=vops_prod
       - DB_USERNAME=vops
       - DB_PASSWORD=${DB_PASSWORD}
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
     depends_on:
       mariadb:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - prod-storage:/var/www/html/storage
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - prod-redis:/data
 
   mariadb:
     image: mariadb:11
@@ -34,6 +47,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - prod-mariadb:/var/lib/mysql
+      - ./docker/mariadb.cnf:/etc/mysql/conf.d/custom.cnf:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       retries: 3
@@ -41,6 +55,8 @@ services:
 
 volumes:
   prod-mariadb:
+    driver: local
+  prod-redis:
     driver: local
   prod-storage:
     driver: local
