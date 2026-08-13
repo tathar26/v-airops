@@ -104,15 +104,81 @@ class FleetManager extends Component
         }, 'fleet_template.csv');
     }
 
+    public $showGlobalImportModal = false;
+    public $globalAircraftCode = '';
+    public $registrationPrefix = 'G-';
+    public $quantityToGenerate = 5;
+    public $customRegistrationsText = '';
+
+    public function openGlobalImportModal()
+    {
+        $this->reset(['globalAircraftCode', 'registrationPrefix', 'quantityToGenerate', 'customRegistrationsText']);
+        $this->registrationPrefix = 'G-';
+        $this->quantityToGenerate = 5;
+        $this->showGlobalImportModal = true;
+    }
+
+    public function importGlobalAirframes()
+    {
+        $this->validate([
+            'globalAircraftCode' => 'required|string',
+            'quantityToGenerate' => 'required|integer|min:1|max:50',
+        ]);
+
+        $tenantId = auth()->user()->tenant_id;
+        $globalAircraft = \App\Models\SystemGlobalAircraft::where('code', $this->globalAircraftCode)->first();
+
+        $code = strtoupper($this->globalAircraftCode);
+        $typeName = $globalAircraft ? $globalAircraft->name : ($code . ' Aircraft');
+
+        // Create or get local AircraftType
+        $aircraftType = AircraftType::firstOrCreate(
+            ['tenant_id' => $tenantId, 'code' => $code],
+            ['name' => $typeName]
+        );
+
+        $registrations = [];
+
+        if (!empty(trim($this->customRegistrationsText))) {
+            $rawRegs = preg_split('/[\s,\n]+/', $this->customRegistrationsText);
+            foreach ($rawRegs as $r) {
+                $r = strtoupper(trim($r));
+                if (!empty($r)) {
+                    $registrations[] = $r;
+                }
+            }
+        } else {
+            $prefix = strtoupper(trim($this->registrationPrefix ?: 'G-'));
+            for ($i = 1; $i <= $this->quantityToGenerate; $i++) {
+                $suffix = sprintf('%02d', $i);
+                $registrations[] = $prefix . 'VA' . $suffix;
+            }
+        }
+
+        $importedCount = 0;
+        foreach ($registrations as $reg) {
+            Airframe::updateOrCreate(
+                ['tenant_id' => $tenantId, 'registration' => $reg],
+                ['aircraft_type_id' => $aircraftType->id, 'name' => $typeName]
+            );
+            $importedCount++;
+        }
+
+        $this->reset(['showGlobalImportModal', 'globalAircraftCode', 'customRegistrationsText']);
+        session()->flash('message', "Successfully imported {$importedCount} airframe(s) for {$code} into your fleet.");
+    }
+
     public function render()
     {
         $tenantId = auth()->user()->tenant_id;
         $airframes = Airframe::with('aircraftType')->where('tenant_id', $tenantId)->get();
         $aircraftTypes = AircraftType::all();
+        $globalAircraftTypes = \App\Models\SystemGlobalAircraft::orderBy('code')->get();
 
         return view('livewire.fleet-manager', [
             'airframes' => $airframes,
             'aircraftTypes' => $aircraftTypes,
+            'globalAircraftTypes' => $globalAircraftTypes,
         ])->layout('layouts.app');
     }
 }

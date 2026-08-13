@@ -23,6 +23,10 @@
                         </button>
                     @endif
                 </div>
+                <button wire:click="openGlobalImportModal" class="bg-[#212631] border border-tenant-accent text-tenant-accent px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Import Airframes
+                </button>
                 <button wire:click="openAddModal" class="bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Add Airframe
@@ -79,7 +83,7 @@
         <x-slot name="content">
             <div class="col-span-6 sm:col-span-4 mb-4">
                 <x-label for="registration" value="{{ __('Registration') }}" />
-                <x-input id="registration" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="registration" placeholder="e.g. G-EZYM" />
+                <x-input id="registration" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="registration" placeholder="e.g. G-EZYM" />
                 <x-input-error for="registration" class="mt-2" />
             </div>
 
@@ -108,6 +112,53 @@
 
             <button wire:click="saveAirframe" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
                 {{ $editMode ? __('Save Changes') : __('Save Airframe') }}
+            </button>
+        </x-slot>
+    </x-dialog-modal>
+
+    <!-- Global Fleet / Airframes Import Modal -->
+    <x-dialog-modal wire:model.live="showGlobalImportModal">
+        <x-slot name="title">
+            {{ __('Import Airframes from Global Repository') }}
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="col-span-6 sm:col-span-4 mb-4">
+                <x-label for="globalAircraftCode" value="{{ __('Select Aircraft Type from Global Repository') }}" />
+                <select id="globalAircraftCode" wire:model="globalAircraftCode" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm focus:border-tenant-accent focus:ring focus:ring-tenant-accent focus:ring-opacity-50">
+                    <option value="">Select a global aircraft type...</option>
+                    @foreach($globalAircraftTypes as $gType)
+                        <option value="{{ $gType->code }}">{{ $gType->code }} - {{ $gType->name }}</option>
+                    @endforeach
+                </select>
+                <x-input-error for="globalAircraftCode" class="mt-2" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <x-label for="registrationPrefix" value="{{ __('Registration Prefix') }}" />
+                    <x-input id="registrationPrefix" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="registrationPrefix" placeholder="e.g. G-, PH-, N-, D-" />
+                </div>
+                <div>
+                    <x-label for="quantityToGenerate" value="{{ __('Quantity to Generate') }}" />
+                    <x-input id="quantityToGenerate" type="number" min="1" max="50" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="quantityToGenerate" />
+                </div>
+            </div>
+
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="customRegistrationsText" value="{{ __('Or Enter Custom Registrations (Optional - comma or line separated)') }}" />
+                <textarea id="customRegistrationsText" wire:model="customRegistrationsText" rows="3" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md uppercase" placeholder="e.g. G-EZYA, G-EZYB, G-EZYC"></textarea>
+                <p class="text-xs text-gray-400 mt-1">If specified, custom registrations will be used instead of auto-generated ones.</p>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showGlobalImportModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+                {{ __('Cancel') }}
+            </x-secondary-button>
+
+            <button wire:click="importGlobalAirframes" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
+                {{ __('Import Airframes') }}
             </button>
         </x-slot>
     </x-dialog-modal>

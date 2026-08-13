@@ -15,6 +15,11 @@ class AircraftTypeManager extends Component
     public $code = '';
     public $name = '';
 
+    public $showGlobalImportModal = false;
+    public $searchGlobal = '';
+    public $selectedGlobalAircraft = [];
+    public $selectAllGlobal = false;
+
     protected $rules = [
         'code' => 'required|string|max:10',
         'name' => 'required|string|max:255',
@@ -24,6 +29,49 @@ class AircraftTypeManager extends Component
     {
         $this->reset(['code', 'name', 'editingId', 'editMode']);
         $this->showAddModal = true;
+    }
+
+    public function openGlobalImportModal()
+    {
+        $this->reset(['searchGlobal', 'selectedGlobalAircraft', 'selectAllGlobal']);
+        $this->showGlobalImportModal = true;
+    }
+
+    public function updatedSelectAllGlobal($value)
+    {
+        if ($value) {
+            $query = \App\Models\SystemGlobalAircraft::query();
+            if ($this->searchGlobal) {
+                $query->where('code', 'like', '%' . $this->searchGlobal . '%')
+                      ->orWhere('name', 'like', '%' . $this->searchGlobal . '%');
+            }
+            $this->selectedGlobalAircraft = $query->pluck('id')->map(fn($id) => (string)$id)->toArray();
+        } else {
+            $this->selectedGlobalAircraft = [];
+        }
+    }
+
+    public function importGlobalTypes()
+    {
+        if (empty($this->selectedGlobalAircraft)) {
+            session()->flash('error', 'Please select at least one aircraft type to import.');
+            return;
+        }
+
+        $globalAircraft = \App\Models\SystemGlobalAircraft::whereIn('id', $this->selectedGlobalAircraft)->get();
+        $tenantId = auth()->user()->tenant_id;
+        $importedCount = 0;
+
+        foreach ($globalAircraft as $aircraft) {
+            AircraftType::firstOrCreate(
+                ['tenant_id' => $tenantId, 'code' => strtoupper($aircraft->code)],
+                ['name' => $aircraft->name]
+            );
+            $importedCount++;
+        }
+
+        $this->reset(['showGlobalImportModal', 'selectedGlobalAircraft', 'selectAllGlobal', 'searchGlobal']);
+        session()->flash('message', "Successfully imported {$importedCount} aircraft type(s) into your fleet configuration.");
     }
 
     public function editAircraftType($id)
@@ -67,8 +115,16 @@ class AircraftTypeManager extends Component
         $tenantId = auth()->user()->tenant_id;
         $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
 
+        $globalQuery = \App\Models\SystemGlobalAircraft::query();
+        if ($this->searchGlobal) {
+            $globalQuery->where('code', 'like', '%' . $this->searchGlobal . '%')
+                        ->orWhere('name', 'like', '%' . $this->searchGlobal . '%');
+        }
+        $globalAircraft = $this->showGlobalImportModal ? $globalQuery->orderBy('code')->paginate(15) : null;
+
         return view('livewire.aircraft-type-manager', [
-            'aircraftTypes' => $aircraftTypes
+            'aircraftTypes' => $aircraftTypes,
+            'globalAircraft' => $globalAircraft,
         ])->layout('layouts.app');
     }
 }
