@@ -15,6 +15,9 @@ class Dispatch extends Component
 {
     public Booking $booking;
 
+    // SimBrief Integration
+    public $simbrief_username = '';
+
     // Aircraft & Callsign
     public $airframe_id;
     public $callsign;
@@ -63,6 +66,10 @@ class Dispatch extends Component
         $this->booking = $booking->load(['route.aircraftTypes', 'airframe.aircraftType', 'tenant', 'user']);
         $simData = $booking->simbrief_data ?? [];
 
+        // Pilot SimBrief Username
+        $profile = auth()->user()->pilotProfiles()->first();
+        $this->simbrief_username = $simData['simbrief_username'] ?? ($profile->simbrief_username ?? '');
+
         // If booking is already dispatched or has OFP generated, show OFP View
         if ($booking->status === 'dispatched' || isset($simData['weights'])) {
             $this->showOfpView = true;
@@ -104,7 +111,6 @@ class Dispatch extends Component
         $this->recalculateZfw();
 
         // Network Defaults
-        $profile = auth()->user()->pilotProfiles()->first();
         $this->network = $simData['network'] ?? ($profile->preferred_network ?? 'Offline');
         $this->copilot_user_id = $simData['copilot_user_id'] ?? null;
     }
@@ -163,6 +169,39 @@ class Dispatch extends Component
         $this->estimated_zfw = $oew + $paxWeight + $bagWeight;
     }
 
+    public function fetchLiveSimbriefOfp()
+    {
+        if (empty(trim($this->simbrief_username))) {
+            session()->flash('error', 'Please enter your SimBrief Username or Pilot ID to fetch live OFP.');
+            return;
+        }
+
+        $simbriefService = new SimBriefService();
+        $liveOfp = $simbriefService->fetchLiveOfp($this->simbrief_username);
+
+        if ($liveOfp) {
+            // Save username to profile for future
+            $profile = auth()->user()->pilotProfiles()->first();
+            if ($profile) {
+                $profile->update(['simbrief_username' => trim($this->simbrief_username)]);
+            }
+
+            $liveOfp['simbrief_username'] = trim($this->simbrief_username);
+
+            $this->booking->update([
+                'airframe_id' => $this->airframe_id,
+                'simbrief_data' => $liveOfp,
+                'status' => 'dispatched'
+            ]);
+
+            $this->booking->refresh();
+            $this->showOfpView = true;
+            session()->flash('message', 'Successfully imported live OFP from SimBrief!');
+        } else {
+            session()->flash('error', "Could not fetch live OFP for SimBrief user '{$this->simbrief_username}'. Make sure you generated an OFP on SimBrief first.");
+        }
+    }
+
     public function generateOfpData()
     {
         $selectedAirframe = Airframe::with('aircraftType')->find($this->airframe_id);
@@ -188,13 +227,12 @@ class Dispatch extends Component
             'dispatch_via_simbrief' => $this->dispatch_via_simbrief,
             'network' => $this->network,
             'copilot_user_id' => $this->copilot_user_id,
+            'simbrief_username' => trim($this->simbrief_username),
         ];
 
         $simbriefService = new SimBriefService();
-        $profile = auth()->user()->pilotProfiles()->first();
-        $ofpPayload = $simbriefService->generateOrFetchOfp($dispatchParams, $profile->simbrief_username ?? null);
+        $ofpPayload = $simbriefService->generateOrFetchOfp($dispatchParams, $this->simbrief_username);
 
-        // Merge parameters into simbrief_data
         $mergedData = array_merge($ofpPayload, $dispatchParams);
 
         $this->booking->update([
@@ -210,13 +248,13 @@ class Dispatch extends Component
     public function createBooking()
     {
         $this->generateOfpData();
-        session()->flash('message', 'Flight successfully dispatched! Your OFP has been generated.');
+        session()->flash('message', 'Flight successfully dispatched! OFP generated.');
     }
 
     public function dispatchSimbriefPopup()
     {
         $this->generateOfpData();
-        $this->dispatch('open-simbrief-popup');
+        $this->dispatch('open-simbrief-popup-window');
     }
 
     public function cancelBooking()
@@ -240,16 +278,26 @@ class Dispatch extends Component
             ->where('id', '!=', auth()->id())
             ->get();
 
-        $simbriefParams = [
-            'type' => $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N'),
+        $typeCode = $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N');
+        $callsignCode = strtoupper($this->callsign);
+        $fltNumCode = strtoupper($this->flight_number);
+        $airlineCode = substr($callsignCode, 0, 3);
+        $regCode = $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE';
+        $dateCode = date('dMy', strtotime($this->departure_date));
+        $timeCode = str_replace(':', '', $this->departure_time);
+
+        // Build SimBrief Web API Popup URL with newflight=1
+        $queryArr = [
+            'newflight' => '1',
+            'type' => $typeCode,
             'orig' => $this->booking->route->departure_icao,
             'dest' => $this->booking->route->arrival_icao,
-            'callsign' => strtoupper($this->callsign),
-            'fltnum' => strtoupper($this->flight_number),
-            'airline' => substr(strtoupper($this->callsign), 0, 3),
-            'reg' => $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE',
-            'date' => date('dMy', strtotime($this->departure_date)),
-            'deptime' => str_replace(':', '', $this->departure_time),
+            'callsign' => $callsignCode,
+            'fltnum' => $fltNumCode,
+            'airline' => $airlineCode,
+            'reg' => $regCode,
+            'date' => $dateCode,
+            'deptime' => $timeCode,
             'route' => $this->routing,
             'fl' => $this->flight_level,
             'ci' => $this->cost_index,
@@ -262,11 +310,13 @@ class Dispatch extends Component
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
+        $simbriefPopupUrl = 'https://www.simbrief.com/system/dispatch.php?' . http_build_query($queryArr);
+
         return view('livewire.pilot.dispatch', [
             'fleet' => $fleet,
             'selectedAirframe' => $selectedAirframe,
             'copilots' => $copilots,
-            'simbriefParams' => $simbriefParams,
+            'simbriefPopupUrl' => $simbriefPopupUrl,
         ])->layout('layouts.app');
     }
 }

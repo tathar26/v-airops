@@ -8,30 +8,56 @@ use Illuminate\Support\Facades\Log;
 class SimBriefService
 {
     /**
+     * Fetch a live flight plan from SimBrief XML/JSON API using username or User ID.
+     *
+     * @param string $usernameOrId Pilot's SimBrief Username or numeric User ID
+     * @return array|null
+     */
+    public function fetchLiveOfp(string $usernameOrId): ?array
+    {
+        $usernameOrId = trim($usernameOrId);
+        if (empty($usernameOrId)) {
+            return null;
+        }
+
+        try {
+            $paramKey = is_numeric($usernameOrId) ? 'userid' : 'username';
+            $url = "https://www.simbrief.com/api/xml.fetcher.php";
+            
+            $response = Http::timeout(8)->get($url, [
+                $paramKey => $usernameOrId,
+                'json' => 1,
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (isset($json['general']) && !isset($json['fetch']['error'])) {
+                    $json['is_simbrief_live'] = true;
+                    return $json;
+                }
+            }
+            
+            Log::warning('SimBrief Live Fetch Failed: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::warning('SimBrief Live Fetch Exception: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Generate or fetch a flight plan via SimBrief API / customized parameters.
      *
      * @param array $flightData Customized dispatch parameters
-     * @param string|null $username The pilot's SimBrief username
+     * @param string|null $username Pilot's SimBrief Username or User ID
      * @return array
      */
     public function generateOrFetchOfp(array $flightData, ?string $username = null): array
     {
         if (!empty($username)) {
-            try {
-                $url = "https://www.simbrief.com/api/xml.fetcher.php";
-                $response = Http::timeout(5)->get($url, [
-                    'username' => $username,
-                    'json' => 1,
-                ]);
-
-                if ($response->successful()) {
-                    $json = $response->json();
-                    if (isset($json['general'])) {
-                        return $json;
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::warning('SimBrief API Fetch Warning: ' . $e->getMessage());
+            $liveOfp = $this->fetchLiveOfp($username);
+            if ($liveOfp) {
+                return $liveOfp;
             }
         }
 
@@ -55,6 +81,7 @@ class SimBriefService
         $altn2 = strtoupper($flightData['altn2'] ?? 'EDHL');
 
         return [
+            'is_simbrief_live' => false,
             'general' => [
                 'flight_number' => strtoupper($flightData['flight_number'] ?? 'DS1181'),
                 'callsign' => strtoupper($flightData['callsign'] ?? 'EZS64HZ'),

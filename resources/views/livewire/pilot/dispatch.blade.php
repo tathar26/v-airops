@@ -6,6 +6,12 @@
         </div>
     @endif
 
+    @if (session()->has('error'))
+        <div class="p-4 bg-red-500/20 border border-red-500 text-red-100 rounded-lg relative" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
     @if (session()->has('info'))
         <div class="p-4 bg-blue-500/20 border border-blue-500 text-blue-100 rounded-lg relative" role="alert">
             <span class="block sm:inline">{{ session('info') }}</span>
@@ -65,51 +71,32 @@
         @endif
     </div>
 
-    <!-- Hidden Form for SimBrief Pop-up Submission -->
-    <form id="simbrief-popup-form" action="https://www.simbrief.com/system/dispatch.php" method="POST" target="_blank">
-        <input type="hidden" name="newflight" value="1">
-        <input type="hidden" name="type" value="{{ $simbriefParams['type'] }}">
-        <input type="hidden" name="orig" value="{{ $simbriefParams['orig'] }}">
-        <input type="hidden" name="dest" value="{{ $simbriefParams['dest'] }}">
-        <input type="hidden" name="callsign" value="{{ $simbriefParams['callsign'] }}">
-        <input type="hidden" name="fltnum" value="{{ $simbriefParams['fltnum'] }}">
-        <input type="hidden" name="airline" value="{{ $simbriefParams['airline'] }}">
-        <input type="hidden" name="reg" value="{{ $simbriefParams['reg'] }}">
-        <input type="hidden" name="date" value="{{ $simbriefParams['date'] }}">
-        <input type="hidden" name="deptime" value="{{ $simbriefParams['deptime'] }}">
-        <input type="hidden" name="route" value="{{ $simbriefParams['route'] }}">
-        <input type="hidden" name="fl" value="{{ $simbriefParams['fl'] }}">
-        <input type="hidden" name="ci" value="{{ $simbriefParams['ci'] }}">
-        <input type="hidden" name="altn" value="{{ $simbriefParams['altn'] }}">
-        <input type="hidden" name="altn2" value="{{ $simbriefParams['altn2'] }}">
-        <input type="hidden" name="pax" value="{{ $simbriefParams['pax'] }}">
-        <input type="hidden" name="bag" value="{{ $simbriefParams['bag'] }}">
-        <input type="hidden" name="units" value="KGS">
-        <input type="hidden" name="planformat" value="{{ $simbriefParams['planformat'] }}">
-        <input type="hidden" name="static_id" value="{{ $simbriefParams['static_id'] }}">
-    </form>
-
     @if($showOfpView && isset($booking->simbrief_data['weights']))
         <!-- DISPATCHED FLIGHT / OFP PRESENTATION VIEW -->
         @php $ofp = $booking->simbrief_data; @endphp
 
         <div class="bg-[#12161F] border border-green-500/30 rounded-xl p-6 shadow-2xl space-y-6">
-            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 flex-wrap gap-4">
                 <div>
                     <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
                         📄 Operational Flight Plan (OFP)
+                        @if(!empty($ofp['is_simbrief_live']))
+                            <span class="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/40 px-2.5 py-0.5 rounded-full font-medium">SimBrief Live</span>
+                        @else
+                            <span class="text-xs bg-white/10 text-gray-300 border border-white/10 px-2.5 py-0.5 rounded-full font-medium">Custom OFP</span>
+                        @endif
                     </h2>
                     <p class="text-xs text-gray-400">OFP Release for {{ $ofp['general']['callsign'] ?? $callsign }} · Format: {{ $ofp['general']['ofp_layout'] ?? 'LIDO' }}</p>
                 </div>
 
-                <div class="flex gap-3 text-xs">
+                <div class="flex gap-3 text-xs flex-wrap">
                     <button wire:click="editDispatch" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 hover:text-white transition">
-                        ✏️ Edit Dispatch Parameters
+                        ✏️ Edit Parameters
                     </button>
-                    <button wire:click="dispatchSimbriefPopup" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
+                    <a href="{{ $simbriefPopupUrl }}" target="_blank" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        SimBrief Pop-up Window
-                    </button>
+                        Open SimBrief Generator
+                    </a>
                 </div>
             </div>
 
@@ -249,22 +236,20 @@
                 </div>
             </div>
 
-            <div class="text-xs text-blue-200 italic">Fuel / TOW / LDW with fuel: run preview</div>
-
             <!-- Action Buttons -->
             <div class="flex items-center gap-4 pt-2 flex-wrap sm:flex-nowrap">
                 <button wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm">
-                    Create Booking & Generate OFP
+                    Confirm Dispatch & Generate OFP
                 </button>
                 
-                <button wire:click="dispatchSimbriefPopup" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                <a href="{{ $simbriefPopupUrl }}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     Preview OFP (SimBrief Pop-up)
-                </button>
+                </a>
             </div>
         </div>
 
-        <!-- SECTION 1: Aircraft & Callsign -->
+        <!-- SECTION 1: Aircraft & SimBrief Live Sync -->
         <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-lg transition-all">
             <div wire:click="$toggle('showSectionAircraft')" class="px-6 py-4 bg-[#181D29] flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-[#1E2433]">
                 <div class="flex items-center gap-3">
@@ -272,7 +257,7 @@
                         ✈
                     </div>
                     <div>
-                        <h3 class="font-bold text-white text-base">Aircraft & Callsign</h3>
+                        <h3 class="font-bold text-white text-base">Aircraft & SimBrief Sync</h3>
                         <p class="text-xs text-gray-400">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} · {{ strtoupper($callsign) }} · {{ strtoupper($flight_number) }} · SimBrief {{ $dispatch_via_simbrief ? 'on' : 'off' }}</p>
                     </div>
                 </div>
@@ -281,6 +266,23 @@
 
             @if($showSectionAircraft)
                 <div class="p-6 space-y-4">
+                    <!-- SimBrief Pilot Account Integration -->
+                    <div class="p-4 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-blue-300 uppercase tracking-wider">SimBrief Integration & Live Sync</span>
+                            <a href="https://www.simbrief.com/system/dispatch.php" target="_blank" class="text-xs text-blue-400 hover:underline">Open SimBrief Website</a>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1">
+                                <x-input type="text" wire:model="simbrief_username" class="w-full bg-[#1C212E] border-blue-500/40 text-white text-sm" placeholder="Enter your SimBrief Username or Pilot ID (e.g. 123456)" />
+                            </div>
+                            <button wire:click="fetchLiveSimbriefOfp" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2">
+                                📥 Fetch Live OFP from SimBrief
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-gray-400">Enter your SimBrief Username / Pilot ID above to pull your exact live generated OFP directly into V-Ops.</p>
+                    </div>
+
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <x-label for="airframe_id" value="{{ __('Aircraft') }}" class="text-white font-medium" />
@@ -527,11 +529,8 @@
     <!-- JS Listener for SimBrief Pop-up Submission -->
     <script>
         document.addEventListener('livewire:init', () => {
-            Livewire.on('open-simbrief-popup', () => {
-                const form = document.getElementById('simbrief-popup-form');
-                if (form) {
-                    form.submit();
-                }
+            Livewire.on('open-simbrief-popup-window', () => {
+                window.open('{{ $simbriefPopupUrl }}', '_blank');
             });
         });
     </script>
