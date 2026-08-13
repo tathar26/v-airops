@@ -93,7 +93,7 @@
                     <button wire:click="editDispatch" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 hover:text-white transition">
                         ✏️ Edit Parameters
                     </button>
-                    <a href="{{ $simbriefPopupUrl }}" target="_blank" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
+                    <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         Open SimBrief Generator
                     </a>
@@ -242,7 +242,7 @@
                     Confirm Dispatch & Open SimBrief
                 </button>
                 
-                <a href="{{ $simbriefPopupUrl }}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     Preview OFP (SimBrief Pop-up)
                 </a>
@@ -270,7 +270,7 @@
                     <div class="p-4 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-blue-300 uppercase tracking-wider">SimBrief Integration & Live Sync</span>
-                            <a href="{{ $simbriefPopupUrl }}" target="_blank" class="text-xs text-blue-400 hover:underline">Open Pre-filled SimBrief Generator</a>
+                            <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="text-xs text-blue-400 hover:underline">Open Pre-filled SimBrief Generator</a>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <div class="flex-1">
@@ -530,7 +530,7 @@
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-simbrief-popup-window', () => {
-                window.open('{{ $simbriefPopupUrl }}', '_blank');
+                window.open('{!! $simbriefPopupUrl !!}', '_blank');
             });
         });
     </script>
