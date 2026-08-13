@@ -113,7 +113,11 @@ class FetchExternalRouteDataJob implements ShouldQueue
                 $equipment = $data[8] !== '\\N' ? $data[8] : null;
 
                 if (strlen($depIcao) <= 4 && strlen($arrIcao) <= 4 && $depIcao && $arrIcao) {
-                    $hashString = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . strtoupper($operator ?? 'NOOP') . '_NOFN';
+                    $prefix = !empty($operator) ? strtoupper($operator) : 'FL';
+                    $num = (abs(crc32($depIcao . $arrIcao . $prefix)) % 8999) + 1000;
+                    $generatedFlightNum = $prefix . $num;
+
+                    $hashString = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . $prefix . '_' . $generatedFlightNum;
                     $hash = md5($hashString);
 
                     // Map IATA equipment to ICAO equipment
@@ -132,7 +136,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
 
                     $upsertData[] = [
                         'original_tenant_id' => null, // External
-                        'flight_number' => null,
+                        'flight_number' => $generatedFlightNum,
                         'operator' => $operator,
                         'departure_icao' => $depIcao,
                         'arrival_icao' => $arrIcao,
@@ -147,7 +151,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
                         SystemGlobalFlight::upsert(
                             $upsertData,
                             ['route_hash'],
-                            ['operator', 'departure_icao', 'arrival_icao', 'aircraft_types']
+                            ['operator', 'departure_icao', 'arrival_icao', 'flight_number', 'aircraft_types']
                         );
                         $upsertData = [];
                         
@@ -163,7 +167,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
             SystemGlobalFlight::upsert(
                 $upsertData,
                 ['route_hash'],
-                ['operator', 'departure_icao', 'arrival_icao', 'aircraft_types']
+                ['operator', 'departure_icao', 'arrival_icao', 'flight_number', 'aircraft_types']
             );
         }
 

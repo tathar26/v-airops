@@ -125,11 +125,15 @@ class FetchJontyRoutesJob implements ShouldQueue
                             $blockTime = sprintf('%02d:%02d', $hours, $minutes);
                         }
 
-                        $hashKey = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . strtoupper($operatorKey ?? 'NOOP') . '_NOFN';
+                        $prefix = !empty($operatorKey) ? strtoupper($operatorKey) : 'FL';
+                        $num = (abs(crc32($depIcao . $arrIcao . $prefix)) % 8999) + 1000;
+                        $generatedFlightNum = $prefix . $num;
+
+                        $hashKey = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . $prefix . '_' . $generatedFlightNum;
                         $flightHash = md5($hashKey);
                         $flightsUpsertData[] = [
                             'original_tenant_id' => null,
-                            'flight_number' => null,
+                            'flight_number' => $generatedFlightNum,
                             'operator' => $operatorKey,
                             'departure_icao' => $depIcao,
                             'arrival_icao' => $arrIcao,
@@ -164,7 +168,7 @@ class FetchJontyRoutesJob implements ShouldQueue
                 SystemGlobalFlight::upsert(
                     $flightsUpsertData,
                     ['route_hash'],
-                    ['operator', 'departure_icao', 'arrival_icao', 'block_time', 'distance']
+                    ['operator', 'departure_icao', 'arrival_icao', 'flight_number', 'block_time', 'distance']
                 );
                 $flightsUpsertData = [];
             }
@@ -182,7 +186,7 @@ class FetchJontyRoutesJob implements ShouldQueue
             SystemGlobalFlight::upsert(
                 $flightsUpsertData,
                 ['route_hash'],
-                ['operator', 'departure_icao', 'arrival_icao', 'block_time', 'distance']
+                ['operator', 'departure_icao', 'arrival_icao', 'flight_number', 'block_time', 'distance']
             );
         }
 
