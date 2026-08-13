@@ -289,8 +289,12 @@ class FetchGlobalRoutesJob implements ShouldQueue
                     $equipKey      = strtoupper($depIcao) . '|' . strtoupper($arrIcao) . '|' . $operatorIata;
                     $aircraftTypes = $equipmentMap[$equipKey] ?? null;
 
-                    // Look up real flight number from AirLabs map
-                    $flightNumber = $flightNumberMap[$equipKey] ?? null;
+                    // Look up real flight number + block time from AirLabs map
+                    $airlabsData  = $flightNumberMap[$equipKey] ?? null;
+                    $flightNumber = $airlabsData['flight_iata'] ?? null;
+                    // Prefer AirLabs duration (accurate actual block time) over Jonty's estimate
+                    $airlabsBlockTime = $airlabsData['block_time'] ?? null;
+                    $finalBlockTime   = $airlabsBlockTime ?? $blockTime;
 
                     // Hash keyed on dep+arr+operator (stable, not tied to flight number)
                     $hashKey   = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . $operatorIata;
@@ -302,7 +306,7 @@ class FetchGlobalRoutesJob implements ShouldQueue
                         'operator'           => $operatorIata,
                         'departure_icao'     => strtoupper($depIcao),
                         'arrival_icao'       => strtoupper($arrIcao),
-                        'block_time'         => $blockTime,
+                        'block_time'         => $finalBlockTime,
                         'route_type'         => 'Scheduled',
                         'distance'           => $distanceNm,
                         'aircraft_types'     => $aircraftTypes,
@@ -336,16 +340,15 @@ class FetchGlobalRoutesJob implements ShouldQueue
     }
 
     /**
-     * Fetch real flight numbers from the AirLabs Routes API.
+     * Fetch real flight numbers AND block times from the AirLabs Routes API.
      *
      * AirLabs free plan: ~1,000 requests/month, 50 rows per request, no credit card required.
      * Sign up at https://airlabs.co and add your key to .env as AIRLABS_API_KEY.
      *
-     * Returns a map: "DEP_ICAO|ARR_ICAO|OPERATOR_IATA" => "U21234" (flight_iata)
+     * IMPORTANT: AirLabs returns one row per operating day (mon/tue/etc.) for each route,
+     * so we deduplicate by dep_icao + arr_icao + airline_iata, keeping the first flight_iata seen.
      *
-     * Strategy: fetch all unique operator IATA codes from the local system_global_airlines table,
-     * then query AirLabs /routes?airline_iata={iata} for each, with rate limiting to stay within
-     * the free tier. Stops early if API key is not configured.
+     * Returns a map: "DEP_ICAO|ARR_ICAO|OPERATOR_IATA" => ['flight_iata' => 'U21234', 'block_time' => '01:55']
      */
     private function fetchAirlabsFlightNumbers(): array
     {
@@ -356,9 +359,9 @@ class FetchGlobalRoutesJob implements ShouldQueue
             return [];
         }
 
-        $flightNumberMap = [];
+        $airlabsMap = [];
 
-        // Get all unique airline IATA codes we have in the global airlines table
+        // Get all unique active airline IATA codes from the system_global_airlines table
         $airlineIatas = SystemGlobalAirline::whereNotNull('iata')
             ->where('iata', '!=', '')
             ->where('active', true)
@@ -368,9 +371,8 @@ class FetchGlobalRoutesJob implements ShouldQueue
 
         Log::info('FetchGlobalRoutesJob: Fetching AirLabs flight numbers for ' . count($airlineIatas) . ' airlines...');
 
-        $requestCount  = 0;
-        $maxRequests   = 900; // Stay safely under 1,000/month limit; leave buffer for other API uses
-        $requestsPerPage = 50; // AirLabs free tier returns max 50 rows per request
+        $requestCount = 0;
+        $maxRequests  = 900; // Stay safely under 1,000/month free tier limit
 
         foreach ($airlineIatas as $iata) {
             if ($requestCount >= $maxRequests) {
@@ -379,21 +381,20 @@ class FetchGlobalRoutesJob implements ShouldQueue
             }
 
             if ($this->batch() && $this->batch()->cancelled()) {
-                return $flightNumberMap;
+                return $airlabsMap;
             }
 
             try {
                 $response = Http::timeout(15)->get('https://airlabs.co/api/v9/routes', [
                     'airline_iata' => $iata,
                     'api_key'      => $apiKey,
-                    '_fields'      => 'airline_iata,dep_icao,arr_icao,flight_iata,flight_number,dep_time,arr_time',
+                    // Request all fields we need; AirLabs returns max 50 rows per request (free tier)
                 ]);
 
                 $requestCount++;
 
                 if (!$response->successful()) {
-                    Log::warning("FetchGlobalRoutesJob: AirLabs returned status {$response->status()} for airline '{$iata}'.");
-                    // Check for quota exceeded (402 or 429)
+                    // 402 = quota exceeded, 429 = rate limited
                     if (in_array($response->status(), [402, 429])) {
                         Log::warning('FetchGlobalRoutesJob: AirLabs quota exceeded. Stopping enrichment.');
                         break;
@@ -402,22 +403,36 @@ class FetchGlobalRoutesJob implements ShouldQueue
                 }
 
                 $routes = $response->json('response') ?? $response->json() ?? [];
-
                 if (!is_array($routes)) continue;
 
                 foreach ($routes as $route) {
                     $depIcao    = strtoupper(trim($route['dep_icao'] ?? ''));
                     $arrIcao    = strtoupper(trim($route['arr_icao'] ?? ''));
-                    $airlineIata = strtoupper(trim($route['airline_iata'] ?? $iata));
-                    $flightIata = trim($route['flight_iata'] ?? ''); // e.g. "U21234"
+                    $opIata     = strtoupper(trim($route['airline_iata'] ?? $iata));
+                    $flightIata = trim($route['flight_iata'] ?? '');
 
                     if (strlen($depIcao) !== 4 || strlen($arrIcao) !== 4 || empty($flightIata)) continue;
 
-                    $key = "{$depIcao}|{$arrIcao}|{$airlineIata}";
-                    $flightNumberMap[$key] = $flightIata;
+                    $key = "{$depIcao}|{$arrIcao}|{$opIata}";
+
+                    // Deduplicate: AirLabs returns one row per operating weekday.
+                    // Only store the first flight_iata we see for this route.
+                    if (isset($airlabsMap[$key])) continue;
+
+                    // Convert AirLabs 'duration' (minutes) to HH:MM block time
+                    $blockTime = null;
+                    $duration = $route['duration'] ?? null;
+                    if ($duration && is_numeric($duration) && $duration > 0) {
+                        $blockTime = sprintf('%02d:%02d', floor($duration / 60), $duration % 60);
+                    }
+
+                    $airlabsMap[$key] = [
+                        'flight_iata' => $flightIata,
+                        'block_time'  => $blockTime,
+                    ];
                 }
 
-                // Polite rate limiting: 200ms between requests to avoid hammering the API
+                // Polite rate limiting: 200ms between requests
                 usleep(200000);
 
             } catch (\Exception $e) {
@@ -425,9 +440,9 @@ class FetchGlobalRoutesJob implements ShouldQueue
             }
         }
 
-        Log::info('FetchGlobalRoutesJob: AirLabs enrichment complete. ' . count($flightNumberMap) . ' flight numbers mapped in ' . $requestCount . ' requests.');
+        Log::info('FetchGlobalRoutesJob: AirLabs enrichment complete. ' . count($airlabsMap) . ' unique routes mapped in ' . $requestCount . ' requests.');
 
-        return $flightNumberMap;
+        return $airlabsMap;
     }
 
     /**
