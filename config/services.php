@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'airlabs' => [
+        'key' => env('AIRLABS_API_KEY'),
+    ],
+
 ];

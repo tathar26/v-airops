@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Bus;
 use App\Jobs\ProcessAirlineDataJob;
-use App\Jobs\FetchExternalRouteDataJob;
+use App\Jobs\FetchGlobalRoutesJob;
 
 class AggregateAirlineData extends Command
 {
@@ -49,8 +49,9 @@ class AggregateAirlineData extends Command
         $jobs[] = new \App\Jobs\FetchExternalAircraftDataJob();
         $jobs[] = new \App\Jobs\FetchExternalAirframeDataJob();
         $jobs[] = new \App\Jobs\FetchExternalAirlineDataJob();
-        $jobs[] = new FetchExternalRouteDataJob();
-        $jobs[] = new \App\Jobs\FetchJontyRoutesJob();
+        // Combined route job: merges Jonty (block times + distances) + OpenFlights (aircraft types)
+        // + AirLabs (real flight numbers if AIRLABS_API_KEY is set in .env)
+        $jobs[] = new FetchGlobalRoutesJob();
 
         $batch = Bus::batch($jobs)
             ->name('Aggregate Global Network Data')
