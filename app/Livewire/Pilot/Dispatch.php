@@ -17,7 +17,7 @@ class Dispatch extends Component
 
     // SimBrief Integration
     public $simbrief_username = '';
-    public $is_syncing = false;
+    public $is_loading_simbrief = false;
 
     // Aircraft & Callsign
     public $airframe_id;
@@ -175,6 +175,53 @@ class Dispatch extends Component
         $this->estimated_zfw = $oew + $paxWeight + $bagWeight;
     }
 
+    /**
+     * Check if a fetched SimBrief OFP matches the current booking parameters (Callsign, Departure ICAO, Arrival ICAO).
+     */
+    public function isOfpMatchingBooking(array $liveOfp): bool
+    {
+        if (!isset($liveOfp['general']['origin']) || !isset($liveOfp['general']['destination'])) {
+            return false;
+        }
+
+        $ofpOrig = strtoupper(trim($liveOfp['general']['origin']));
+        $ofpDest = strtoupper(trim($liveOfp['general']['destination']));
+        $bookingDep = strtoupper(trim($this->booking->route->departure_icao));
+        $bookingArr = strtoupper(trim($this->booking->route->arrival_icao));
+
+        // 1. Validate Departure & Arrival Airports
+        if ($ofpOrig !== $bookingDep || $ofpDest !== $bookingArr) {
+            Log::info("SimBrief OFP Mismatch: Origin/Destination mismatch (OFP: {$ofpOrig}-{$ofpDest}, Booking: {$bookingDep}-{$bookingArr})");
+            return false;
+        }
+
+        // 2. Validate Callsign / Flight Number
+        $ofpCallsign = strtoupper(trim($liveOfp['general']['callsign'] ?? ''));
+        $ofpFltNum = strtoupper(trim($liveOfp['general']['flight_number'] ?? ''));
+        $targetCallsign = strtoupper(trim($this->callsign));
+        $targetFltNum = strtoupper(trim($this->flight_number));
+
+        $ofpNum = preg_replace('/[^0-9]/', '', $ofpCallsign . $ofpFltNum);
+        $targetNum = preg_replace('/[^0-9]/', '', $targetCallsign . $targetFltNum);
+
+        $callsignMatches = (
+            $ofpCallsign === $targetCallsign ||
+            $ofpFltNum === $targetFltNum ||
+            (!empty($targetNum) && !empty($ofpNum) && $ofpNum === $targetNum) ||
+            (isset($liveOfp['params']['static_id']) && $liveOfp['params']['static_id'] === 'VOPS-' . $this->booking->id)
+        );
+
+        if (!$callsignMatches) {
+            Log::info("SimBrief OFP Mismatch: Callsign mismatch (OFP: {$ofpCallsign}/{$ofpFltNum}, Booking Target: {$targetCallsign}/{$targetFltNum})");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Auto-polling background check (called every 3s via wire:poll while in loading state)
+     */
     public function checkLiveSimbriefOfp()
     {
         if ($this->showOfpView || empty(trim($this->simbrief_username))) {
@@ -184,27 +231,25 @@ class Dispatch extends Component
         $simbriefService = new SimBriefService();
         $liveOfp = $simbriefService->fetchLiveOfp($this->simbrief_username);
 
-        if ($liveOfp && isset($liveOfp['general']['origin'])) {
-            $orig = strtoupper($liveOfp['general']['origin']);
-            $dest = strtoupper($liveOfp['general']['destination']);
-            
-            // Match origin/destination with booking route
-            if ($orig === strtoupper($this->booking->route->departure_icao) && $dest === strtoupper($this->booking->route->arrival_icao)) {
-                $liveOfp['simbrief_username'] = trim($this->simbrief_username);
+        if ($liveOfp && $this->isOfpMatchingBooking($liveOfp)) {
+            $liveOfp['simbrief_username'] = trim($this->simbrief_username);
 
-                $this->booking->update([
-                    'airframe_id' => $this->airframe_id,
-                    'simbrief_data' => $liveOfp,
-                    'status' => 'dispatched'
-                ]);
+            $this->booking->update([
+                'airframe_id' => $this->airframe_id,
+                'simbrief_data' => $liveOfp,
+                'status' => 'dispatched'
+            ]);
 
-                $this->booking->refresh();
-                $this->showOfpView = true;
-                session()->flash('message', 'Real SimBrief OFP imported automatically!');
-            }
+            $this->booking->refresh();
+            $this->is_loading_simbrief = false;
+            $this->showOfpView = true;
+            session()->flash('message', 'Real SimBrief OFP imported automatically!');
         }
     }
 
+    /**
+     * Manual trigger to fetch live SimBrief OFP
+     */
     public function fetchLiveSimbriefOfp()
     {
         if (empty(trim($this->simbrief_username))) {
@@ -215,7 +260,7 @@ class Dispatch extends Component
         $simbriefService = new SimBriefService();
         $liveOfp = $simbriefService->fetchLiveOfp($this->simbrief_username);
 
-        if ($liveOfp) {
+        if ($liveOfp && $this->isOfpMatchingBooking($liveOfp)) {
             $profile = auth()->user()->pilotProfiles()->first();
             if ($profile) {
                 $profile->update(['simbrief_username' => trim($this->simbrief_username)]);
@@ -230,10 +275,18 @@ class Dispatch extends Component
             ]);
 
             $this->booking->refresh();
+            $this->is_loading_simbrief = false;
             $this->showOfpView = true;
             session()->flash('message', 'Successfully imported live OFP from SimBrief!');
         } else {
-            session()->flash('error', "Could not fetch live OFP for SimBrief user '{$this->simbrief_username}'. Make sure you generated an OFP on SimBrief first.");
+            if ($liveOfp && !$this->isOfpMatchingBooking($liveOfp)) {
+                $ofpOrig = $liveOfp['general']['origin'] ?? '';
+                $ofpDest = $liveOfp['general']['destination'] ?? '';
+                $ofpCs = $liveOfp['general']['callsign'] ?? '';
+                session()->flash('error', "The latest SimBrief OFP ({$ofpCs}: {$ofpOrig}→{$ofpDest}) does not match this booking ({$this->callsign}: {$this->booking->route->departure_icao}→{$this->booking->route->arrival_icao}). Please click 'Generate Flight' on SimBrief first.");
+            } else {
+                session()->flash('error', "Could not fetch live OFP for SimBrief user '{$this->simbrief_username}'. Make sure you generated an OFP on SimBrief first.");
+            }
         }
     }
 
@@ -282,19 +335,26 @@ class Dispatch extends Component
     public function createBooking()
     {
         $this->generateOfpData();
-        $this->is_syncing = true;
+        
         if ($this->dispatch_via_simbrief) {
+            $this->is_loading_simbrief = true;
             $this->dispatch('open-simbrief-custom-popup');
+            session()->flash('message', 'SimBrief opened with pre-filled flight options! Generating OFP...');
         } else {
             $this->showOfpView = true;
         }
-        session()->flash('message', 'Opening SimBrief with pre-filled parameters. V-Ops will auto-sync when generated!');
     }
 
     public function dispatchSimbriefPopup()
     {
         $this->generateOfpData();
+        $this->is_loading_simbrief = true;
         $this->dispatch('open-simbrief-custom-popup');
+    }
+
+    public function cancelLoadingState()
+    {
+        $this->is_loading_simbrief = false;
     }
 
     public function cancelBooking()
@@ -307,7 +367,7 @@ class Dispatch extends Component
     public function editDispatch()
     {
         $this->showOfpView = false;
-        $this->is_syncing = false;
+        $this->is_loading_simbrief = false;
     }
 
     public function render()
