@@ -28,3 +28,6 @@ jobs:
           tags: tathar26/v-ops:devel
           cache-from: type=registry,ref=tathar26/v-ops:buildcache
           cache-to: type=registry,ref=tathar26/v-ops:buildcache,mode=max
+
+      - name: Trigger Portainer Webhook
+        run: curl -X POST https://portainer.artmex-hosting.com/api/stacks/webhooks/bbbe346c-d742-427a-826b-a6f38be48401
