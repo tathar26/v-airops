@@ -59,11 +59,13 @@ class FlightCentreApiController extends Controller
         $arrivalIcaos = $routes->pluck('arrival_icao')->unique();
 
         $destinations = \App\Models\Airport::whereIn('icao', $arrivalIcaos)->get();
+        $hubs = \App\Models\TenantHub::where('tenant_id', $tenantId)->where('is_base', true)->pluck('airport_id');
 
         return response()->json([
             'current' => $currentAirport,
             'destinations' => $destinations,
-            'routes' => $routes
+            'routes' => $routes,
+            'hubs' => $hubs
         ]);
     }
 

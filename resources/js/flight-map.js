@@ -79,6 +79,7 @@ document.addEventListener('alpine:init', () => {
                     this.currentAirport = data.current;
                     this.destinations = data.destinations;
                     this.routes = data.routes;
+                    this.hubs = data.hubs || [];
                     this.renderBookMap();
                 } else {
                     this.airports = data.airports;
@@ -109,7 +110,8 @@ document.addEventListener('alpine:init', () => {
 
             // Draw destinations
             this.destinations.forEach(airport => {
-                this.drawMarker(airport, 'destination');
+                let isHub = this.hubs.includes(airport.id);
+                this.drawMarker(airport, isHub ? 'hub' : 'destination');
             });
 
             this.renderRoutes();
@@ -248,7 +250,41 @@ document.addEventListener('alpine:init', () => {
 
         hideTooltip() {
             const tooltip = document.getElementById('map-tooltip');
-            if (tooltip) tooltip.classList.add('hidden');
+            if (tooltip) {
+                tooltip.classList.add('hidden');
+            }
+        },
+
+        async jumpseat() {
+            if (!this.selectedAirport) return;
+            
+            try {
+                // CSRF token is required
+                let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                let response = await fetch('/api/flight-centre/current-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        airport_id: this.selectedAirport.id
+                    })
+                });
+
+                if (response.ok) {
+                    this.selectedAirport = null;
+                    this.fetchData(); // reload map data
+                    // optionally reload page if we want to refresh other non-alpine components
+                    window.location.reload();
+                } else {
+                    alert('Could not update location.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error connecting to server.');
+            }
         },
 
         toggleLayer(id) {

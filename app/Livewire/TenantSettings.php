@@ -20,7 +20,7 @@ class TenantSettings extends Component
     // General Settings
     public $name = '';
     public $icao = '';
-    public $base_airport_icao = '';
+    public $newHubIcao = '';
     public $accent_color = '';
     public $bg_color = '';
     public $logo;
@@ -41,10 +41,7 @@ class TenantSettings extends Component
         $tenant = auth()->user()->tenant;
         $this->name = $tenant->name;
         $this->icao = $tenant->icao;
-        $baseHub = \App\Models\TenantHub::where('tenant_id', $tenant->id)->where('is_base', true)->first();
-        if ($baseHub && $baseHub->airport) {
-            $this->base_airport_icao = $baseHub->airport->icao;
-        }
+        // Hubs are now fetched directly in render() or via property if needed.
         $this->accent_color = $tenant->accent_color;
         $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
@@ -87,7 +84,7 @@ class TenantSettings extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'icao' => 'nullable|string|max:4',
-            'base_airport_icao' => 'nullable|string|max:4',
+            // base_airport_icao removed
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
             'logo' => 'nullable|image|max:1024',
@@ -100,40 +97,7 @@ class TenantSettings extends Component
         $tenant->bg_color = $this->bg_color;
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
 
-        if ($this->base_airport_icao) {
-            $icao = strtoupper($this->base_airport_icao);
-            $airport = \App\Models\Airport::where('icao', $icao)->first();
-            
-            if (!$airport) {
-                // Try to fetch from Nominatim
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(3)->withHeaders([
-                        'User-Agent' => 'V-Ops Virtual Airline System'
-                    ])->get("https://nominatim.openstreetmap.org/search", [
-                        'q' => $icao . ' airport',
-                        'format' => 'json',
-                        'limit' => 1
-                    ]);
-
-                    if ($response->successful() && !empty($response->json())) {
-                        $data = $response->json()[0];
-                        $airport = \App\Models\Airport::create([
-                            'icao' => $icao,
-                            'name' => $data['name'] ?? $icao,
-                            'lat' => (float) $data['lat'],
-                            'lon' => (float) $data['lon']
-                        ]);
-                    }
-                } catch (\Exception $e) {}
-            }
-
-            if ($airport) {
-                \App\Models\TenantHub::updateOrCreate(
-                    ['tenant_id' => $tenant->id, 'is_base' => true],
-                    ['airport_id' => $airport->id]
-                );
-            }
-        }
+        // Hub logic moved to separate methods
 
         if ($this->logo) {
             if ($tenant->logo_path) {
@@ -145,6 +109,34 @@ class TenantSettings extends Component
         $tenant->save();
 
         session()->flash('settings_message', 'Settings saved successfully.');
+    }
+
+    public function addHub()
+    {
+        $this->validate(['newHubIcao' => 'required|string|size:4']);
+        $icao = strtoupper($this->newHubIcao);
+        
+        $airport = \App\Models\Airport::fetchAndCreate($icao);
+
+        if ($airport) {
+            \App\Models\TenantHub::firstOrCreate([
+                'tenant_id' => auth()->user()->tenant_id,
+                'airport_id' => $airport->id,
+                'is_base' => true
+            ]);
+            $this->newHubIcao = '';
+            session()->flash('hub_message', 'Base added successfully.');
+        } else {
+            $this->addError('newHubIcao', 'Airport not found or could not be fetched.');
+        }
+    }
+
+    public function removeHub($hubId)
+    {
+        \App\Models\TenantHub::where('tenant_id', auth()->user()->tenant_id)
+            ->where('id', $hubId)
+            ->delete();
+        session()->flash('hub_message', 'Base removed successfully.');
     }
 
     public function openUserModal()
@@ -215,8 +207,11 @@ class TenantSettings extends Component
     public function render()
     {
         $users = User::with('roles')->where('tenant_id', auth()->user()->tenant_id)->get();
+        $hubs = \App\Models\TenantHub::with('airport')->where('tenant_id', auth()->user()->tenant_id)->where('is_base', true)->get();
+        
         return view('livewire.tenant-settings', [
-            'users' => $users
+            'users' => $users,
+            'hubs' => $hubs
         ])->layout('layouts.app');
     }
 }

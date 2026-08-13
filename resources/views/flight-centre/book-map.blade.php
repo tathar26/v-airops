@@ -23,8 +23,12 @@
                 </div>
             </div>
 
-            <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-tenant-accent hover:opacity-80 text-white font-bold py-3 rounded-md transition mb-4 text-sm flex items-center justify-center shadow-lg">
+            <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-tenant-accent hover:opacity-80 text-white font-bold py-3 rounded-md transition mb-2 text-sm flex items-center justify-center shadow-lg">
                 <span class="mr-2">🛫</span> Book Flight to <span x-text="selectedAirport ? selectedAirport.icao : ''" class="ml-1"></span>
+            </button>
+
+            <button x-show="selectedAirport" @click="jumpseat()" style="display: none;" class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-md transition mb-4 text-sm flex items-center justify-center border border-white/20">
+                <span class="mr-2">💺</span> Jumpseat to <span x-text="selectedAirport ? selectedAirport.icao : ''" class="ml-1"></span>
             </button>
 
             <button x-show="!selectedAirport" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded-md transition mb-6 text-sm">

@@ -42,6 +42,20 @@
                 <span class="mr-2">↺</span> Reset Map
             </button>
         </div>
+
+        <!-- Tooltip Template -->
+        <div id="map-tooltip" class="hidden absolute z-20 glass-panel p-3 rounded-lg shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-10px]">
+            <div class="flex justify-between items-start mb-1">
+                <div class="font-bold text-white text-lg"><span id="tt-icao"></span> <span class="text-gray-400 text-sm font-normal" id="tt-name"></span></div>
+                <div id="tt-badge" class="hidden bg-red-500/20 text-red-400 text-[10px] px-1.5 py-0.5 rounded ml-2 font-bold uppercase">Base</div>
+            </div>
+            <div class="text-gray-400 text-xs flex gap-3">
+                <div title="Elevation"><span id="tt-elev"></span> ft</div>
+                <div title="Connections"><span id="tt-conn"></span> connections</div>
+                <div title="Distance"><span id="tt-dist"></span> nm from <span id="tt-from"></span></div>
+            </div>
+            <div class="mt-2 text-tenant-accent text-xs font-semibold uppercase text-center" id="tt-action" style="display: none;">CLICK TO SELECT ARRIVAL</div>
+        </div>
         </div>
     </div>
     
