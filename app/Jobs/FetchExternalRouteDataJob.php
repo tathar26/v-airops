@@ -33,9 +33,29 @@ class FetchExternalRouteDataJob implements ShouldQueue
             return;
         }
 
-        // Fetch routes from Jonty's mirror of OpenFlights
-        $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat';
+        // 1. Fetch planes to build IATA -> ICAO mapping
+        $planesUrl = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/planes.dat';
+        $planesResponse = Http::timeout(60)->get($planesUrl);
+        $iataToIcao = [];
         
+        if ($planesResponse->successful()) {
+            $planeLines = explode("\n", $planesResponse->body());
+            foreach ($planeLines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                $data = str_getcsv($line);
+                if (count($data) >= 3) {
+                    $iata = $data[1] !== '\\N' ? $data[1] : null;
+                    $icao = $data[2] !== '\\N' ? $data[2] : null;
+                    if ($iata && $icao && $icao !== '\\N' && strlen($icao) >= 2) {
+                        $iataToIcao[$iata] = $icao;
+                    }
+                }
+            }
+        }
+
+        // 2. Fetch routes from Jonty's mirror of OpenFlights
+        $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat';
         $response = Http::timeout(60)->get($url);
 
         if (!$response->successful()) {
@@ -52,22 +72,29 @@ class FetchExternalRouteDataJob implements ShouldQueue
 
             $data = str_getcsv($line);
             
-            // OpenFlights format: 
-            // 0: Airline, 1: Airline ID, 2: Source airport, 3: Source airport ID, 
-            // 4: Destination airport, 5: Destination airport ID, 6: Codeshare, 7: Stops, 8: Equipment
-            
             if (count($data) >= 9) {
                 $operator = $data[0] !== '\\N' ? $data[0] : null;
                 $depIcao = $data[2] !== '\\N' ? $data[2] : null;
                 $arrIcao = $data[4] !== '\\N' ? $data[4] : null;
                 $equipment = $data[8] !== '\\N' ? $data[8] : null;
 
-                // OpenFlights primarily uses IATA codes for airports in this dataset, but sometimes ICAO.
-                // Assuming we want to store it as provided, or we would need an IATA to ICAO mapping.
-                // For simplicity as requested, we store it directly.
                 if (strlen($depIcao) <= 4 && strlen($arrIcao) <= 4 && $depIcao && $arrIcao) {
                     $hashString = $depIcao . '-' . $arrIcao . '-' . ($operator ?? 'NA') . '-EXTERNAL';
                     $hash = md5($hashString);
+
+                    // Map IATA equipment to ICAO equipment
+                    $mappedEquipment = [];
+                    if ($equipment) {
+                        $equipList = explode(' ', $equipment);
+                        foreach ($equipList as $equip) {
+                            if (isset($iataToIcao[$equip])) {
+                                $mappedEquipment[] = $iataToIcao[$equip];
+                            } else {
+                                $mappedEquipment[] = $equip; // Fallback to raw if no mapping found
+                            }
+                        }
+                    }
+                    $aircraftTypes = !empty($mappedEquipment) ? implode(',', $mappedEquipment) : null;
 
                     $upsertData[] = [
                         'original_tenant_id' => null, // External
@@ -78,7 +105,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
                         'block_time' => null,
                         'route_type' => 'Scheduled',
                         'distance' => null,
-                        'aircraft_types' => $equipment ? str_replace(' ', ',', $equipment) : null,
+                        'aircraft_types' => $aircraftTypes,
                         'route_hash' => $hash,
                     ];
 
