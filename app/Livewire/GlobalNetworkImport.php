@@ -27,6 +27,21 @@ class GlobalNetworkImport extends Component
         'searchOperator' => ['except' => ''],
     ];
 
+    public function updatedSearchDeparture()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearchArrival()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSearchOperator()
+    {
+        $this->resetPage();
+    }
+
     public function updatedSelectAll($value)
     {
         if ($value) {
@@ -58,7 +73,8 @@ class GlobalNetworkImport extends Component
             $query->where(function($q) {
                 $q->where('system_global_flights.operator', 'like', '%' . $this->searchOperator . '%')
                   ->orWhere('system_global_airlines.name', 'like', '%' . $this->searchOperator . '%')
-                  ->orWhere('system_global_airlines.icao', 'like', '%' . strtoupper($this->searchOperator) . '%');
+                  ->orWhere('system_global_airlines.icao', 'like', '%' . strtoupper($this->searchOperator) . '%')
+                  ->orWhere('system_global_airlines.iata', 'like', '%' . strtoupper($this->searchOperator) . '%');
             });
         }
 
