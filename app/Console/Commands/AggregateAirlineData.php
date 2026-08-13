@@ -47,6 +47,7 @@ class AggregateAirlineData extends Command
         // Also add the external fetch jobs to the batch
         $jobs[] = new \App\Jobs\FetchExternalAirportDataJob();
         $jobs[] = new \App\Jobs\FetchExternalAircraftDataJob();
+        $jobs[] = new \App\Jobs\FetchExternalAirframeDataJob();
         $jobs[] = new \App\Jobs\FetchExternalAirlineDataJob();
         $jobs[] = new FetchExternalRouteDataJob();
         $jobs[] = new \App\Jobs\FetchJontyRoutesJob();

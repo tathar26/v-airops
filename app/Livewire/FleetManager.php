@@ -105,6 +105,12 @@ class FleetManager extends Component
     }
 
     public $showGlobalImportModal = false;
+    public $importMode = 'real_world'; // 'real_world' or 'generate'
+    public $searchRealWorld = '';
+    public $filterAircraftCode = '';
+    public $selectedRealWorldAirframes = [];
+    public $selectAllRealWorld = false;
+
     public $globalAircraftCode = '';
     public $registrationPrefix = 'G-';
     public $quantityToGenerate = 5;
@@ -112,10 +118,63 @@ class FleetManager extends Component
 
     public function openGlobalImportModal()
     {
-        $this->reset(['globalAircraftCode', 'registrationPrefix', 'quantityToGenerate', 'customRegistrationsText']);
+        $this->reset(['importMode', 'searchRealWorld', 'filterAircraftCode', 'selectedRealWorldAirframes', 'selectAllRealWorld', 'globalAircraftCode', 'registrationPrefix', 'quantityToGenerate', 'customRegistrationsText']);
+        $this->importMode = 'real_world';
         $this->registrationPrefix = 'G-';
         $this->quantityToGenerate = 5;
         $this->showGlobalImportModal = true;
+    }
+
+    public function updatedSelectAllRealWorld($value)
+    {
+        if ($value) {
+            $query = \App\Models\SystemGlobalAirframe::query();
+            if ($this->filterAircraftCode) {
+                $query->where('icao_code', $this->filterAircraftCode);
+            }
+            if ($this->searchRealWorld) {
+                $query->where(function($q) {
+                    $q->where('registration', 'like', '%' . $this->searchRealWorld . '%')
+                      ->orWhere('operator', 'like', '%' . $this->searchRealWorld . '%')
+                      ->orWhere('name', 'like', '%' . $this->searchRealWorld . '%');
+                });
+            }
+            $this->selectedRealWorldAirframes = $query->pluck('id')->map(fn($id) => (string)$id)->toArray();
+        } else {
+            $this->selectedRealWorldAirframes = [];
+        }
+    }
+
+    public function importSelectedRealWorldAirframes()
+    {
+        if (empty($this->selectedRealWorldAirframes)) {
+            session()->flash('error', 'Please select at least one real-world airframe to import.');
+            return;
+        }
+
+        $tenantId = auth()->user()->tenant_id;
+        $realAirframes = \App\Models\SystemGlobalAirframe::whereIn('id', $this->selectedRealWorldAirframes)->get();
+        $importedCount = 0;
+
+        foreach ($realAirframes as $globalAirframe) {
+            // Create or get local AircraftType based on ICAO code
+            $code = strtoupper($globalAirframe->icao_code);
+            $typeName = $globalAirframe->name ?: ($code . ' Aircraft');
+
+            $aircraftType = AircraftType::firstOrCreate(
+                ['tenant_id' => $tenantId, 'code' => $code],
+                ['name' => $typeName]
+            );
+
+            Airframe::updateOrCreate(
+                ['tenant_id' => $tenantId, 'registration' => strtoupper($globalAirframe->registration)],
+                ['aircraft_type_id' => $aircraftType->id, 'name' => $globalAirframe->operator ?: $typeName]
+            );
+            $importedCount++;
+        }
+
+        $this->reset(['showGlobalImportModal', 'selectedRealWorldAirframes', 'selectAllRealWorld', 'searchRealWorld']);
+        session()->flash('message', "Successfully imported {$importedCount} real-world airframe(s) into your fleet.");
     }
 
     public function importGlobalAirframes()
@@ -175,10 +234,27 @@ class FleetManager extends Component
         $aircraftTypes = AircraftType::all();
         $globalAircraftTypes = \App\Models\SystemGlobalAircraft::orderBy('code')->get();
 
+        $realWorldAirframes = null;
+        if ($this->showGlobalImportModal && $this->importMode === 'real_world') {
+            $realQuery = \App\Models\SystemGlobalAirframe::query();
+            if ($this->filterAircraftCode) {
+                $realQuery->where('icao_code', $this->filterAircraftCode);
+            }
+            if ($this->searchRealWorld) {
+                $realQuery->where(function($q) {
+                    $q->where('registration', 'like', '%' . $this->searchRealWorld . '%')
+                      ->orWhere('operator', 'like', '%' . $this->searchRealWorld . '%')
+                      ->orWhere('name', 'like', '%' . $this->searchRealWorld . '%');
+                });
+            }
+            $realWorldAirframes = $realQuery->orderBy('registration')->paginate(15);
+        }
+
         return view('livewire.fleet-manager', [
             'airframes' => $airframes,
             'aircraftTypes' => $aircraftTypes,
             'globalAircraftTypes' => $globalAircraftTypes,
+            'realWorldAirframes' => $realWorldAirframes,
         ])->layout('layouts.app');
     }
 }

@@ -117,39 +117,112 @@
     </x-dialog-modal>
 
     <!-- Global Fleet / Airframes Import Modal -->
-    <x-dialog-modal wire:model.live="showGlobalImportModal">
+    <x-dialog-modal wire:model.live="showGlobalImportModal" maxWidth="3xl">
         <x-slot name="title">
             {{ __('Import Airframes from Global Repository') }}
         </x-slot>
 
         <x-slot name="content">
-            <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="globalAircraftCode" value="{{ __('Select Aircraft Type from Global Repository') }}" />
-                <select id="globalAircraftCode" wire:model="globalAircraftCode" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm focus:border-tenant-accent focus:ring focus:ring-tenant-accent focus:ring-opacity-50">
-                    <option value="">Select a global aircraft type...</option>
-                    @foreach($globalAircraftTypes as $gType)
-                        <option value="{{ $gType->code }}">{{ $gType->code }} - {{ $gType->name }}</option>
-                    @endforeach
-                </select>
-                <x-input-error for="globalAircraftCode" class="mt-2" />
+            <!-- Mode Toggle Tabs -->
+            <div class="flex border-b border-white/10 mb-4">
+                <button wire:click="$set('importMode', 'real_world')" class="py-2 px-4 text-sm font-semibold border-b-2 transition-colors {{ $importMode === 'real_world' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+                    Real-World Registrations (OpenFlights Repository)
+                </button>
+                <button wire:click="$set('importMode', 'generate')" class="py-2 px-4 text-sm font-semibold border-b-2 transition-colors {{ $importMode === 'generate' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+                    Auto-Generate / Custom
+                </button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <x-label for="registrationPrefix" value="{{ __('Registration Prefix') }}" />
-                    <x-input id="registrationPrefix" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="registrationPrefix" placeholder="e.g. G-, PH-, N-, D-" />
+            @if($importMode === 'real_world')
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <x-label for="filterAircraftCode" value="{{ __('Filter by Aircraft Type') }}" />
+                        <select id="filterAircraftCode" wire:model.live="filterAircraftCode" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm text-sm">
+                            <option value="">All Aircraft Types</option>
+                            @foreach($globalAircraftTypes as $gType)
+                                <option value="{{ $gType->code }}">{{ $gType->code }} - {{ $gType->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-label for="searchRealWorld" value="{{ __('Search Registration or Operator') }}" />
+                        <x-input id="searchRealWorld" type="text" wire:model.live.debounce.300ms="searchRealWorld" placeholder="Search (e.g. G-EZY, KLM, N737, Ryanair...)" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white text-sm" />
+                    </div>
                 </div>
-                <div>
-                    <x-label for="quantityToGenerate" value="{{ __('Quantity to Generate') }}" />
-                    <x-input id="quantityToGenerate" type="number" min="1" max="50" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="quantityToGenerate" />
-                </div>
-            </div>
 
-            <div class="col-span-6 sm:col-span-4">
-                <x-label for="customRegistrationsText" value="{{ __('Or Enter Custom Registrations (Optional - comma or line separated)') }}" />
-                <textarea id="customRegistrationsText" wire:model="customRegistrationsText" rows="3" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md uppercase" placeholder="e.g. G-EZYA, G-EZYB, G-EZYC"></textarea>
-                <p class="text-xs text-gray-400 mt-1">If specified, custom registrations will be used instead of auto-generated ones.</p>
-            </div>
+                @if($realWorldAirframes)
+                    <div class="overflow-x-auto bg-black/20 rounded-lg border border-white/5 max-h-80">
+                        <table class="min-w-full divide-y divide-white/5 text-sm">
+                            <thead class="bg-white/5 sticky top-0 bg-[#151C2C]">
+                                <tr>
+                                    <th class="p-3 w-12 text-center">
+                                        <input type="checkbox" wire:model.live="selectAllRealWorld" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                                    </th>
+                                    <th class="p-3 text-left text-xs font-medium text-gray-400 uppercase">Registration</th>
+                                    <th class="p-3 text-left text-xs font-medium text-gray-400 uppercase">ICAO Code</th>
+                                    <th class="p-3 text-left text-xs font-medium text-gray-400 uppercase">Operator / Model</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 text-white">
+                                @forelse($realWorldAirframes as $airframeItem)
+                                    <tr class="hover:bg-white/5 transition-colors">
+                                        <td class="p-3 text-center">
+                                            <input type="checkbox" wire:model.live="selectedRealWorldAirframes" value="{{ $airframeItem->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                                        </td>
+                                        <td class="p-3 font-mono font-bold text-tenant-accent">
+                                            {{ $airframeItem->registration }}
+                                        </td>
+                                        <td class="p-3 font-mono text-gray-300">
+                                            {{ $airframeItem->icao_code }}
+                                        </td>
+                                        <td class="p-3 text-gray-300">
+                                            {{ $airframeItem->operator ?: $airframeItem->name ?: 'N/A' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="p-6 text-center text-gray-500">
+                                            No real-world airframes found in repository matching search.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3">
+                        {{ $realWorldAirframes->links() }}
+                    </div>
+                @endif
+            @else
+                <div class="col-span-6 sm:col-span-4 mb-4">
+                    <x-label for="globalAircraftCode" value="{{ __('Select Aircraft Type from Global Repository') }}" />
+                    <select id="globalAircraftCode" wire:model="globalAircraftCode" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm focus:border-tenant-accent focus:ring focus:ring-tenant-accent focus:ring-opacity-50">
+                        <option value="">Select a global aircraft type...</option>
+                        @foreach($globalAircraftTypes as $gType)
+                            <option value="{{ $gType->code }}">{{ $gType->code }} - {{ $gType->name }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error for="globalAircraftCode" class="mt-2" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <x-label for="registrationPrefix" value="{{ __('Registration Prefix') }}" />
+                        <x-input id="registrationPrefix" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="registrationPrefix" placeholder="e.g. G-, PH-, N-, D-" />
+                    </div>
+                    <div>
+                        <x-label for="quantityToGenerate" value="{{ __('Quantity to Generate') }}" />
+                        <x-input id="quantityToGenerate" type="number" min="1" max="50" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="quantityToGenerate" />
+                    </div>
+                </div>
+
+                <div class="col-span-6 sm:col-span-4">
+                    <x-label for="customRegistrationsText" value="{{ __('Or Enter Custom Registrations (Optional - comma or line separated)') }}" />
+                    <textarea id="customRegistrationsText" wire:model="customRegistrationsText" rows="3" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md uppercase" placeholder="e.g. G-EZYA, G-EZYB, G-EZYC"></textarea>
+                    <p class="text-xs text-gray-400 mt-1">If specified, custom registrations will be used instead of auto-generated ones.</p>
+                </div>
+            @endif
         </x-slot>
 
         <x-slot name="footer">
@@ -157,9 +230,15 @@
                 {{ __('Cancel') }}
             </x-secondary-button>
 
-            <button wire:click="importGlobalAirframes" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
-                {{ __('Import Airframes') }}
-            </button>
+            @if($importMode === 'real_world')
+                <button wire:click="importSelectedRealWorldAirframes" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
+                    {{ __('Import Selected Real-World Airframes') }} ({{ count($selectedRealWorldAirframes) }})
+                </button>
+            @else
+                <button wire:click="importGlobalAirframes" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
+                    {{ __('Import Airframes') }}
+                </button>
+            @endif
         </x-slot>
     </x-dialog-modal>
 </div>
