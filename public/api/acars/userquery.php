@@ -1,6 +1,7 @@
 <?php
 
-// Physical bridge file to allow Nginx (with try_files $uri =404) to load Laravel
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+
 $indexPath = __DIR__;
 while (!file_exists($indexPath . '/index.php') && dirname($indexPath) !== $indexPath) {
     $indexPath = dirname($indexPath);
