@@ -180,7 +180,6 @@ class Dispatch extends Component
         $liveOfp = $simbriefService->fetchLiveOfp($this->simbrief_username);
 
         if ($liveOfp) {
-            // Save username to profile for future
             $profile = auth()->user()->pilotProfiles()->first();
             if ($profile) {
                 $profile->update(['simbrief_username' => trim($this->simbrief_username)]);
@@ -248,7 +247,10 @@ class Dispatch extends Component
     public function createBooking()
     {
         $this->generateOfpData();
-        session()->flash('message', 'Flight successfully dispatched! OFP generated.');
+        if ($this->dispatch_via_simbrief) {
+            $this->dispatch('open-simbrief-popup-window');
+        }
+        session()->flash('message', 'Flight successfully dispatched! Launching SimBrief with your exact parameters.');
     }
 
     public function dispatchSimbriefPopup()
@@ -286,9 +288,7 @@ class Dispatch extends Component
         $dateCode = date('dMy', strtotime($this->departure_date));
         $timeCode = str_replace(':', '', $this->departure_time);
 
-        // Build SimBrief Web API Popup URL with newflight=1
-        $queryArr = [
-            'newflight' => '1',
+        $simbriefParams = [
             'type' => $typeCode,
             'orig' => $this->booking->route->departure_icao,
             'dest' => $this->booking->route->arrival_icao,
@@ -310,12 +310,14 @@ class Dispatch extends Component
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
-        $simbriefPopupUrl = 'https://www.simbrief.com/system/dispatch.php?' . http_build_query($queryArr);
+        // Navigraph SimBrief Dispatch Web API URL
+        $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/new?' . http_build_query($simbriefParams);
 
         return view('livewire.pilot.dispatch', [
             'fleet' => $fleet,
             'selectedAirframe' => $selectedAirframe,
             'copilots' => $copilots,
+            'simbriefParams' => $simbriefParams,
             'simbriefPopupUrl' => $simbriefPopupUrl,
         ])->layout('layouts.app');
     }

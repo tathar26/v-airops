@@ -18,6 +18,29 @@
         </div>
     @endif
 
+    <!-- Navigraph SimBrief Web API Dispatch Form (Auto-fills https://dispatch.simbrief.com/options/new) -->
+    <form id="simbrief-dispatch-form" action="https://dispatch.simbrief.com/options/new" method="POST" target="_blank">
+        <input type="hidden" name="type" value="{{ $simbriefParams['type'] }}">
+        <input type="hidden" name="orig" value="{{ $simbriefParams['orig'] }}">
+        <input type="hidden" name="dest" value="{{ $simbriefParams['dest'] }}">
+        <input type="hidden" name="callsign" value="{{ $simbriefParams['callsign'] }}">
+        <input type="hidden" name="fltnum" value="{{ $simbriefParams['fltnum'] }}">
+        <input type="hidden" name="airline" value="{{ $simbriefParams['airline'] }}">
+        <input type="hidden" name="reg" value="{{ $simbriefParams['reg'] }}">
+        <input type="hidden" name="date" value="{{ $simbriefParams['date'] }}">
+        <input type="hidden" name="deptime" value="{{ $simbriefParams['deptime'] }}">
+        <input type="hidden" name="route" value="{{ $simbriefParams['route'] }}">
+        <input type="hidden" name="fl" value="{{ $simbriefParams['fl'] }}">
+        <input type="hidden" name="ci" value="{{ $simbriefParams['ci'] }}">
+        <input type="hidden" name="altn" value="{{ $simbriefParams['altn'] }}">
+        <input type="hidden" name="altn2" value="{{ $simbriefParams['altn2'] }}">
+        <input type="hidden" name="pax" value="{{ $simbriefParams['pax'] }}">
+        <input type="hidden" name="bag" value="{{ $simbriefParams['bag'] }}">
+        <input type="hidden" name="units" value="KGS">
+        <input type="hidden" name="planformat" value="{{ $simbriefParams['planformat'] }}">
+        <input type="hidden" name="static_id" value="{{ $simbriefParams['static_id'] }}">
+    </form>
+
     <!-- Top Flight Header -->
     <div class="bg-[#12161F] border border-white/10 rounded-xl p-6 shadow-xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -93,10 +116,10 @@
                     <button wire:click="editDispatch" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 hover:text-white transition">
                         ✏️ Edit Parameters
                     </button>
-                    <a href="{{ $simbriefPopupUrl }}" target="_blank" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
+                    <button type="button" onclick="document.getElementById('simbrief-dispatch-form').submit()" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        Open SimBrief Generator
-                    </a>
+                        Open SimBrief (Auto-fill Options)
+                    </button>
                 </div>
             </div>
 
@@ -239,13 +262,13 @@
             <!-- Action Buttons -->
             <div class="flex items-center gap-4 pt-2 flex-wrap sm:flex-nowrap">
                 <button wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm">
-                    Confirm Dispatch & Generate OFP
+                    Confirm Dispatch & Auto-fill SimBrief
                 </button>
                 
-                <a href="{{ $simbriefPopupUrl }}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
+                <button type="button" onclick="document.getElementById('simbrief-dispatch-form').submit()" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     Preview OFP (SimBrief Pop-up)
-                </a>
+                </button>
             </div>
         </div>
 
@@ -270,7 +293,7 @@
                     <div class="p-4 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-blue-300 uppercase tracking-wider">SimBrief Integration & Live Sync</span>
-                            <a href="https://www.simbrief.com/system/dispatch.php" target="_blank" class="text-xs text-blue-400 hover:underline">Open SimBrief Website</a>
+                            <a href="https://dispatch.simbrief.com/options/new" target="_blank" class="text-xs text-blue-400 hover:underline">Open SimBrief Generator</a>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <div class="flex-1">
@@ -530,7 +553,12 @@
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-simbrief-popup-window', () => {
-                window.open('{{ $simbriefPopupUrl }}', '_blank');
+                const form = document.getElementById('simbrief-dispatch-form');
+                if (form) {
+                    form.submit();
+                } else {
+                    window.open('{{ $simbriefPopupUrl }}', '_blank');
+                }
             });
         });
     </script>
