@@ -83,6 +83,10 @@ Route::middleware([
         ->middleware('role:VA Owner|Pilot')
         ->name('airports');
 
+    Route::get('/global-network', \App\Livewire\GlobalNetworkImport::class)
+        ->middleware('role:VA Owner')
+        ->name('global-network');
+
     Route::get('/aircraft-types', \App\Livewire\AircraftTypeManager::class)
         ->middleware('role:VA Owner|Pilot')
         ->name('aircraft-types');
