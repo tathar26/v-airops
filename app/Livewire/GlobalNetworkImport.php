@@ -67,6 +67,7 @@ class GlobalNetworkImport extends Component
             ->leftJoin('system_global_airlines as sga', 'system_global_flights.operator', '=', 'sga.iata')
             ->leftJoin('system_global_airports as dep_airport', 'system_global_flights.departure_icao', '=', 'dep_airport.icao')
             ->leftJoin('system_global_airports as arr_airport', 'system_global_flights.arrival_icao', '=', 'arr_airport.icao')
+            ->whereRaw('CHAR_LENGTH(system_global_flights.departure_icao) = 4 AND CHAR_LENGTH(system_global_flights.arrival_icao) = 4')
             ->orderBy('system_global_flights.id');
 
         if ($this->searchDeparture) {

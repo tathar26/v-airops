@@ -31,6 +31,12 @@ class AggregateAirlineData extends Command
     {
         $this->info('Starting data aggregation...');
 
+        // Clean up legacy 3-character IATA rows from previous runs
+        $pruned = \App\Models\SystemGlobalFlight::whereRaw('CHAR_LENGTH(departure_icao) < 4 OR CHAR_LENGTH(arrival_icao) < 4')->delete();
+        if ($pruned > 0) {
+            $this->info("Pruned {$pruned} legacy 3-letter IATA rows.");
+        }
+
         $tenants = Tenant::all();
         $jobs = [];
 
