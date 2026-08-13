@@ -113,6 +113,11 @@ class Dispatch extends Component
         // Network Defaults
         $this->network = $simData['network'] ?? ($profile->preferred_network ?? 'Offline');
         $this->copilot_user_id = $simData['copilot_user_id'] ?? null;
+
+        // Auto-fetch if returning from SimBrief generation popup
+        if (request()->has('auto_fetch') && !empty($this->simbrief_username)) {
+            $this->fetchLiveSimbriefOfp();
+        }
     }
 
     public function findDefaultAlternates()
@@ -248,15 +253,15 @@ class Dispatch extends Component
     {
         $this->generateOfpData();
         if ($this->dispatch_via_simbrief) {
-            $this->dispatch('open-simbrief-popup-window');
+            $this->dispatch('open-simbrief-autogenerate-popup');
         }
-        session()->flash('message', 'Flight successfully dispatched! Launching SimBrief Generator.');
+        session()->flash('message', 'Flight successfully dispatched! Launching background SimBrief generator.');
     }
 
     public function dispatchSimbriefPopup()
     {
         $this->generateOfpData();
-        $this->dispatch('open-simbrief-popup-window');
+        $this->dispatch('open-simbrief-autogenerate-popup');
     }
 
     public function cancelBooking()
@@ -289,7 +294,7 @@ class Dispatch extends Component
         $depH = (int)date('H', strtotime($this->departure_time));
         $depM = (int)date('i', strtotime($this->departure_time));
 
-        // Navigraph SimBrief Dispatch Redirect Parameters (https://forum.navigraph.com/t/dispatch-redirect-guide/5299)
+        // Navigraph SimBrief Dispatch Redirect Parameters
         $simbriefParams = [
             'airline' => $airlineCode,
             'fltnum' => $fltNumCode,
@@ -317,7 +322,7 @@ class Dispatch extends Component
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
-        // Navigraph SimBrief Dispatch Redirect URL
+        // Navigraph SimBrief Custom URL
         $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/custom?' . http_build_query($simbriefParams);
 
         return view('livewire.pilot.dispatch', [

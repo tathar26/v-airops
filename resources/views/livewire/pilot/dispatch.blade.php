@@ -18,6 +18,32 @@
         </div>
     @endif
 
+    <!-- Official SimBrief API Form for Automated Background OFP Generation -->
+    <form id="sbapiform" action="https://www.simbrief.com/api/xml.generate.php" method="POST" target="simbrief_frame" class="hidden">
+        <input type="hidden" name="type" value="{{ $simbriefParams['type'] }}">
+        <input type="hidden" name="orig" value="{{ $simbriefParams['orig'] }}">
+        <input type="hidden" name="dest" value="{{ $simbriefParams['dest'] }}">
+        <input type="hidden" name="callsign" value="{{ $simbriefParams['callsign'] }}">
+        <input type="hidden" name="fltnum" value="{{ $simbriefParams['fltnum'] }}">
+        <input type="hidden" name="airline" value="{{ $simbriefParams['airline'] }}">
+        <input type="hidden" name="reg" value="{{ $simbriefParams['reg'] }}">
+        <input type="hidden" name="date" value="{{ $simbriefParams['date'] }}">
+        <input type="hidden" name="deph" value="{{ $simbriefParams['deph'] }}">
+        <input type="hidden" name="depm" value="{{ $simbriefParams['depm'] }}">
+        <input type="hidden" name="route" value="{{ $simbriefParams['route'] }}">
+        <input type="hidden" name="fl" value="{{ $simbriefParams['fl'] }}">
+        <input type="hidden" name="civalue" value="{{ $simbriefParams['civalue'] }}">
+        <input type="hidden" name="altn" value="{{ $simbriefParams['altn'] }}">
+        <input type="hidden" name="altn_count" value="{{ $simbriefParams['altn_count'] }}">
+        <input type="hidden" name="altn_1_id" value="{{ $simbriefParams['altn_1_id'] }}">
+        <input type="hidden" name="altn_2_id" value="{{ $simbriefParams['altn_2_id'] }}">
+        <input type="hidden" name="pax" value="{{ $simbriefParams['pax'] }}">
+        <input type="hidden" name="cargo" value="{{ $simbriefParams['cargo'] }}">
+        <input type="hidden" name="units" value="KGS">
+        <input type="hidden" name="planformat" value="{{ $simbriefParams['planformat'] }}">
+        <input type="hidden" name="static_id" value="{{ $simbriefParams['static_id'] }}">
+    </form>
+
     <!-- Top Flight Header -->
     <div class="bg-[#12161F] border border-white/10 rounded-xl p-6 shadow-xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -95,7 +121,7 @@
                     </button>
                     <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="px-4 py-2 bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white rounded-lg transition flex items-center gap-1.5 font-semibold">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        Open SimBrief Generator
+                        Open SimBrief Options
                     </a>
                 </div>
             </div>
@@ -239,12 +265,12 @@
             <!-- Action Buttons -->
             <div class="flex items-center gap-4 pt-2 flex-wrap sm:flex-nowrap">
                 <button wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm">
-                    Confirm Dispatch & Open SimBrief
+                    🚀 Generate SimBrief OFP Automatically
                 </button>
                 
                 <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    Preview OFP (SimBrief Pop-up)
+                    SimBrief Options Page
                 </a>
             </div>
         </div>
@@ -526,11 +552,22 @@
         </div>
     @endif
 
-    <!-- JS Listener for SimBrief Pop-up Window Opening -->
+    <!-- Official SimBrief APIv1 Script -->
+    <script type="text/javascript" src="https://www.simbrief.com/api/simbrief.apiv1.js"></script>
     <script>
         document.addEventListener('livewire:init', () => {
-            Livewire.on('open-simbrief-popup-window', () => {
-                window.open('{!! $simbriefPopupUrl !!}', '_blank');
+            Livewire.on('open-simbrief-autogenerate-popup', () => {
+                const returnUrl = "{!! route('profile.dispatch', $booking->id) !!}?auto_fetch=1";
+                if (typeof simbriefsubmit === 'function') {
+                    simbriefsubmit(returnUrl);
+                } else {
+                    const form = document.getElementById('sbapiform');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        window.open('{!! $simbriefPopupUrl !!}', '_blank');
+                    }
+                }
             });
         });
     </script>
