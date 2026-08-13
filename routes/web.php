@@ -22,6 +22,8 @@ $registerFsacarsWebRoutes = function (string $prefix = '') {
     });
 };
 
+$registerFsacarsWebRoutes('api/acars');
+$registerFsacarsWebRoutes('api/fsacars');
 $registerFsacarsWebRoutes('acars');
 $registerFsacarsWebRoutes('fsacars');
 $registerFsacarsWebRoutes('userquery.php');

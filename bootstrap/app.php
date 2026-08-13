@@ -14,6 +14,17 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->validateCsrfTokens(except: [
+            'acars/*',
+            'fsacars/*',
+            'api/acars/*',
+            'api/fsacars/*',
+            'userquery.php',
+            'dispatch.php',
+            'posrep.php',
+            'pirep.php',
+            'pirep_mysql.php',
+        ]);
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

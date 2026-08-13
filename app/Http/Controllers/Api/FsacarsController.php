@@ -205,17 +205,19 @@ class FsacarsController extends Controller
     }
 
     /**
-     * Helper to locate user by Callsign, ID, or Email.
+     * Helper to locate user by Callsign, ID, or Email (case-insensitive).
      */
     private function findUser(string $identifier): ?User
     {
-        if (is_numeric($identifier)) {
-            $user = User::find((int) $identifier);
+        $cleanId = strtolower(trim($identifier));
+
+        if (is_numeric($cleanId)) {
+            $user = User::find((int) $cleanId);
             if ($user) return $user;
         }
 
-        return User::where('callsign', $identifier)
-            ->orWhere('email', $identifier)
+        return User::whereRaw('LOWER(email) = ?', [$cleanId])
+            ->orWhereRaw('LOWER(callsign) = ?', [$cleanId])
             ->first();
     }
 
@@ -225,25 +227,21 @@ class FsacarsController extends Controller
      */
     private function validatePassword(User $user, string $passInput): bool
     {
-        $passInputLower = strtolower($passInput);
+        $passInputLower = strtolower(trim($passInput));
 
         // 1. Direct match with stored acars_password_hash
         if (!empty($user->acars_password_hash) && strtolower($user->acars_password_hash) === $passInputLower) {
             return true;
         }
 
-        // 2. Match SHA-256 hash (from org.cfg hashalgo=SHA256)
-        if ($passInputLower === hash('sha256', $user->email)) {
-            return true;
-        }
-
-        // 3. Match SHA-1 hash (default FSACARS hash)
-        if ($passInputLower === sha1($user->email)) {
-            return true;
-        }
-
-        // 4. Bcrypt or Hash check if passInput was sent in plaintext
+        // 2. Direct Bcrypt / Hash check if passInput was sent in plaintext
         if (Hash::check($passInput, $user->password)) {
+            return true;
+        }
+
+        // 3. Auto-bind acars_password_hash on pilot's first FSACARS login attempt if hash format is valid (SHA256 / SHA1 hex)
+        if (empty($user->acars_password_hash) && (strlen($passInputLower) === 64 || strlen($passInputLower) === 40)) {
+            $user->forceFill(['acars_password_hash' => $passInputLower])->save();
             return true;
         }
 
