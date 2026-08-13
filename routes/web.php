@@ -6,6 +6,30 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Web Fallback Route Aliases for FSACARS
+|--------------------------------------------------------------------------
+| Handles calls if org.cfg specifies URLs without /api prefix or with /fsacars path.
+*/
+$registerFsacarsWebRoutes = function (string $prefix = '') {
+    Route::prefix($prefix)->group(function () {
+        Route::match(['get', 'post'], '/userquery.php', [\App\Http\Controllers\Api\FsacarsController::class, 'authenticate']);
+        Route::match(['get', 'post'], '/dispatch.php', [\App\Http\Controllers\Api\FsacarsController::class, 'dispatch']);
+        Route::match(['get', 'post'], '/posrep.php', [\App\Http\Controllers\Api\FsacarsController::class, 'positionReport']);
+        Route::match(['get', 'post'], '/pirep.php', [\App\Http\Controllers\Api\FsacarsController::class, 'submitPirep']);
+        Route::match(['get', 'post'], '/pirep_mysql.php', [\App\Http\Controllers\Api\FsacarsController::class, 'submitPirep']);
+    });
+};
+
+$registerFsacarsWebRoutes('acars');
+$registerFsacarsWebRoutes('fsacars');
+$registerFsacarsWebRoutes('userquery.php');
+$registerFsacarsWebRoutes('dispatch.php');
+$registerFsacarsWebRoutes('posrep.php');
+$registerFsacarsWebRoutes('pirep.php');
+$registerFsacarsWebRoutes('pirep_mysql.php');
+
 // Airport Coordinate Lookup API
 Route::get('/api/airport/{icao}', function ($icao) {
     $icao = strtoupper($icao);
