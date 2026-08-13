@@ -38,18 +38,28 @@ class GlobalNetworkImport extends Component
 
     protected function buildQuery()
     {
-        $query = SystemGlobalFlight::query();
+        $query = SystemGlobalFlight::query()
+            ->select('system_global_flights.*', 'system_global_airlines.name as airline_name', 'system_global_airlines.iata as airline_iata', 'system_global_airlines.icao as airline_icao')
+            ->leftJoin('system_global_airlines', function($join) {
+                $join->on('system_global_flights.operator', '=', 'system_global_airlines.iata')
+                     ->orOn('system_global_flights.operator', '=', 'system_global_airlines.icao')
+                     ->orOn('system_global_flights.operator', '=', 'system_global_airlines.name');
+            });
 
         if ($this->searchDeparture) {
-            $query->where('departure_icao', 'like', '%' . strtoupper($this->searchDeparture) . '%');
+            $query->where('system_global_flights.departure_icao', 'like', '%' . strtoupper($this->searchDeparture) . '%');
         }
 
         if ($this->searchArrival) {
-            $query->where('arrival_icao', 'like', '%' . strtoupper($this->searchArrival) . '%');
+            $query->where('system_global_flights.arrival_icao', 'like', '%' . strtoupper($this->searchArrival) . '%');
         }
 
         if ($this->searchOperator) {
-            $query->where('operator', 'like', '%' . $this->searchOperator . '%');
+            $query->where(function($q) {
+                $q->where('system_global_flights.operator', 'like', '%' . $this->searchOperator . '%')
+                  ->orWhere('system_global_airlines.name', 'like', '%' . $this->searchOperator . '%')
+                  ->orWhere('system_global_airlines.icao', 'like', '%' . strtoupper($this->searchOperator) . '%');
+            });
         }
 
         return $query;

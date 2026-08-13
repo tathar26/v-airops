@@ -38,8 +38,10 @@ class AggregateAirlineData extends Command
             $jobs[] = new ProcessAirlineDataJob($tenant->id);
         }
 
-        // Also add the external fetch job to the batch
+        // Also add the external fetch jobs to the batch
+        $jobs[] = new \App\Jobs\FetchExternalAirlineDataJob();
         $jobs[] = new FetchExternalRouteDataJob();
+        $jobs[] = new \App\Jobs\FetchJontyRoutesJob();
 
         $batch = Bus::batch($jobs)
             ->name('Aggregate Global Network Data')

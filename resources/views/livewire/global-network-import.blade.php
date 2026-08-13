@@ -65,7 +65,17 @@
                             <td class="p-4 text-center">
                                 <input type="checkbox" wire:model.live="selectedFlights" value="{{ $flight->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
                             </td>
-                            <td class="p-4 font-bold">{{ $flight->operator ?? 'N/A' }} {{ $flight->flight_number }}</td>
+                            <td class="p-4">
+                                <div class="font-bold">
+                                    {{ $flight->airline_name ?? $flight->operator ?? 'Unknown Operator' }} 
+                                    {{ $flight->flight_number }}
+                                </div>
+                                @if($flight->airline_iata || $flight->airline_icao)
+                                    <div class="text-xs text-gray-400">
+                                        {{ implode(' / ', array_filter([$flight->airline_iata, $flight->airline_icao])) }}
+                                    </div>
+                                @endif
+                            </td>
                             <td class="p-4 font-mono text-tenant-accent">{{ $flight->departure_icao }}</td>
                             <td class="p-4 font-mono text-tenant-accent">{{ $flight->arrival_icao }}</td>
                             <td class="p-4 text-sm text-gray-400">{{ $flight->aircraft_types ?? 'Any' }}</td>
