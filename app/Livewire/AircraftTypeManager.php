@@ -3,11 +3,13 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-
+use Livewire\WithPagination;
 use App\Models\AircraftType;
 
 class AircraftTypeManager extends Component
 {
+    use WithPagination;
+
     public $showAddModal = false;
     public $editMode = false;
     public $editingId = null;
@@ -19,6 +21,11 @@ class AircraftTypeManager extends Component
     public $searchGlobal = '';
     public $selectedGlobalAircraft = [];
     public $selectAllGlobal = false;
+
+    public function updatingSearchGlobal()
+    {
+        $this->resetPage();
+    }
 
     protected $rules = [
         'code' => 'required|string|max:10',

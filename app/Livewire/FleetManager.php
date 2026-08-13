@@ -3,14 +3,14 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-
+use Livewire\WithPagination;
 use App\Models\Airframe;
 use App\Models\AircraftType;
 use Livewire\WithFileUploads;
 
 class FleetManager extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $showAddModal = false;
     public $editMode = false;
@@ -115,6 +115,16 @@ class FleetManager extends Component
     public $registrationPrefix = 'G-';
     public $quantityToGenerate = 5;
     public $customRegistrationsText = '';
+
+    public function updatingSearchRealWorld()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterAircraftCode()
+    {
+        $this->resetPage();
+    }
 
     public function openGlobalImportModal()
     {
