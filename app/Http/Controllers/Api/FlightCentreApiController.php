@@ -102,6 +102,20 @@ class FlightCentreApiController extends Controller
     {
         $request->validate(['route_id' => 'required|exists:routes,id']);
 
+        // Check if user already has an active booking
+        $existingBooking = \App\Models\Booking::where('user_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'dispatched'])
+            ->latest()
+            ->first();
+
+        if ($existingBooking) {
+            return response()->json([
+                'success' => true,
+                'booking_id' => $existingBooking->id,
+                'message' => 'You already have an active flight booking. Redirecting to active flight.'
+            ]);
+        }
+
         $route = \App\Models\Route::findOrFail($request->route_id);
         
         // Ensure route belongs to tenant

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Airframe;
 use App\Models\Airport;
 use App\Models\User;
+use App\Services\SimBriefService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -44,13 +45,14 @@ class Dispatch extends Component
     public $network = 'Offline';
     public $copilot_user_id = null;
 
-    // UI Collapse States
+    // UI States
     public $showSectionAircraft = true;
     public $showSectionSchedule = true;
     public $showSectionAlternates = true;
     public $showSectionPayload = true;
     public $showSectionNetwork = true;
     public $showRouteDetails = false;
+    public $showOfpView = false;
 
     public function mount(Booking $booking)
     {
@@ -61,6 +63,11 @@ class Dispatch extends Component
         $this->booking = $booking->load(['route.aircraftTypes', 'airframe.aircraftType', 'tenant', 'user']);
         $simData = $booking->simbrief_data ?? [];
 
+        // If booking is already dispatched or has OFP generated, show OFP View
+        if ($booking->status === 'dispatched' || isset($simData['weights'])) {
+            $this->showOfpView = true;
+        }
+
         // Aircraft & Callsign Defaults
         $this->airframe_id = $booking->airframe_id;
         if (!$this->airframe_id) {
@@ -69,22 +76,22 @@ class Dispatch extends Component
         }
 
         $operatorCode = $booking->route->operator ?? 'EZS';
-        $this->callsign = $simData['callsign'] ?? ($booking->route->callsign ?? ($operatorCode . rand(100, 999) . 'HZ'));
-        $this->flight_number = $simData['flight_number'] ?? ($booking->route->flight_number ?? ('DS' . rand(1000, 9999)));
+        $this->callsign = $simData['general']['callsign'] ?? ($simData['callsign'] ?? ($booking->route->callsign ?? ($operatorCode . rand(100, 999) . 'HZ')));
+        $this->flight_number = $simData['general']['flight_number'] ?? ($simData['flight_number'] ?? ($booking->route->flight_number ?? ('DS' . rand(1000, 9999))));
         $this->dispatch_via_simbrief = $simData['dispatch_via_simbrief'] ?? true;
 
         // Schedule & Route Defaults
         $this->departure_date = $simData['departure_date'] ?? date('Y-m-d');
         $this->departure_time = $simData['departure_time'] ?? date('H:i', strtotime('+30 minutes'));
-        $this->routing = $simData['routing'] ?? ($booking->route->route_string ?? '');
-        $this->flight_level = $simData['flight_level'] ?? '';
-        $this->cost_index = $simData['cost_index'] ?? 4;
+        $this->routing = $simData['general']['route'] ?? ($simData['routing'] ?? ($booking->route->route_string ?? ''));
+        $this->flight_level = $simData['general']['initial_altitude'] ?? ($simData['flight_level'] ?? '');
+        $this->cost_index = $simData['general']['cost_index'] ?? ($simData['cost_index'] ?? 4);
 
         // Alternates Defaults
         $this->auto_find_alternates = $simData['auto_find_alternates'] ?? true;
         $this->num_alternates = $simData['num_alternates'] ?? 2;
-        $this->alternate_1 = $simData['alternate_1'] ?? '';
-        $this->alternate_2 = $simData['alternate_2'] ?? '';
+        $this->alternate_1 = $simData['general']['alternate'] ?? ($simData['alternate_1'] ?? '');
+        $this->alternate_2 = $simData['general']['alternate2'] ?? ($simData['alternate_2'] ?? '');
 
         // Auto-find default alternates if empty
         if (empty($this->alternate_1)) {
@@ -92,8 +99,8 @@ class Dispatch extends Component
         }
 
         // Payload Defaults
-        $this->passengers = $simData['passengers'] ?? 170;
-        $this->hold_bags = $simData['hold_bags'] ?? 152;
+        $this->passengers = $simData['weights']['pax_count'] ?? ($simData['passengers'] ?? 170);
+        $this->hold_bags = $simData['weights']['bag_count'] ?? ($simData['hold_bags'] ?? 152);
         $this->recalculateZfw();
 
         // Network Defaults
@@ -107,7 +114,6 @@ class Dispatch extends Component
         $arrIcao = $this->booking->route->arrival_icao;
         $depIcao = $this->booking->route->departure_icao;
 
-        // Find nearby airports in same region/country as arrival
         $nearby = Airport::where('icao', '!=', $arrIcao)
             ->where('icao', '!=', $depIcao)
             ->where(function($q) use ($arrIcao) {
@@ -151,54 +157,78 @@ class Dispatch extends Component
 
     public function recalculateZfw()
     {
-        // Average OEW = 42,500kg, Pax avg = 84kg, Bag avg = 15kg
         $paxWeight = $this->passengers * 84;
         $bagWeight = $this->hold_bags * 15;
         $oew = 42500;
-
         $this->estimated_zfw = $oew + $paxWeight + $bagWeight;
     }
 
-    public function saveBookingState()
+    public function generateOfpData()
     {
-        $simData = [
+        $selectedAirframe = Airframe::with('aircraftType')->find($this->airframe_id);
+
+        $dispatchParams = [
+            'type' => $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N'),
+            'reg' => $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE',
             'callsign' => strtoupper($this->callsign),
             'flight_number' => strtoupper($this->flight_number),
-            'dispatch_via_simbrief' => $this->dispatch_via_simbrief,
-            'departure_date' => $this->departure_date,
-            'departure_time' => $this->departure_time,
-            'routing' => $this->routing,
-            'flight_level' => $this->flight_level,
-            'cost_index' => $this->cost_index,
-            'auto_find_alternates' => $this->auto_find_alternates,
-            'num_alternates' => $this->num_alternates,
-            'alternate_1' => strtoupper($this->alternate_1),
-            'alternate_2' => strtoupper($this->alternate_2),
+            'orig' => $this->booking->route->departure_icao,
+            'dest' => $this->booking->route->arrival_icao,
+            'altn' => strtoupper($this->alternate_1),
+            'altn2' => strtoupper($this->alternate_2),
+            'route' => $this->routing,
+            'fl' => $this->flight_level,
+            'ci' => $this->cost_index,
             'passengers' => $this->passengers,
             'hold_bags' => $this->hold_bags,
             'estimated_zfw' => $this->estimated_zfw,
+            'distance' => $this->booking->route->distance ?? 374,
+            'departure_date' => $this->departure_date,
+            'departure_time' => $this->departure_time,
+            'dispatch_via_simbrief' => $this->dispatch_via_simbrief,
             'network' => $this->network,
             'copilot_user_id' => $this->copilot_user_id,
         ];
 
+        $simbriefService = new SimBriefService();
+        $profile = auth()->user()->pilotProfiles()->first();
+        $ofpPayload = $simbriefService->generateOrFetchOfp($dispatchParams, $profile->simbrief_username ?? null);
+
+        // Merge parameters into simbrief_data
+        $mergedData = array_merge($ofpPayload, $dispatchParams);
+
         $this->booking->update([
             'airframe_id' => $this->airframe_id,
-            'simbrief_data' => array_merge($this->booking->simbrief_data ?? [], $simData),
+            'simbrief_data' => $mergedData,
             'status' => 'dispatched'
         ]);
+
+        $this->booking->refresh();
+        $this->showOfpView = true;
     }
 
     public function createBooking()
     {
-        $this->saveBookingState();
-        session()->flash('message', 'Booking saved and dispatch parameters confirmed!');
-        return redirect()->route('flight-centre.index');
+        $this->generateOfpData();
+        session()->flash('message', 'Flight successfully dispatched! Your OFP has been generated.');
     }
 
     public function dispatchSimbriefPopup()
     {
-        $this->saveBookingState();
+        $this->generateOfpData();
         $this->dispatch('open-simbrief-popup');
+    }
+
+    public function cancelBooking()
+    {
+        $this->booking->delete();
+        session()->flash('message', 'Booking cancelled successfully.');
+        return redirect()->route('flight-centre.index');
+    }
+
+    public function editDispatch()
+    {
+        $this->showOfpView = false;
     }
 
     public function render()
@@ -210,7 +240,6 @@ class Dispatch extends Component
             ->where('id', '!=', auth()->id())
             ->get();
 
-        // Prepare SimBrief form payload
         $simbriefParams = [
             'type' => $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N'),
             'orig' => $this->booking->route->departure_icao,

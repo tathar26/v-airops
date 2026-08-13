@@ -13,6 +13,16 @@ class FlightCentreController extends Controller
 
     public function bookFlightMap()
     {
+        $activeBooking = \App\Models\Booking::where('user_id', auth()->id())
+            ->whereIn('status', ['pending', 'dispatched'])
+            ->latest()
+            ->first();
+
+        if ($activeBooking) {
+            session()->flash('info', 'You already have an active flight booking. Please complete or cancel your active flight before booking a new one.');
+            return redirect()->route('profile.dispatch', $activeBooking->id);
+        }
+
         return view('flight-centre.book-map');
     }
 

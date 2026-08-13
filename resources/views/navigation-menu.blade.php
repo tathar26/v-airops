@@ -73,7 +73,8 @@
 
         <!-- Flight Centre -->
         @php
-            $isFlightCentreActive = request()->routeIs('flight-centre.*');
+            $isFlightCentreActive = request()->routeIs('flight-centre.*') || request()->routeIs('profile.dispatch');
+            $activeBooking = auth()->check() ? \App\Models\Booking::where('user_id', auth()->id())->whereIn('status', ['pending', 'dispatched'])->latest()->first() : null;
         @endphp
         <li x-data="{ open: {{ $isFlightCentreActive ? 'true' : 'false' }} }">
             <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ $isFlightCentreActive ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
@@ -89,11 +90,20 @@
                         Dashboard
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('flight-centre.book') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.book') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
-                        Book a Flight
-                    </a>
-                </li>
+                @if($activeBooking)
+                    <li>
+                        <a href="{{ route('profile.dispatch', $activeBooking->id) }}" class="flex items-center justify-between px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profile.dispatch') ? 'text-green-400 bg-green-500/10' : 'text-green-400 hover:bg-white/5' }}">
+                            <span class="flex items-center gap-1.5">✈️ Active Flight</span>
+                            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        </a>
+                    </li>
+                @else
+                    <li>
+                        <a href="{{ route('flight-centre.book') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.book') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                            Book a Flight
+                        </a>
+                    </li>
+                @endif
                 <li>
                     <a href="{{ route('flight-centre.flights') }}" class="block px-2 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('flight-centre.flights') ? 'text-tenant-accent bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
                         Flights List
