@@ -22,7 +22,14 @@ class FsacarsController extends Controller
     public function authenticate(Request $request): Response
     {
         $userInput = trim((string) $request->input('user', ''));
-        $passInput = trim((string) $request->input('pass', ''));
+        // FSACARS sends the pilot password hash in 'hash' and org serverpass in 'pass'
+        $passInput = trim((string) ($request->input('hash') ?: $request->input('pass') ?: ''));
+
+        Log::info('FSACARS Auth Request', [
+            'user' => $userInput,
+            'has_hash' => $request->has('hash'),
+            'has_pass' => $request->has('pass'),
+        ]);
 
         if (empty($userInput)) {
             return response('ERR#Missing Username', 200)->header('Content-Type', 'text/plain');
@@ -31,12 +38,16 @@ class FsacarsController extends Controller
         $user = $this->findUser($userInput);
 
         if (!$user) {
+            Log::warning('FSACARS Auth Failed: Pilot Not Found', ['user' => $userInput]);
             return response('ERR#Pilot Not Found', 200)->header('Content-Type', 'text/plain');
         }
 
-        if (!$this->validatePassword($user, $passInput)) {
+        if (!$this->validatePassword($user, $passInput, $request)) {
+            Log::warning('FSACARS Auth Failed: Invalid Password', ['user' => $userInput]);
             return response('ERR#Invalid Password', 200)->header('Content-Type', 'text/plain');
         }
+
+        Log::info('FSACARS Auth Success', ['user' => $userInput, 'pilot_name' => $user->name]);
 
         // FSACARS expects plaintext OK or OK#PilotName
         return response('OK#' . $user->name, 200)->header('Content-Type', 'text/plain');
@@ -225,23 +236,33 @@ class FsacarsController extends Controller
      * Validate pass input against user password or acars_password_hash.
      * Supports SHA-256 (hashalgo=SHA256 in org.cfg), SHA-1, stored acars_password_hash, and Bcrypt.
      */
-    private function validatePassword(User $user, string $passInput): bool
+    private function validatePassword(User $user, string $passInput, ?Request $request = null): bool
     {
-        $passInputLower = strtolower(trim($passInput));
+        $hashParam = $request ? trim((string) $request->input('hash', '')) : '';
+        $passParam = $request ? trim((string) $request->input('pass', '')) : '';
+        
+        $hashLower = strtolower($hashParam);
+        $passLower = strtolower(trim($passInput));
 
         // 1. Direct match with stored acars_password_hash
-        if (!empty($user->acars_password_hash) && strtolower($user->acars_password_hash) === $passInputLower) {
+        if (!empty($user->acars_password_hash)) {
+            $storedHash = strtolower($user->acars_password_hash);
+            if ($storedHash === $hashLower || $storedHash === $passLower) {
+                return true;
+            }
+        }
+
+        // 2. Direct Bcrypt / Hash check if pass or passInput was sent in plaintext
+        if (Hash::check($passInput, $user->password) || ($passParam && Hash::check($passParam, $user->password))) {
             return true;
         }
 
-        // 2. Direct Bcrypt / Hash check if passInput was sent in plaintext
-        if (Hash::check($passInput, $user->password)) {
-            return true;
-        }
-
-        // 3. Auto-bind acars_password_hash on pilot's first FSACARS login attempt if hash format is valid (SHA256 / SHA1 hex)
-        if (empty($user->acars_password_hash) && (strlen($passInputLower) === 64 || strlen($passInputLower) === 40)) {
-            $user->forceFill(['acars_password_hash' => $passInputLower])->save();
+        // 3. Auto-bind acars_password_hash on pilot's first FSACARS login attempt
+        // We use hashParam if present (64 or 40 chars), otherwise passLower
+        $targetHash = (strlen($hashLower) === 64 || strlen($hashLower) === 40) ? $hashLower : $passLower;
+        if (strlen($targetHash) === 64 || strlen($targetHash) === 40) {
+            $user->forceFill(['acars_password_hash' => $targetHash])->save();
+            Log::info("FSACARS: Auto-bound acars_password_hash for user {$user->id} ({$user->email})");
             return true;
         }
 
