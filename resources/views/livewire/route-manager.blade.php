@@ -127,10 +127,17 @@
                 </div>
             </div>
 
-            <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="block_time" value="{{ __('Block Time (HH:MM)') }}" />
-                <x-input id="block_time" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="block_time" placeholder="e.g. 02:30" />
-                <x-input-error for="block_time" class="mt-2" />
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-1">
+                    <x-label for="block_time" value="{{ __('Block Time (HH:MM)') }}" />
+                    <x-input id="block_time" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="block_time" placeholder="e.g. 02:30 (Auto if blank)" />
+                    <x-input-error for="block_time" class="mt-2" />
+                </div>
+                <div class="col-span-1">
+                    <x-label for="distance" value="{{ __('Distance (NM)') }}" />
+                    <x-input id="distance" type="number" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="distance" placeholder="Auto if blank" />
+                    <x-input-error for="distance" class="mt-2" />
+                </div>
             </div>
 
             <div class="col-span-6 sm:col-span-4 mb-4">

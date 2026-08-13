@@ -20,6 +20,7 @@ class RouteManager extends Component
     public $departure_icao = '';
     public $arrival_icao = '';
     public $block_time = '';
+    public $distance = '';
     public $route_string = '';
     public $route_type = 'Scheduled';
     public $selectedAircraftTypes = [];
@@ -30,7 +31,8 @@ class RouteManager extends Component
         'flight_number' => 'required|string|max:10',
         'departure_icao' => 'required|string|size:4',
         'arrival_icao' => 'required|string|size:4',
-        'block_time' => 'required|string|max:10', // e.g., '02:30'
+        'block_time' => 'nullable|string|max:10', // e.g., '02:30'
+        'distance' => 'nullable|numeric',
         'route_string' => 'nullable|string|max:255',
         'route_type' => 'required|string|in:Scheduled,Charter,Cargo',
         'selectedAircraftTypes' => 'array',
@@ -39,7 +41,7 @@ class RouteManager extends Component
 
     public function openAddModal()
     {
-        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'route_type', 'selectedAircraftTypes', 'editingId', 'editMode', 'csvFile']);
+        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'distance', 'route_string', 'route_type', 'selectedAircraftTypes', 'editingId', 'editMode', 'csvFile']);
         $this->showAddModal = true;
     }
 
@@ -51,6 +53,7 @@ class RouteManager extends Component
         $this->departure_icao = $route->departure_icao;
         $this->arrival_icao = $route->arrival_icao;
         $this->block_time = $route->block_time;
+        $this->distance = $route->distance;
         $this->route_string = $route->route_string;
         $this->route_type = $route->route_type ?? 'Scheduled';
         $this->selectedAircraftTypes = $route->aircraftTypes->pluck('id')->toArray();
@@ -67,8 +70,30 @@ class RouteManager extends Component
     {
         $this->validate();
 
-        \App\Models\Airport::fetchAndCreate($this->departure_icao);
-        \App\Models\Airport::fetchAndCreate($this->arrival_icao);
+        $depAirport = \App\Models\Airport::fetchAndCreate($this->departure_icao);
+        $arrAirport = \App\Models\Airport::fetchAndCreate($this->arrival_icao);
+
+        if (empty($this->distance) && $depAirport && $arrAirport) {
+            // Haversine formula in NM
+            $earth_radius = 3440.065;
+            $lat1 = deg2rad($depAirport->lat);
+            $lon1 = deg2rad($depAirport->lon);
+            $lat2 = deg2rad($arrAirport->lat);
+            $lon2 = deg2rad($arrAirport->lon);
+            $dLat = $lat2 - $lat1;
+            $dLon = $lon2 - $lon1;
+            $a = sin($dLat/2) * sin($dLat/2) + cos($lat1) * cos($lat2) * sin($dLon/2) * sin($dLon/2);
+            $c = 2 * asin(sqrt($a));
+            $this->distance = round($earth_radius * $c);
+        }
+
+        if (empty($this->block_time) && !empty($this->distance)) {
+            // Rough estimate: 420 kts + 30 mins taxi
+            $total_minutes = round(($this->distance / 420) * 60 + 30);
+            $hours = floor($total_minutes / 60);
+            $minutes = $total_minutes % 60;
+            $this->block_time = sprintf('%02d:%02d', $hours, $minutes);
+        }
 
         if ($this->editMode) {
             $route = Route::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingId);
@@ -77,6 +102,7 @@ class RouteManager extends Component
                 'departure_icao' => strtoupper($this->departure_icao),
                 'arrival_icao' => strtoupper($this->arrival_icao),
                 'block_time' => $this->block_time,
+                'distance' => $this->distance,
                 'route_string' => $this->route_string,
                 'route_type' => $this->route_type,
             ]);
@@ -88,13 +114,14 @@ class RouteManager extends Component
                 'departure_icao' => strtoupper($this->departure_icao),
                 'arrival_icao' => strtoupper($this->arrival_icao),
                 'block_time' => $this->block_time,
+                'distance' => $this->distance,
                 'route_string' => $this->route_string,
                 'route_type' => $this->route_type,
             ]);
             $route->aircraftTypes()->sync($this->selectedAircraftTypes);
         }
 
-        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'route_string', 'route_type', 'selectedAircraftTypes', 'showAddModal', 'editMode', 'editingId']);
+        $this->reset(['flight_number', 'departure_icao', 'arrival_icao', 'block_time', 'distance', 'route_string', 'route_type', 'selectedAircraftTypes', 'showAddModal', 'editMode', 'editingId']);
     }
 
     public function importCsv()

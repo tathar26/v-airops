@@ -23,6 +23,34 @@
                 </div>
             </div>
 
+            <!-- Route Details (Shown when airport is selected) -->
+            <div x-show="selectedRouteDetails" style="display: none;" class="mb-4 space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-black/40 border border-white/5 rounded p-2 px-3">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex items-center gap-1.5"><span class="text-xs">✈️</span> AIRCRAFT</div>
+                        <div class="text-white font-bold text-sm truncate" x-text="selectedRouteDetails.aircraft" :title="selectedRouteDetails.aircraft"></div>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded p-2 px-3">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex items-center gap-1.5"><span class="text-xs">🏢</span> OPERATORS</div>
+                        <div class="text-white font-bold text-sm truncate" x-text="selectedRouteDetails.operator" :title="selectedRouteDetails.operator"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-black/40 border border-white/5 rounded p-2 px-3">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex items-center gap-1.5"><span class="text-xs">⏱️</span> DURATION</div>
+                        <div class="text-white font-bold text-sm" x-text="selectedRouteDetails.duration"></div>
+                    </div>
+                    <div class="bg-black/40 border border-white/5 rounded p-2 px-3">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex items-center gap-1.5"><span class="text-xs">📍</span> DISTANCE</div>
+                        <div class="text-white font-bold text-sm" x-text="selectedRouteDetails.distance"></div>
+                    </div>
+                </div>
+                <div class="bg-black/40 border border-white/5 rounded p-2 px-3 text-center">
+                    <div class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex items-center justify-center gap-1.5"><span class="text-xs">📋</span> ROUTE TYPES</div>
+                    <div class="text-white font-bold text-sm" x-text="selectedRouteDetails.routeType"></div>
+                </div>
+            </div>
+
             <button x-show="selectedAirport" @click="openBookingModal()" style="display: none;" class="w-full bg-tenant-accent hover:opacity-80 text-white font-bold py-3 rounded-md transition mb-2 text-sm flex items-center justify-center shadow-lg">
                 <span class="mr-2">🛫</span> Book Flight to <span x-text="selectedAirport ? selectedAirport.icao : ''" class="ml-1"></span>
             </button>

@@ -168,6 +168,45 @@ document.addEventListener('alpine:init', () => {
             this.renderRoutes();
         },
 
+        get selectedRouteDetails() {
+            if (!this.selectedAirport || this.mode !== 'book') return null;
+
+            let relatedRoutes = this.routes.filter(r => r.arrival_icao === this.selectedAirport.icao);
+            if (relatedRoutes.length === 0) return null;
+
+            // Aggregate data
+            let aircraftTypes = new Set();
+            let operators = new Set();
+            let durations = [];
+            let routeTypes = new Set();
+
+            relatedRoutes.forEach(r => {
+                if (r.aircraft_types) {
+                    r.aircraft_types.forEach(at => aircraftTypes.add(at.icao || at.name));
+                }
+                if (r.operator) operators.add(r.operator);
+                if (r.block_time) durations.push(r.block_time);
+                if (r.route_type) routeTypes.add(r.route_type);
+            });
+
+            // Distance calculation
+            let distance = 0;
+            if (this.currentAirport && this.selectedAirport) {
+                distance = Math.round(this.map.distance(
+                    [this.currentAirport.lat, this.currentAirport.lon], 
+                    [this.selectedAirport.lat, this.selectedAirport.lon]
+                ) / 1852); // meters to nm
+            }
+
+            return {
+                aircraft: Array.from(aircraftTypes).join(', ') || 'Any',
+                operator: Array.from(operators).join(', ') || 'N/A',
+                duration: durations.length > 0 ? durations[0] : 'N/A', // just pick first if multiple
+                distance: distance ? distance + ' NM' : 'N/A',
+                routeType: Array.from(routeTypes).join(', ') || 'Scheduled'
+            };
+        },
+
         drawMarker(airport, type) {
             let color = type === 'current' ? '#f97316' : (type === 'hub' ? '#ef4444' : '#60a5fa');
             let radius = type === 'destination' ? 4 : 6;

@@ -52,7 +52,8 @@ class FlightCentreApiController extends Controller
         $currentAirport = \App\Models\Airport::find($currentAirportId);
 
         // Get routes originating from current airport for this tenant
-        $routes = \App\Models\Route::where('tenant_id', $tenantId)
+        $routes = \App\Models\Route::with('aircraftTypes')
+            ->where('tenant_id', $tenantId)
             ->where('departure_icao', $currentAirport->icao)
             ->get();
 
