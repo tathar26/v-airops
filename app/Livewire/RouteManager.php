@@ -28,8 +28,8 @@ class RouteManager extends Component
 
     protected $rules = [
         'flight_number' => 'required|string|max:10',
-        'departure_icao' => 'required|string|size:4',
-        'arrival_icao' => 'required|string|size:4',
+        'departure_icao' => 'required|string|size:4|exists:airports,icao',
+        'arrival_icao' => 'required|string|size:4|exists:airports,icao',
         'block_time' => 'required|string|max:10', // e.g., '02:30'
         'route_string' => 'nullable|string|max:255',
         'route_type' => 'required|string|in:Scheduled,Charter,Cargo',

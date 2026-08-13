@@ -147,6 +147,14 @@
             </a>
         </li>
 
+        <!-- Airport Manager -->
+        <li>
+            <a href="{{ route('airports') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('airports') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('airports') ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Airport Manager
+            </a>
+        </li>
+
         <!-- PIREPs (Admin) -->
         <li>
             <a href="{{ route('pireps') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pireps') || request()->routeIs('pireps.show') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">

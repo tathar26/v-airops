@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Airport extends Model
 {
-    protected $fillable = ['icao', 'name', 'lat', 'lon', 'elevation'];
+    protected $fillable = ['icao', 'name', 'lat', 'lon', 'elevation', 'metadata'];
+
+    protected $casts = [
+        'metadata' => 'array',
+    ];
 
     public function tenantHubs()
     {

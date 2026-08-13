@@ -79,6 +79,10 @@ Route::middleware([
         ->middleware('role:VA Owner|Pilot')
         ->name('routes');
 
+    Route::get('/airports', \App\Livewire\AirportManager::class)
+        ->middleware('role:VA Owner|Pilot')
+        ->name('airports');
+
     Route::get('/aircraft-types', \App\Livewire\AircraftTypeManager::class)
         ->middleware('role:VA Owner|Pilot')
         ->name('aircraft-types');
