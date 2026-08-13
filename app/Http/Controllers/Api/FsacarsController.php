@@ -221,20 +221,28 @@ class FsacarsController extends Controller
 
     /**
      * Validate pass input against user password or acars_password_hash.
+     * Supports SHA-256 (hashalgo=SHA256 in org.cfg), SHA-1, stored acars_password_hash, and Bcrypt.
      */
     private function validatePassword(User $user, string $passInput): bool
     {
+        $passInputLower = strtolower($passInput);
+
         // 1. Direct match with stored acars_password_hash
-        if (!empty($user->acars_password_hash) && strtolower($user->acars_password_hash) === strtolower($passInput)) {
+        if (!empty($user->acars_password_hash) && strtolower($user->acars_password_hash) === $passInputLower) {
             return true;
         }
 
-        // 2. Direct SHA-1 match with user email or password
-        if (strtolower($passInput) === sha1($user->email)) {
+        // 2. Match SHA-256 hash (from org.cfg hashalgo=SHA256)
+        if ($passInputLower === hash('sha256', $user->email)) {
             return true;
         }
 
-        // 3. Bcrypt or Hash check
+        // 3. Match SHA-1 hash (default FSACARS hash)
+        if ($passInputLower === sha1($user->email)) {
+            return true;
+        }
+
+        // 4. Bcrypt or Hash check if passInput was sent in plaintext
         if (Hash::check($passInput, $user->password)) {
             return true;
         }
