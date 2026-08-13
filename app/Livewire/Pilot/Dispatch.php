@@ -180,24 +180,32 @@ class Dispatch extends Component
      */
     public function isOfpMatchingBooking(array $liveOfp): bool
     {
-        if (!isset($liveOfp['general']['origin']) || !isset($liveOfp['general']['destination'])) {
-            return false;
+        // Extract Origin ICAO safely from any SimBrief schema structure
+        $ofpOrig = $liveOfp['general']['origin'] ?? ($liveOfp['origin']['icao_code'] ?? ($liveOfp['origin'] ?? ''));
+        if (is_array($ofpOrig)) {
+            $ofpOrig = $ofpOrig['icao_code'] ?? $ofpOrig['icao'] ?? '';
         }
+        $ofpOrig = strtoupper(trim((string)$ofpOrig));
 
-        $ofpOrig = strtoupper(trim($liveOfp['general']['origin']));
-        $ofpDest = strtoupper(trim($liveOfp['general']['destination']));
+        // Extract Destination ICAO safely
+        $ofpDest = $liveOfp['general']['destination'] ?? ($liveOfp['destination']['icao_code'] ?? ($liveOfp['destination'] ?? ''));
+        if (is_array($ofpDest)) {
+            $ofpDest = $ofpDest['icao_code'] ?? $ofpDest['icao'] ?? '';
+        }
+        $ofpDest = strtoupper(trim((string)$ofpDest));
+
         $bookingDep = strtoupper(trim($this->booking->route->departure_icao));
         $bookingArr = strtoupper(trim($this->booking->route->arrival_icao));
 
         // 1. Validate Departure & Arrival Airports
-        if ($ofpOrig !== $bookingDep || $ofpDest !== $bookingArr) {
-            Log::info("SimBrief OFP Mismatch: Origin/Destination mismatch (OFP: {$ofpOrig}-{$ofpDest}, Booking: {$bookingDep}-{$bookingArr})");
+        if (empty($ofpOrig) || empty($ofpDest) || $ofpOrig !== $bookingDep || $ofpDest !== $bookingArr) {
+            Log::info("SimBrief OFP Mismatch: Origin/Destination mismatch (OFP: '{$ofpOrig}'-'{$ofpDest}', Booking: '{$bookingDep}'-'{$bookingArr}')");
             return false;
         }
 
         // 2. Validate Callsign / Flight Number
-        $ofpCallsign = strtoupper(trim($liveOfp['general']['callsign'] ?? ''));
-        $ofpFltNum = strtoupper(trim($liveOfp['general']['flight_number'] ?? ''));
+        $ofpCallsign = strtoupper(trim((string)($liveOfp['atc']['callsign'] ?? $liveOfp['general']['callsign'] ?? $liveOfp['callsign'] ?? '')));
+        $ofpFltNum = strtoupper(trim((string)($liveOfp['general']['flight_number'] ?? $liveOfp['flight_number'] ?? '')));
         $targetCallsign = strtoupper(trim($this->callsign));
         $targetFltNum = strtoupper(trim($this->flight_number));
 
@@ -212,7 +220,7 @@ class Dispatch extends Component
         );
 
         if (!$callsignMatches) {
-            Log::info("SimBrief OFP Mismatch: Callsign mismatch (OFP: {$ofpCallsign}/{$ofpFltNum}, Booking Target: {$targetCallsign}/{$targetFltNum})");
+            Log::info("SimBrief OFP Mismatch: Callsign mismatch (OFP CS: '{$ofpCallsign}', OFP Flt: '{$ofpFltNum}', Target CS: '{$targetCallsign}', Target Flt: '{$targetFltNum}')");
             return false;
         }
 
@@ -280,9 +288,9 @@ class Dispatch extends Component
             session()->flash('message', 'Successfully imported live OFP from SimBrief!');
         } else {
             if ($liveOfp && !$this->isOfpMatchingBooking($liveOfp)) {
-                $ofpOrig = $liveOfp['general']['origin'] ?? '';
-                $ofpDest = $liveOfp['general']['destination'] ?? '';
-                $ofpCs = $liveOfp['general']['callsign'] ?? '';
+                $ofpOrig = $liveOfp['general']['origin'] ?? ($liveOfp['origin']['icao_code'] ?? '');
+                $ofpDest = $liveOfp['general']['destination'] ?? ($liveOfp['destination']['icao_code'] ?? '');
+                $ofpCs = $liveOfp['atc']['callsign'] ?? ($liveOfp['general']['callsign'] ?? '');
                 session()->flash('error', "The latest SimBrief OFP ({$ofpCs}: {$ofpOrig}→{$ofpDest}) does not match this booking ({$this->callsign}: {$this->booking->route->departure_icao}→{$this->booking->route->arrival_icao}). Please click 'Generate Flight' on SimBrief first.");
             } else {
                 session()->flash('error', "Could not fetch live OFP for SimBrief user '{$this->simbrief_username}'. Make sure you generated an OFP on SimBrief first.");

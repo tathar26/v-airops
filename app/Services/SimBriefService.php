@@ -24,15 +24,41 @@ class SimBriefService
             $paramKey = is_numeric($usernameOrId) ? 'userid' : 'username';
             $url = "https://www.simbrief.com/api/xml.fetcher.php";
             
-            $response = Http::timeout(8)->get($url, [
+            $response = Http::timeout(10)->get($url, [
                 $paramKey => $usernameOrId,
                 'json' => 'v2',
             ]);
 
             if ($response->successful()) {
                 $json = $response->json();
-                if (isset($json['general']) && !isset($json['fetch']['error'])) {
+                if ((isset($json['general']) || isset($json['origin'])) && !isset($json['fetch']['error'])) {
                     $json['is_simbrief_live'] = true;
+
+                    // Ensure 'general' array exists
+                    if (!isset($json['general'])) {
+                        $json['general'] = [];
+                    }
+
+                    // Normalize SimBrief JSON v2 keys into 'general' for seamless consumption
+                    if (empty($json['general']['origin']) && isset($json['origin']['icao_code'])) {
+                        $json['general']['origin'] = $json['origin']['icao_code'];
+                    }
+                    if (empty($json['general']['destination']) && isset($json['destination']['icao_code'])) {
+                        $json['general']['destination'] = $json['destination']['icao_code'];
+                    }
+                    if (empty($json['general']['callsign']) && isset($json['atc']['callsign'])) {
+                        $json['general']['callsign'] = $json['atc']['callsign'];
+                    }
+                    if (empty($json['general']['flight_number']) && isset($json['general']['flight_number'])) {
+                        $json['general']['flight_number'] = $json['general']['flight_number'];
+                    }
+                    if (empty($json['general']['alternate']) && isset($json['alternate']['icao_code'])) {
+                        $json['general']['alternate'] = $json['alternate']['icao_code'];
+                    }
+                    if (empty($json['general']['route']) && isset($json['general']['route'])) {
+                        $json['general']['route'] = $json['general']['route'];
+                    }
+
                     return $json;
                 }
             }
