@@ -34,7 +34,9 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'email',
+        'callsign',
         'password',
+        'acars_password_hash',
         'tenant_id',
         'vatsim_id',
         'ivao_id',
@@ -84,8 +86,13 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
-    public function pilotProfiles()
+    public function pireps()
     {
-        return $this->hasMany(PilotProfile::class);
+        return $this->hasMany(Pirep::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
     }
 }

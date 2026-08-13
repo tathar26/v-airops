@@ -20,7 +20,30 @@ class Pirep extends Model
         'is_day_landing',
         'is_event',
         'passengers',
-        'freight'
+        'freight',
+        'flight_hash',
+        'aircraft_title',
+        'atc_model',
+        'time_out',
+        'time_off',
+        'time_on',
+        'time_in',
+        'air_time',
+        'distance_nm',
+        'fuel_start',
+        'fuel_stop',
+        'fuel_used',
+        'takeoff_weight',
+        'landing_weight',
+        'landing_g',
+        'landing_kts',
+        'landing_flight_rules',
+        'has_crashed',
+        'overspeed_count',
+        'pause_count',
+        'slew_count',
+        'stall_count',
+        'raw_acars_log'
     ];
 
     protected $casts = [
@@ -28,6 +51,7 @@ class Pirep extends Model
         'is_day_takeoff' => 'boolean',
         'is_day_landing' => 'boolean',
         'is_event' => 'boolean',
+        'has_crashed' => 'boolean',
         'flight_time' => 'integer',
         'points_awarded' => 'integer',
         'touchdown_rate_fpm' => 'integer',
@@ -53,5 +77,10 @@ class Pirep extends Model
     public function comments()
     {
         return $this->hasMany(PirepComment::class);
+    }
+
+    public function telemetries()
+    {
+        return $this->hasMany(PirepTelemetry::class);
     }
 }
