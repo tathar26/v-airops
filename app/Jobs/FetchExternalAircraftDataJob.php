@@ -32,7 +32,13 @@ class FetchExternalAircraftDataJob implements ShouldQueue
             return;
         }
 
-        // Fetch planes from Jpatokal's OpenFlights mirror
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalAircraftDataJob: Starting fetch...');
+
+        try {
+            // Fetch planes from Jpatokal's OpenFlights mirror
         $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/planes.dat';
         
         $response = Http::timeout(60)->get($url);
@@ -89,6 +95,14 @@ class FetchExternalAircraftDataJob implements ShouldQueue
                 ['code'],
                 ['name']
             );
+        }
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalAircraftDataJob: Completed successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FetchExternalAircraftDataJob failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 }

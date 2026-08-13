@@ -35,7 +35,13 @@ class FetchExternalAirlineDataJob implements ShouldQueue
             return;
         }
 
-        // Fetch airlines from Jonty's mirror of OpenFlights
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalAirlineDataJob: Starting fetch...');
+
+        try {
+            // Fetch airlines from Jonty's mirror of OpenFlights
         $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat';
         
         $response = Http::timeout(60)->get($url);
@@ -102,6 +108,14 @@ class FetchExternalAirlineDataJob implements ShouldQueue
                 ['hash'],
                 ['name', 'iata', 'icao', 'callsign', 'country', 'active']
             );
+        }
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalAirlineDataJob: Completed successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FetchExternalAirlineDataJob failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 }

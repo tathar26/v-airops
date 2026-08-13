@@ -43,17 +43,27 @@ class FetchJontyRoutesJob implements ShouldQueue
             return;
         }
 
-        $url = 'https://raw.githubusercontent.com/Jonty/airline-route-data/refs/heads/main/airline_routes.json';
-        $response = Http::timeout(120)->get($url);
+        ini_set('memory_limit', '1024M');
+        set_time_limit(600);
 
-        if (!$response->successful()) {
-            return;
-        }
+        \Illuminate\Support\Facades\Log::info('FetchJontyRoutesJob: Starting fetch from GitHub...');
 
-        $data = $response->json();
-        if (empty($data)) {
-            return;
-        }
+        try {
+            $url = 'https://raw.githubusercontent.com/Jonty/airline-route-data/refs/heads/main/airline_routes.json';
+            $response = Http::timeout(120)->get($url);
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('FetchJontyRoutesJob: HTTP request failed with status ' . $response->status());
+                return;
+            }
+
+            $data = $response->json();
+            if (empty($data)) {
+                \Illuminate\Support\Facades\Log::warning('FetchJontyRoutesJob: Downloaded JSON was empty.');
+                return;
+            }
+
+            \Illuminate\Support\Facades\Log::info('FetchJontyRoutesJob: JSON parsed successfully. Processing routes...');
 
         // 1. Build an IATA -> ICAO mapping for airports based on the root keys
         $iataToIcao = [];
@@ -173,6 +183,14 @@ class FetchJontyRoutesJob implements ShouldQueue
                 ['route_hash'],
                 ['operator', 'departure_icao', 'arrival_icao', 'block_time', 'distance']
             );
+        }
+
+        \Illuminate\Support\Facades\Log::info('FetchJontyRoutesJob: Completed processing Jonty routes successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FetchJontyRoutesJob failed with exception: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 }

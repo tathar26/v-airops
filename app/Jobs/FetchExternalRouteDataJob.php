@@ -36,7 +36,13 @@ class FetchExternalRouteDataJob implements ShouldQueue
             return;
         }
 
-        // 1. Fetch planes to build IATA -> ICAO mapping
+        ini_set('memory_limit', '1024M');
+        set_time_limit(600);
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalRouteDataJob: Starting fetch...');
+
+        try {
+            // 1. Fetch planes to build IATA -> ICAO mapping
         $planesUrl = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/planes.dat';
         $planesResponse = Http::timeout(60)->get($planesUrl);
         $iataToIcao = [];
@@ -159,6 +165,14 @@ class FetchExternalRouteDataJob implements ShouldQueue
                 ['route_hash'],
                 ['operator', 'departure_icao', 'arrival_icao', 'aircraft_types']
             );
+        }
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalRouteDataJob: Completed successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FetchExternalRouteDataJob failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 }

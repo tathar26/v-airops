@@ -26,12 +26,19 @@ class FetchExternalAirportDataJob implements ShouldQueue
             return;
         }
 
-        $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
-        $response = \Illuminate\Support\Facades\Http::timeout(120)->get($url);
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
 
-        if (!$response->successful()) {
-            return;
-        }
+        \Illuminate\Support\Facades\Log::info('FetchExternalAirportDataJob: Starting fetch...');
+
+        try {
+            $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
+            $response = \Illuminate\Support\Facades\Http::timeout(120)->get($url);
+
+            if (!$response->successful()) {
+                \Illuminate\Support\Facades\Log::error('FetchExternalAirportDataJob: HTTP request failed with status ' . $response->status());
+                return;
+            }
 
         $lines = explode("\n", $response->body());
         $upsertData = [];
@@ -79,6 +86,14 @@ class FetchExternalAirportDataJob implements ShouldQueue
                 ['icao'],
                 ['name', 'city', 'country', 'iata', 'latitude', 'longitude', 'elevation']
             );
+        }
+
+        \Illuminate\Support\Facades\Log::info('FetchExternalAirportDataJob: Completed successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('FetchExternalAirportDataJob failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 }
