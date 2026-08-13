@@ -87,7 +87,7 @@ class FetchJontyRoutesJob implements ShouldQueue
                 $carriers = $route['carriers'] ?? [];
                 
                 foreach ($carriers as $carrier) {
-                    $operatorIata = $carrier['iata'] ?? null;
+                    $operatorIata = isset($carrier['iata']) ? mb_substr($carrier['iata'], 0, 3) : null;
                     $operatorName = $carrier['name'] ?? null;
 
                     if ($operatorIata && $operatorName) {
