@@ -17,6 +17,7 @@ class Dispatch extends Component
 
     // SimBrief Integration
     public $simbrief_username = '';
+    public $is_syncing = false;
 
     // Aircraft & Callsign
     public $airframe_id;
@@ -114,7 +115,7 @@ class Dispatch extends Component
         $this->network = $simData['network'] ?? ($profile->preferred_network ?? 'Offline');
         $this->copilot_user_id = $simData['copilot_user_id'] ?? null;
 
-        // Auto-fetch if returning from SimBrief generation popup
+        // Auto-fetch if returning from SimBrief generation or explicitly requested
         if (request()->has('auto_fetch') && !empty($this->simbrief_username)) {
             $this->fetchLiveSimbriefOfp();
         }
@@ -172,6 +173,36 @@ class Dispatch extends Component
         $bagWeight = $this->hold_bags * 15;
         $oew = 42500;
         $this->estimated_zfw = $oew + $paxWeight + $bagWeight;
+    }
+
+    public function checkLiveSimbriefOfp()
+    {
+        if ($this->showOfpView || empty(trim($this->simbrief_username))) {
+            return;
+        }
+
+        $simbriefService = new SimBriefService();
+        $liveOfp = $simbriefService->fetchLiveOfp($this->simbrief_username);
+
+        if ($liveOfp && isset($liveOfp['general']['origin'])) {
+            $orig = strtoupper($liveOfp['general']['origin']);
+            $dest = strtoupper($liveOfp['general']['destination']);
+            
+            // Match origin/destination with booking route
+            if ($orig === strtoupper($this->booking->route->departure_icao) && $dest === strtoupper($this->booking->route->arrival_icao)) {
+                $liveOfp['simbrief_username'] = trim($this->simbrief_username);
+
+                $this->booking->update([
+                    'airframe_id' => $this->airframe_id,
+                    'simbrief_data' => $liveOfp,
+                    'status' => 'dispatched'
+                ]);
+
+                $this->booking->refresh();
+                $this->showOfpView = true;
+                session()->flash('message', 'Real SimBrief OFP imported automatically!');
+            }
+        }
     }
 
     public function fetchLiveSimbriefOfp()
@@ -246,22 +277,24 @@ class Dispatch extends Component
         ]);
 
         $this->booking->refresh();
-        $this->showOfpView = true;
     }
 
     public function createBooking()
     {
         $this->generateOfpData();
+        $this->is_syncing = true;
         if ($this->dispatch_via_simbrief) {
-            $this->dispatch('open-simbrief-autogenerate-popup');
+            $this->dispatch('open-simbrief-custom-popup');
+        } else {
+            $this->showOfpView = true;
         }
-        session()->flash('message', 'Flight successfully dispatched! Launching background SimBrief generator.');
+        session()->flash('message', 'Opening SimBrief with pre-filled parameters. V-Ops will auto-sync when generated!');
     }
 
     public function dispatchSimbriefPopup()
     {
         $this->generateOfpData();
-        $this->dispatch('open-simbrief-autogenerate-popup');
+        $this->dispatch('open-simbrief-custom-popup');
     }
 
     public function cancelBooking()
@@ -274,6 +307,7 @@ class Dispatch extends Component
     public function editDispatch()
     {
         $this->showOfpView = false;
+        $this->is_syncing = false;
     }
 
     public function render()
