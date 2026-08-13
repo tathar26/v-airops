@@ -321,9 +321,9 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-4 pt-2 flex-wrap sm:flex-nowrap">
-                    <button wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm flex items-center justify-center gap-2">
+                    <a href="{!! $simbriefPopupUrl !!}" target="_blank" wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm flex items-center justify-center gap-2">
                         <span>🚀 Confirm Dispatch & Open SimBrief</span>
-                    </button>
+                    </a>
                     
                     <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -609,13 +609,4 @@
             </div>
         @endif
     @endif
-
-    <!-- JS Listener for SimBrief Pre-filled Custom Redirect Window -->
-    <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('open-simbrief-custom-popup', () => {
-                window.open('{!! $simbriefPopupUrl !!}', '_blank');
-            });
-        });
-    </script>
 </div>
