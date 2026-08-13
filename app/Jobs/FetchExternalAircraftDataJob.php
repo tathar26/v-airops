@@ -49,7 +49,7 @@ class FetchExternalAircraftDataJob implements ShouldQueue
             $line = trim($line);
             if (empty($line)) continue;
 
-            $data = str_getcsv($line);
+            $data = str_getcsv($line, ',', '"', '\\');
             
             // OpenFlights planes.dat format: 
             // 0: Name, 1: IATA, 2: ICAO

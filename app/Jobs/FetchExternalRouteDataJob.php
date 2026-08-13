@@ -43,7 +43,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
             foreach ($planeLines as $line) {
                 $line = trim($line);
                 if (empty($line)) continue;
-                $data = str_getcsv($line);
+                $data = str_getcsv($line, ',', '"', '\\');
                 if (count($data) >= 3) {
                     $iata = $data[1] !== '\\N' ? $data[1] : null;
                     $icao = $data[2] !== '\\N' ? $data[2] : null;
@@ -64,7 +64,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
             foreach ($airportLines as $line) {
                 $line = trim($line);
                 if (empty($line)) continue;
-                $data = str_getcsv($line);
+                $data = str_getcsv($line, ',', '"', '\\');
                 if (count($data) >= 6) {
                     $iata = $data[4] !== '\\N' && $data[4] !== '' ? $data[4] : null;
                     $icao = $data[5] !== '\\N' && $data[5] !== '' ? $data[5] : null;
@@ -91,7 +91,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
             $line = trim($line);
             if (empty($line)) continue;
 
-            $data = str_getcsv($line);
+            $data = str_getcsv($line, ',', '"', '\\');
             
             if (count($data) >= 9) {
                 $operator = $data[0] !== '\\N' ? $data[0] : null;
