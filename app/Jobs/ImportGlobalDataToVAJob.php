@@ -50,11 +50,14 @@ class ImportGlobalDataToVAJob implements ShouldQueue
             Airport::fetchAndCreate($flight->departure_icao);
             Airport::fetchAndCreate($flight->arrival_icao);
 
+            $operatorPrefix = !empty($flight->operator) ? strtoupper($flight->operator) : 'FL';
+            $flightNum = !empty($flight->flight_number) ? $flight->flight_number : ($operatorPrefix . rand(100, 9999));
+
             // Create or Update Route for the specific tenant
             $route = Route::updateOrCreate(
                 [
                     'tenant_id' => $this->tenantId,
-                    'flight_number' => $flight->flight_number ?? 'GB' . rand(100, 9999), // Provide a fallback flight number if missing
+                    'flight_number' => $flightNum,
                     'departure_icao' => $flight->departure_icao,
                     'arrival_icao' => $flight->arrival_icao,
                 ],

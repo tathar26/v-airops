@@ -52,6 +52,12 @@ class GlobalNetworkImport extends Component
 
     protected function buildQuery()
     {
+        $airlinesSub = \Illuminate\Support\Facades\DB::table('system_global_airlines')
+            ->select('iata', \Illuminate\Support\Facades\DB::raw('MAX(name) as name'), \Illuminate\Support\Facades\DB::raw('MAX(icao) as icao'))
+            ->whereNotNull('iata')
+            ->where('iata', '!=', '')
+            ->groupBy('iata');
+
         $query = SystemGlobalFlight::query()
             ->select(
                 'system_global_flights.*',
@@ -63,8 +69,8 @@ class GlobalNetworkImport extends Component
                 'arr_airport.name as arr_name',
                 'arr_airport.iata as arr_iata'
             )
-            // Use a single-key join on iata only for performance (most operators are stored as IATA codes)
-            ->leftJoin('system_global_airlines as sga', 'system_global_flights.operator', '=', 'sga.iata')
+            // Subquery join guarantees 1 airline match per IATA code to prevent row duplication
+            ->leftJoinSub($airlinesSub, 'sga', 'system_global_flights.operator', '=', 'sga.iata')
             ->leftJoin('system_global_airports as dep_airport', 'system_global_flights.departure_icao', '=', 'dep_airport.icao')
             ->leftJoin('system_global_airports as arr_airport', 'system_global_flights.arrival_icao', '=', 'arr_airport.icao')
             ->whereRaw('CHAR_LENGTH(system_global_flights.departure_icao) = 4 AND CHAR_LENGTH(system_global_flights.arrival_icao) = 4')
