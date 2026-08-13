@@ -26,7 +26,7 @@ class SimBriefService
             
             $response = Http::timeout(8)->get($url, [
                 $paramKey => $usernameOrId,
-                'json' => 1,
+                'json' => 'v2',
             ]);
 
             if ($response->successful()) {

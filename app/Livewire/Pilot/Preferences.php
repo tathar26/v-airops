@@ -19,6 +19,7 @@ class Preferences extends Component
     public $preferHonorary;
     public $preferredNetwork;
     public $simbriefFormat;
+    public $simbriefUsername;
 
     public $resetPassword = '';
     public $deletePassword = '';
@@ -40,6 +41,7 @@ class Preferences extends Component
             $this->preferHonorary = $profile->prefer_honorary_rank;
             $this->preferredNetwork = $profile->preferred_network;
             $this->simbriefFormat = $profile->simbrief_ofp_format;
+            $this->simbriefUsername = $profile->simbrief_username;
         }
 
         $tenant = auth()->user()->tenant;
@@ -90,6 +92,7 @@ class Preferences extends Component
                 'prefer_honorary_rank' => $this->preferHonorary,
                 'preferred_network' => $this->preferredNetwork ?: null,
                 'simbrief_ofp_format' => $this->simbriefFormat ?: null,
+                'simbrief_username' => $this->simbriefUsername ? trim($this->simbriefUsername) : null,
             ]);
 
             session()->flash('message', 'Preferences saved successfully.');
@@ -195,8 +198,6 @@ class Preferences extends Component
             $user->delete();
             return redirect('/');
         } else {
-            // Log out and let them log back into a different VA later, 
-            // or switch them to the first available tenant
             $newProfile = PilotProfile::where('user_id', $user->id)->first();
             $user->update(['tenant_id' => $newProfile->tenant_id]);
             $this->showDeleteModal = false;

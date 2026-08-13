@@ -18,30 +18,6 @@
         </div>
     @endif
 
-    <!-- Navigraph SimBrief Web API Dispatch Form (GET method pre-fills flight options) -->
-    <form id="simbrief-dispatch-form" action="https://www.simbrief.com/system/dispatch.php" method="GET" target="_blank">
-        <input type="hidden" name="newflight" value="1">
-        <input type="hidden" name="type" value="{{ $simbriefParams['type'] }}">
-        <input type="hidden" name="orig" value="{{ $simbriefParams['orig'] }}">
-        <input type="hidden" name="dest" value="{{ $simbriefParams['dest'] }}">
-        <input type="hidden" name="callsign" value="{{ $simbriefParams['callsign'] }}">
-        <input type="hidden" name="fltnum" value="{{ $simbriefParams['fltnum'] }}">
-        <input type="hidden" name="airline" value="{{ $simbriefParams['airline'] }}">
-        <input type="hidden" name="reg" value="{{ $simbriefParams['reg'] }}">
-        <input type="hidden" name="date" value="{{ $simbriefParams['date'] }}">
-        <input type="hidden" name="deptime" value="{{ $simbriefParams['deptime'] }}">
-        <input type="hidden" name="route" value="{{ $simbriefParams['route'] }}">
-        <input type="hidden" name="fl" value="{{ $simbriefParams['fl'] }}">
-        <input type="hidden" name="ci" value="{{ $simbriefParams['ci'] }}">
-        <input type="hidden" name="altn" value="{{ $simbriefParams['altn'] }}">
-        <input type="hidden" name="altn2" value="{{ $simbriefParams['altn2'] }}">
-        <input type="hidden" name="pax" value="{{ $simbriefParams['pax'] }}">
-        <input type="hidden" name="bag" value="{{ $simbriefParams['bag'] }}">
-        <input type="hidden" name="units" value="KGS">
-        <input type="hidden" name="planformat" value="{{ $simbriefParams['planformat'] }}">
-        <input type="hidden" name="static_id" value="{{ $simbriefParams['static_id'] }}">
-    </form>
-
     <!-- Top Flight Header -->
     <div class="bg-[#12161F] border border-white/10 rounded-xl p-6 shadow-xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -263,7 +239,7 @@
             <!-- Action Buttons -->
             <div class="flex items-center gap-4 pt-2 flex-wrap sm:flex-nowrap">
                 <button wire:click="createBooking" class="w-full sm:w-auto flex-1 bg-white text-blue-900 font-extrabold px-6 py-3 rounded-lg shadow-lg hover:bg-gray-100 transition text-center text-sm">
-                    Confirm Dispatch & Auto-fill SimBrief
+                    Confirm Dispatch & Open SimBrief
                 </button>
                 
                 <a href="{{ $simbriefPopupUrl }}" target="_blank" class="w-full sm:w-auto bg-[#1C212E] hover:bg-[#283042] border border-blue-400/40 text-white font-bold px-6 py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm">
@@ -294,7 +270,7 @@
                     <div class="p-4 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-blue-300 uppercase tracking-wider">SimBrief Integration & Live Sync</span>
-                            <a href="{{ $simbriefPopupUrl }}" target="_blank" class="text-xs text-blue-400 hover:underline">Open SimBrief Generator</a>
+                            <a href="{{ $simbriefPopupUrl }}" target="_blank" class="text-xs text-blue-400 hover:underline">Open Pre-filled SimBrief Generator</a>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <div class="flex-1">
@@ -304,7 +280,7 @@
                                 📥 Fetch Live OFP from SimBrief
                             </button>
                         </div>
-                        <p class="text-[11px] text-gray-400">Enter your SimBrief Username / Pilot ID above to pull your exact live generated OFP directly into V-Ops.</p>
+                        <p class="text-[11px] text-gray-400">Enter your Navigraph Alias or SimBrief Pilot ID above to pull your exact live generated OFP directly into V-Ops.</p>
                     </div>
 
                     <div>
@@ -550,16 +526,11 @@
         </div>
     @endif
 
-    <!-- JS Listener for SimBrief Pop-up Submission -->
+    <!-- JS Listener for SimBrief Pop-up Window Opening -->
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('open-simbrief-popup-window', () => {
-                const form = document.getElementById('simbrief-dispatch-form');
-                if (form) {
-                    form.submit();
-                } else {
-                    window.open('{{ $simbriefPopupUrl }}', '_blank');
-                }
+                window.open('{{ $simbriefPopupUrl }}', '_blank');
             });
         });
     </script>

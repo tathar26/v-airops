@@ -40,14 +40,13 @@
                 <div>
                     <div class="flex justify-between items-end mb-2">
                         <h4 class="text-sm font-bold text-white">Preferred Network<span class="text-red-500">*</span></h4>
-                        <a href="#" class="text-xs text-tenant-accent font-bold hover:underline">Missing Network?</a>
                     </div>
                     <select wire:model="preferredNetwork" wire:change="savePreferences" class="w-full bg-blue-900/30 border border-blue-500/50 text-white text-sm rounded focus:ring-tenant-accent focus:border-tenant-accent block p-2.5">
                         <option value="">Offline</option>
                         <option value="VATSIM">VATSIM</option>
                         <option value="IVAO">IVAO</option>
                         <option value="POSCON">POSCON</option>
-                        <option value="APOC">APOC</option>
+                        <option value="PILOTEDGE">PilotEdge</option>
                     </select>
                     <p class="text-xs text-gray-400 mt-2">Default Network to select when Dispatching a Flight</p>
                 </div>
@@ -56,7 +55,7 @@
                 <div>
                     <div class="flex justify-between items-end mb-2">
                         <h4 class="text-sm font-bold text-white">SimBrief OFP Format</h4>
-                        <span class="text-xs text-gray-400">Set by the Virtual Airline: {{ strtoupper($tenantDefaultSimbriefFormat) }}</span>
+                        <span class="text-xs text-gray-400">Set by VA: {{ strtoupper($tenantDefaultSimbriefFormat) }}</span>
                     </div>
                     <select wire:model="simbriefFormat" wire:change="savePreferences" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded focus:ring-tenant-accent focus:border-tenant-accent block p-2.5">
                         <option value="">Use VA Default ({{ strtoupper($tenantDefaultSimbriefFormat) }})</option>
@@ -67,9 +66,19 @@
                     <p class="text-xs text-gray-400 mt-2">Format used for SimBrief OFP</p>
                 </div>
 
+                <!-- SimBrief Username / Pilot ID -->
+                <div class="md:col-span-2">
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="text-sm font-bold text-white">SimBrief Username or Pilot ID</h4>
+                        <a href="https://dispatch.simbrief.com/account" target="_blank" class="text-xs text-tenant-accent font-bold hover:underline">Find SimBrief ID</a>
+                    </div>
+                    <x-input type="text" wire:model="simbriefUsername" wire:change="savePreferences" class="w-full bg-black/40 border border-white/10 text-white text-sm rounded block p-2.5" placeholder="e.g. Navigraph Alias or 6-digit Pilot ID (e.g. 123456)" />
+                    <p class="text-xs text-gray-400 mt-2">Your Navigraph Alias or SimBrief Pilot ID used to sync real live OFPs into V-Ops.</p>
+                </div>
+
             </div>
             <div class="px-6 py-4 bg-green-600/90 border-t border-green-700 text-center cursor-pointer hover:bg-green-500 transition-colors" wire:click="savePreferences">
-                <span class="text-white font-bold text-sm">Save</span>
+                <span class="text-white font-bold text-sm">Save Preferences</span>
             </div>
         </div>
 

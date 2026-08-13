@@ -20,6 +20,7 @@ class PilotProfile extends Model
         'prefer_honorary_rank',
         'preferred_network',
         'simbrief_ofp_format',
+        'simbrief_username',
         'current_airport_id',
     ];
 

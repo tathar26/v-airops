@@ -250,7 +250,7 @@ class Dispatch extends Component
         if ($this->dispatch_via_simbrief) {
             $this->dispatch('open-simbrief-popup-window');
         }
-        session()->flash('message', 'Flight successfully dispatched! Launching SimBrief with your exact parameters.');
+        session()->flash('message', 'Flight successfully dispatched! Launching SimBrief Generator.');
     }
 
     public function dispatchSimbriefPopup()
@@ -282,37 +282,43 @@ class Dispatch extends Component
 
         $typeCode = $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N');
         $callsignCode = strtoupper($this->callsign);
-        $fltNumCode = strtoupper($this->flight_number);
-        $airlineCode = substr($callsignCode, 0, 3);
+        $fltNumCode = preg_replace('/[^0-9]/', '', $this->flight_number) ?: '1181';
+        $airlineCode = substr($callsignCode, 0, 3) ?: 'EZS';
         $regCode = $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE';
-        $dateCode = date('dMy', strtotime($this->departure_date));
-        $timeCode = str_replace(':', '', $this->departure_time);
+        $dateCode = date('dMY', strtotime($this->departure_date));
+        $depH = (int)date('H', strtotime($this->departure_time));
+        $depM = (int)date('i', strtotime($this->departure_time));
 
+        // Navigraph SimBrief Dispatch Redirect Parameters (https://forum.navigraph.com/t/dispatch-redirect-guide/5299)
         $simbriefParams = [
-            'newflight' => '1',
+            'airline' => $airlineCode,
+            'fltnum' => $fltNumCode,
+            'callsign' => $callsignCode,
             'type' => $typeCode,
             'orig' => $this->booking->route->departure_icao,
             'dest' => $this->booking->route->arrival_icao,
-            'callsign' => $callsignCode,
-            'fltnum' => $fltNumCode,
-            'airline' => $airlineCode,
-            'reg' => $regCode,
             'date' => $dateCode,
-            'deptime' => $timeCode,
+            'deph' => $depH,
+            'depm' => $depM,
+            'steh' => 1,
+            'stem' => 30,
+            'reg' => $regCode,
             'route' => $this->routing,
-            'fl' => $this->flight_level,
-            'ci' => $this->cost_index,
+            'fl' => $this->flight_level ?: 'AUTO',
+            'civalue' => $this->cost_index ?: 4,
             'altn' => strtoupper($this->alternate_1),
-            'altn2' => strtoupper($this->alternate_2),
-            'pax' => $this->passengers,
-            'bag' => $this->hold_bags,
+            'altn_count' => (int)$this->num_alternates,
+            'altn_1_id' => strtoupper($this->alternate_1),
+            'altn_2_id' => strtoupper($this->alternate_2),
+            'pax' => (int)$this->passengers,
+            'cargo' => round(($this->hold_bags * 15) / 1000, 1),
             'units' => 'KGS',
-            'planformat' => auth()->user()->pilotProfiles()->first()->simbrief_ofp_format ?? 'lido',
+            'planformat' => auth()->user()->pilotProfiles()->first()->simbrief_ofp_format ?? 'LIDO',
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
-        // SimBrief Web API Dispatch URL using GET
-        $simbriefPopupUrl = 'https://www.simbrief.com/system/dispatch.php?' . http_build_query($simbriefParams);
+        // Navigraph SimBrief Dispatch Redirect URL
+        $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/custom?' . http_build_query($simbriefParams);
 
         return view('livewire.pilot.dispatch', [
             'fleet' => $fleet,
