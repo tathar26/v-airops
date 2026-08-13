@@ -6,6 +6,31 @@
 
 <div class="py-6 sm:py-8 lg:py-10 flex-grow flex flex-col relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
     
+    @if (session()->has('message'))
+        <div class="mb-6 bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded relative">
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
+    
+    @if (session()->has('error'))
+        <div class="mb-6 bg-red-500/20 border border-red-500 text-red-100 px-4 py-3 rounded relative">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
+
+    @if($currentBatch)
+        <div wire:poll.2s="updateBatchProgress" class="mb-6 p-4 bg-black/40 rounded-lg border border-white/10">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-white font-bold text-sm">Global Network Aggregation Progress</h3>
+                <span class="text-vops-primary text-sm font-bold">{{ $currentBatch->progress() }}%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+                <div class="bg-vops-primary h-2.5 rounded-full transition-all duration-500" style="width: {{ $currentBatch->progress() }}%"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Processed {{ $currentBatch->processedJobs() }} of {{ $currentBatch->totalJobs }} jobs. {{ $currentBatch->failedJobs }} failed.</p>
+        </div>
+    @endif
+
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Stat Card 1 -->
@@ -44,6 +69,32 @@
                 <div class="p-3 bg-vops-success/20 rounded-lg">
                     <svg class="w-8 h-8 text-vops-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Network Repository Management Card -->
+    <div class="glass-panel p-6 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>🌍</span> Global Network Database
+                </h3>
+                <p class="text-sm text-gray-400 mt-1">
+                    Central route repository containing <strong class="text-white">{{ number_format($totalGlobalFlights) }}</strong> global routes across <strong class="text-white">{{ number_format($totalGlobalAirlines) }}</strong> airlines.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button wire:click="clearGlobalNetwork" 
+                        wire:confirm="Are you sure you want to completely empty the global network database? All cached routes, airlines, and airports will be deleted." 
+                        class="bg-red-600/80 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2 text-sm">
+                    <span>🗑️</span> Empty Database
+                </button>
+                <button wire:click="rebuildGlobalNetwork" 
+                        {{ $currentBatch ? 'disabled' : '' }}
+                        class="bg-vops-primary hover:opacity-80 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2 text-sm disabled:opacity-50">
+                    <span>🔄</span> Rebuild Network
+                </button>
             </div>
         </div>
     </div>

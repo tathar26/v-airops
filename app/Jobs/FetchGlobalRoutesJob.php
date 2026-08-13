@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * FetchGlobalRoutesJob
  *
- * Combines THREE public/freemium route datasets into a single, enriched global route table:
+ * Combines TWO public route datasets into a single, enriched global route table:
  *
  *  1. Jonty (airline_routes.json):
  *       Provides: departure ICAO, arrival ICAO, carrier IATA + name, block time (min), distance (km)
@@ -25,25 +25,19 @@ use Illuminate\Support\Facades\DB;
  *  2. OpenFlights (routes.dat):
  *       Provides: departure/arrival (IATA→ICAO mapped), carrier IATA, aircraft equipment types
  *
- *  3. AirLabs Routes API (https://airlabs.co — free key, ~1,000 req/month):
- *       Provides: REAL flight numbers (flight_iata, flight_icao), scheduled dep/arr times
- *       Requires: AIRLABS_API_KEY in .env
- *
  * Merge strategy (keyed on dep_icao + arr_icao + operator_iata):
  *  - block_time     → Jonty
  *  - distance       → Jonty (km → NM)
  *  - aircraft_types → OpenFlights
- *  - flight_number  → AirLabs (real IATA flight number, e.g. U21234)
+ *  - flight_number  → NULL (resolved at import time via AirLabs, or fictional number generated)
  *  - airline name   → Jonty (upserted into system_global_airlines)
- *
- * If AIRLABS_API_KEY is not set, flight_number is stored as NULL.
  */
 class FetchGlobalRoutesJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 1;
-    public int $timeout = 1200; // 20 minutes – fetches + merges three datasets
+    public int $timeout = 900; // 15 minutes – fetches + merges two datasets
 
     public function handle(): void
     {
@@ -71,20 +65,13 @@ class FetchGlobalRoutesJob implements ShouldQueue
             Log::info('FetchGlobalRoutesJob: OpenFlights equipment map built (' . count($equipmentMap) . ' routes).');
 
             // ----------------------------------------------------------------
-            // STEP 3: Fetch AirLabs real flight numbers
-            //   Key: "DEP_ICAO|ARR_ICAO|OPERATOR_IATA" → flight_iata string (e.g. "U21234")
-            //   Requires AIRLABS_API_KEY in .env. Silently skipped if not configured.
+            // STEP 3: Fetch Jonty routes + upsert airlines + merge with equipment
+            //   flight_number is left NULL here — resolved at import time.
             // ----------------------------------------------------------------
-            $flightNumberMap = $this->fetchAirlabsFlightNumbers();
-            Log::info('FetchGlobalRoutesJob: AirLabs flight number map built (' . count($flightNumberMap) . ' routes).');
+            $this->fetchJontyAndMerge($equipmentMap);
 
             // ----------------------------------------------------------------
-            // STEP 4: Fetch Jonty routes + upsert airlines + merge all three maps
-            // ----------------------------------------------------------------
-            $this->fetchJontyAndMerge($equipmentMap, $flightNumberMap);
-
-            // ----------------------------------------------------------------
-            // STEP 5: Fix IATA collisions in system_global_airlines
+            // STEP 4: Fix IATA collisions in system_global_airlines
             //   Remove defunct/inactive duplicates that share an IATA code
             //   with a known active airline. e.g. "United Feeder Service" (U2)
             //   clashes with easyJet.
@@ -210,10 +197,11 @@ class FetchGlobalRoutesJob implements ShouldQueue
     }
 
     /**
-     * Fetch Jonty airline_routes.json, merge aircraft equipment from OpenFlights map
-     * and real flight numbers from AirLabs, then upsert into system_global_flights + system_global_airlines.
+     * Fetch Jonty airline_routes.json, merge aircraft equipment from OpenFlights map,
+     * and upsert everything into system_global_flights + system_global_airlines.
+     * flight_number is stored as NULL — it is resolved at import time.
      */
-    private function fetchJontyAndMerge(array $equipmentMap, array $flightNumberMap = []): void
+    private function fetchJontyAndMerge(array $equipmentMap): void
     {
         $url = 'https://raw.githubusercontent.com/Jonty/airline-route-data/refs/heads/main/airline_routes.json';
         $response = Http::timeout(120)->get($url);
@@ -289,24 +277,17 @@ class FetchGlobalRoutesJob implements ShouldQueue
                     $equipKey      = strtoupper($depIcao) . '|' . strtoupper($arrIcao) . '|' . $operatorIata;
                     $aircraftTypes = $equipmentMap[$equipKey] ?? null;
 
-                    // Look up real flight number + block time from AirLabs map
-                    $airlabsData  = $flightNumberMap[$equipKey] ?? null;
-                    $flightNumber = $airlabsData['flight_iata'] ?? null;
-                    // Prefer AirLabs duration (accurate actual block time) over Jonty's estimate
-                    $airlabsBlockTime = $airlabsData['block_time'] ?? null;
-                    $finalBlockTime   = $airlabsBlockTime ?? $blockTime;
-
-                    // Hash keyed on dep+arr+operator (stable, not tied to flight number)
+                    // Hash keyed on dep+arr+operator (stable)
                     $hashKey   = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . $operatorIata;
                     $routeHash = md5($hashKey);
 
                     $flightsUpsert[] = [
                         'original_tenant_id' => null,
-                        'flight_number'      => $flightNumber,  // NULL if AirLabs not configured or route not found
+                        'flight_number'      => null,  // Resolved at import time (AirLabs or fictional)
                         'operator'           => $operatorIata,
                         'departure_icao'     => strtoupper($depIcao),
                         'arrival_icao'       => strtoupper($arrIcao),
-                        'block_time'         => $finalBlockTime,
+                        'block_time'         => $blockTime,
                         'route_type'         => 'Scheduled',
                         'distance'           => $distanceNm,
                         'aircraft_types'     => $aircraftTypes,
@@ -337,153 +318,6 @@ class FetchGlobalRoutesJob implements ShouldQueue
                 ['operator', 'departure_icao', 'arrival_icao', 'flight_number', 'block_time', 'distance', 'aircraft_types']
             );
         }
-    }
-
-    /**
-     * Fetch real flight numbers AND block times from the AirLabs Routes API.
-     *
-     * AirLabs free plan: ~1,000 requests/month, 50 rows per request.
-     *
-     * CYCLE DESIGN — "don't update until all routes have been checked, then start over":
-     *   - We track progress in the Laravel cache (key: airlabs_enrichment_progress).
-     *   - Each job run fetches up to $maxRequestsPerRun airlines, accumulating data.
-     *   - We ONLY write flight numbers to the DB after ALL airlines have been processed.
-     *   - Once a full cycle completes, the cache resets and we start again next run.
-     *
-     * AirLabs deduplication: returns one row per weekday — we deduplicate by dep+arr+operator.
-     *
-     * Returns a map: "DEP_ICAO|ARR_ICAO|OPERATOR_IATA" => ['flight_iata' => 'U21234', 'block_time' => '01:55']
-     * Returns [] if no cycle is complete yet (DB update is deferred to a later run).
-     */
-    private function fetchAirlabsFlightNumbers(): array
-    {
-        $apiKey = config('services.airlabs.key', env('AIRLABS_API_KEY'));
-
-        if (empty($apiKey)) {
-            Log::info('FetchGlobalRoutesJob: AIRLABS_API_KEY not set – skipping flight number enrichment.');
-            return [];
-        }
-
-        // --- Load progress from cache ---
-        // Cache structure:
-        //   airlabs_progress.pending_iatas   => ordered list of IATA codes not yet fetched this cycle
-        //   airlabs_progress.accumulated_map => flight number map built so far this cycle
-        $cacheKey    = 'airlabs_enrichment_progress';
-        $cacheTtl    = 60 * 24 * 40; // 40 days — safely covers a monthly billing cycle
-        $progress    = \Illuminate\Support\Facades\Cache::get($cacheKey, null);
-
-        // Build the full list of active airline IATAs from DB
-        $allAirlineIatas = SystemGlobalAirline::whereNotNull('iata')
-            ->where('iata', '!=', '')
-            ->where('active', true)
-            ->distinct()
-            ->pluck('iata')
-            ->toArray();
-
-        if ($progress === null) {
-            // Fresh start: first time or after a completed cycle
-            Log::info('FetchGlobalRoutesJob: Starting fresh AirLabs enrichment cycle for ' . count($allAirlineIatas) . ' airlines.');
-            $progress = [
-                'pending_iatas'   => $allAirlineIatas,
-                'accumulated_map' => [],
-            ];
-        } else {
-            Log::info('FetchGlobalRoutesJob: Resuming AirLabs enrichment cycle. ' .
-                count($progress['pending_iatas']) . ' airlines remaining out of ' . count($allAirlineIatas) . '.');
-        }
-
-        $maxRequestsPerRun = 900; // Stay safely under 1,000/month free tier limit
-        $requestCount      = 0;
-        $pendingIatas      = $progress['pending_iatas'];
-        $accumulatedMap    = $progress['accumulated_map'];
-
-        foreach ($pendingIatas as $idx => $iata) {
-            if ($requestCount >= $maxRequestsPerRun) {
-                Log::warning("FetchGlobalRoutesJob: AirLabs per-run limit ({$maxRequestsPerRun}) reached. Saving progress.");
-                // Save progress — remaining airlines will be processed in the next run
-                \Illuminate\Support\Facades\Cache::put($cacheKey, [
-                    'pending_iatas'   => array_slice($pendingIatas, $idx),
-                    'accumulated_map' => $accumulatedMap,
-                ], $cacheTtl);
-                // Cycle not complete — do NOT update the DB yet
-                return [];
-            }
-
-            if ($this->batch() && $this->batch()->cancelled()) {
-                \Illuminate\Support\Facades\Cache::put($cacheKey, [
-                    'pending_iatas'   => array_slice($pendingIatas, $idx),
-                    'accumulated_map' => $accumulatedMap,
-                ], $cacheTtl);
-                return [];
-            }
-
-            try {
-                $response = Http::timeout(15)->get('https://airlabs.co/api/v9/routes', [
-                    'airline_iata' => $iata,
-                    'api_key'      => $apiKey,
-                ]);
-
-                $requestCount++;
-
-                if (!$response->successful()) {
-                    // 402 = quota exceeded, 429 = rate limited → save progress and stop
-                    if (in_array($response->status(), [402, 429])) {
-                        Log::warning('FetchGlobalRoutesJob: AirLabs quota exceeded. Saving progress.');
-                        \Illuminate\Support\Facades\Cache::put($cacheKey, [
-                            'pending_iatas'   => array_slice($pendingIatas, $idx),
-                            'accumulated_map' => $accumulatedMap,
-                        ], $cacheTtl);
-                        return [];
-                    }
-                    continue;
-                }
-
-                $routes = $response->json('response') ?? $response->json() ?? [];
-                if (!is_array($routes)) continue;
-
-                foreach ($routes as $route) {
-                    $depIcao    = strtoupper(trim($route['dep_icao'] ?? ''));
-                    $arrIcao    = strtoupper(trim($route['arr_icao'] ?? ''));
-                    $opIata     = strtoupper(trim($route['airline_iata'] ?? $iata));
-                    $flightIata = trim($route['flight_iata'] ?? '');
-
-                    if (strlen($depIcao) !== 4 || strlen($arrIcao) !== 4 || empty($flightIata)) continue;
-
-                    $key = "{$depIcao}|{$arrIcao}|{$opIata}";
-
-                    // Deduplicate: AirLabs returns one row per operating weekday.
-                    // Only keep the first flight_iata seen for this route.
-                    if (isset($accumulatedMap[$key])) continue;
-
-                    // Convert AirLabs 'duration' (minutes) to HH:MM block time
-                    $blockTime = null;
-                    $duration  = $route['duration'] ?? null;
-                    if ($duration && is_numeric($duration) && $duration > 0) {
-                        $blockTime = sprintf('%02d:%02d', floor($duration / 60), $duration % 60);
-                    }
-
-                    $accumulatedMap[$key] = [
-                        'flight_iata' => $flightIata,
-                        'block_time'  => $blockTime,
-                    ];
-                }
-
-                // Polite rate limiting: 200ms between requests
-                usleep(200000);
-
-            } catch (\Exception $e) {
-                Log::warning("FetchGlobalRoutesJob: AirLabs request failed for airline '{$iata}': " . $e->getMessage());
-            }
-        }
-
-        // ✅ FULL CYCLE COMPLETE — all airlines fetched this cycle
-        Log::info('FetchGlobalRoutesJob: AirLabs full cycle complete! ' .
-            count($accumulatedMap) . ' unique routes mapped in ' . $requestCount . ' requests. Applying to DB...');
-
-        // Reset cycle — next run will start fresh
-        \Illuminate\Support\Facades\Cache::forget($cacheKey);
-
-        return $accumulatedMap;
     }
 
     /**
