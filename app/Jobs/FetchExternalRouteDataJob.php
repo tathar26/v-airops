@@ -54,6 +54,27 @@ class FetchExternalRouteDataJob implements ShouldQueue
             }
         }
 
+        // 1.5 Fetch airports to build Airport IATA -> ICAO mapping
+        $airportsUrl = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat';
+        $airportsResponse = Http::timeout(60)->get($airportsUrl);
+        $airportIataToIcao = [];
+
+        if ($airportsResponse->successful()) {
+            $airportLines = explode("\n", $airportsResponse->body());
+            foreach ($airportLines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                $data = str_getcsv($line);
+                if (count($data) >= 6) {
+                    $iata = $data[4] !== '\\N' && $data[4] !== '' ? $data[4] : null;
+                    $icao = $data[5] !== '\\N' && $data[5] !== '' ? $data[5] : null;
+                    if ($iata && strlen($iata) === 3 && $icao && strlen($icao) === 4) {
+                        $airportIataToIcao[$iata] = $icao;
+                    }
+                }
+            }
+        }
+
         // 2. Fetch routes from Jonty's mirror of OpenFlights
         $url = 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat';
         $response = Http::timeout(60)->get($url);
@@ -74,8 +95,12 @@ class FetchExternalRouteDataJob implements ShouldQueue
             
             if (count($data) >= 9) {
                 $operator = $data[0] !== '\\N' ? $data[0] : null;
-                $depIcao = $data[2] !== '\\N' ? $data[2] : null;
-                $arrIcao = $data[4] !== '\\N' ? $data[4] : null;
+                $depRaw = $data[2] !== '\\N' ? $data[2] : null;
+                $arrRaw = $data[4] !== '\\N' ? $data[4] : null;
+                
+                // Map to ICAO if they are 3 letters
+                $depIcao = (strlen($depRaw) === 3 && isset($airportIataToIcao[$depRaw])) ? $airportIataToIcao[$depRaw] : $depRaw;
+                $arrIcao = (strlen($arrRaw) === 3 && isset($airportIataToIcao[$arrRaw])) ? $airportIataToIcao[$arrRaw] : $arrRaw;
                 $equipment = $data[8] !== '\\N' ? $data[8] : null;
 
                 if (strlen($depIcao) <= 4 && strlen($arrIcao) <= 4 && $depIcao && $arrIcao) {
