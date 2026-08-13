@@ -48,69 +48,77 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto bg-black/20 rounded-lg border border-white/5">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-white/5 text-gray-400 text-sm uppercase tracking-wider border-b border-white/10">
-                        <th class="p-4 w-12 text-center">
-                            <input type="checkbox" wire:model.live="selectAll" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
-                        </th>
-                        <th class="p-4">Operator</th>
-                        <th class="p-4">Origin</th>
-                        <th class="p-4">Destination</th>
-                        <th class="p-4">Aircraft</th>
-                        <th class="p-4">Distance</th>
-                    </tr>
-                </thead>
-                <tbody class="text-white divide-y divide-white/5">
-                    @forelse($flights as $flight)
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="p-4 text-center">
-                                <input type="checkbox" wire:model.live="selectedFlights" value="{{ $flight->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
-                            </td>
-                            <td class="p-4">
-                                <div class="font-bold">
-                                    {{ $flight->airline_name ?? $flight->operator ?? 'Unknown Operator' }} 
-                                    {{ $flight->flight_number }}
-                                </div>
-                                @if($flight->airline_iata || $flight->airline_icao)
-                                    <div class="text-xs text-gray-400">
-                                        {{ implode(' / ', array_filter([$flight->airline_iata, $flight->airline_icao])) }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="p-4">
-                                <div class="font-mono text-tenant-accent font-bold">{{ $flight->departure_icao }}</div>
-                                @if($flight->dep_name || $flight->dep_iata)
-                                    <div class="text-xs text-gray-400">
-                                        {{ implode(' / ', array_filter([$flight->dep_iata, $flight->dep_name])) }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="p-4">
-                                <div class="font-mono text-tenant-accent font-bold">{{ $flight->arrival_icao }}</div>
-                                @if($flight->arr_name || $flight->arr_iata)
-                                    <div class="text-xs text-gray-400">
-                                        {{ implode(' / ', array_filter([$flight->arr_iata, $flight->arr_name])) }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="p-4 text-sm text-gray-400">{{ $flight->aircraft_types ?? 'Any' }}</td>
-                            <td class="p-4 text-sm">{{ $flight->distance ? $flight->distance . ' NM' : 'N/A' }}</td>
+        @if($flights === null)
+            <div class="flex flex-col items-center justify-center py-20 text-center">
+                <div class="text-6xl mb-4">🌍</div>
+                <h3 class="text-xl font-bold text-white mb-2">Search the Global Route Network</h3>
+                <p class="text-gray-400 max-w-md">Enter an origin, destination, or operator above and click <strong class="text-white">Search</strong> to browse from over 200,000 global routes.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto bg-black/20 rounded-lg border border-white/5">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/5 text-gray-400 text-sm uppercase tracking-wider border-b border-white/10">
+                            <th class="p-4 w-12 text-center">
+                                <input type="checkbox" wire:model.live="selectAll" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                            </th>
+                            <th class="p-4">Operator</th>
+                            <th class="p-4">Origin</th>
+                            <th class="p-4">Destination</th>
+                            <th class="p-4">Aircraft</th>
+                            <th class="p-4">Distance</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="p-8 text-center text-gray-500">
-                                No global routes found matching your filters.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="text-white divide-y divide-white/5">
+                        @forelse($flights as $flight)
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 text-center">
+                                    <input type="checkbox" wire:model.live="selectedFlights" value="{{ $flight->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                                </td>
+                                <td class="p-4">
+                                    <div class="font-bold">
+                                        {{ $flight->airline_name ?? $flight->operator ?? 'Unknown Operator' }} 
+                                        {{ $flight->flight_number }}
+                                    </div>
+                                    @if($flight->airline_iata || $flight->airline_icao)
+                                        <div class="text-xs text-gray-400">
+                                            {{ implode(' / ', array_filter([$flight->airline_iata, $flight->airline_icao])) }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="p-4">
+                                    <div class="font-mono text-tenant-accent font-bold">{{ $flight->departure_icao }}</div>
+                                    @if($flight->dep_name || $flight->dep_iata)
+                                        <div class="text-xs text-gray-400">
+                                            {{ implode(' / ', array_filter([$flight->dep_iata, $flight->dep_name])) }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="p-4">
+                                    <div class="font-mono text-tenant-accent font-bold">{{ $flight->arrival_icao }}</div>
+                                    @if($flight->arr_name || $flight->arr_iata)
+                                        <div class="text-xs text-gray-400">
+                                            {{ implode(' / ', array_filter([$flight->arr_iata, $flight->arr_name])) }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="p-4 text-sm text-gray-400">{{ $flight->aircraft_types ?? 'Any' }}</td>
+                                <td class="p-4 text-sm">{{ $flight->distance ? $flight->distance . ' NM' : 'N/A' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-gray-500">
+                                    No global routes found matching your filters.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="mt-4">
-            {{ $flights->links() }}
-        </div>
+            <div class="mt-4">
+                {{ $flights->links() }}
+            </div>
+        @endif
     </div>
 </div>

@@ -15,6 +15,9 @@ class FetchExternalAirlineDataJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 1;
+    public int $timeout = 300; // 5 minutes
+
     /**
      * Create a new job instance.
      */

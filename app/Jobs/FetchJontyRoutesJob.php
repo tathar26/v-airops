@@ -17,6 +17,16 @@ class FetchJontyRoutesJob implements ShouldQueue
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
+     * The number of times the job may be attempted.
+     */
+    public int $tries = 1;
+
+    /**
+     * The number of seconds the job can run before timing out.
+     */
+    public int $timeout = 600; // 10 minutes for the large Jonty JSON dataset
+
+    /**
      * Create a new job instance.
      */
     public function __construct()
