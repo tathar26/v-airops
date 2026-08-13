@@ -86,6 +86,11 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
+    public function pilotProfiles()
+    {
+        return $this->hasMany(PilotProfile::class);
+    }
+
     public function pireps()
     {
         return $this->hasMany(Pirep::class);
