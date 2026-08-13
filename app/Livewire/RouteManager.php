@@ -28,8 +28,8 @@ class RouteManager extends Component
 
     protected $rules = [
         'flight_number' => 'required|string|max:10',
-        'departure_icao' => 'required|string|size:4|exists:airports,icao',
-        'arrival_icao' => 'required|string|size:4|exists:airports,icao',
+        'departure_icao' => 'required|string|size:4',
+        'arrival_icao' => 'required|string|size:4',
         'block_time' => 'required|string|max:10', // e.g., '02:30'
         'route_string' => 'nullable|string|max:255',
         'route_type' => 'required|string|in:Scheduled,Charter,Cargo',
@@ -66,6 +66,9 @@ class RouteManager extends Component
     public function saveRoute()
     {
         $this->validate();
+
+        \App\Models\Airport::fetchAndCreate($this->departure_icao);
+        \App\Models\Airport::fetchAndCreate($this->arrival_icao);
 
         if ($this->editMode) {
             $route = Route::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingId);
@@ -104,6 +107,9 @@ class RouteManager extends Component
             $header = fgetcsv($handle, 1000, ",");
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                 if(count($data) >= 4) {
+                    \App\Models\Airport::fetchAndCreate($data[1]);
+                    \App\Models\Airport::fetchAndCreate($data[2]);
+
                     Route::updateOrCreate(
                         ['tenant_id' => auth()->user()->tenant_id, 'flight_number' => $data[0]],
                         [
