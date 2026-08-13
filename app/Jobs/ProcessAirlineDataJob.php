@@ -62,8 +62,8 @@ class ProcessAirlineDataJob implements ShouldQueue
         Route::with('aircraftTypes')->where('tenant_id', $this->tenantId)->chunk(500, function ($routes) {
             $upsertData = [];
             foreach ($routes as $route) {
-                // Generate a unique hash for the route
-                $hashString = $route->departure_icao . '-' . $route->arrival_icao . '-' . ($route->operator ?? 'NA') . '-' . ($route->flight_number ?? 'NA');
+                $fnKey = !empty($route->flight_number) ? strtoupper(trim($route->flight_number)) : 'NOFN';
+                $hashString = strtoupper(trim($route->departure_icao)) . '_' . strtoupper(trim($route->arrival_icao)) . '_' . strtoupper(trim($route->operator ?? 'NOOP')) . '_' . $fnKey;
                 $hash = md5($hashString);
 
                 $aircraftTypes = $route->aircraftTypes->pluck('code')->implode(',');

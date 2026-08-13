@@ -63,6 +63,7 @@
                                 <input type="checkbox" wire:model.live="selectAll" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
                             </th>
                             <th class="p-4">Operator</th>
+                            <th class="p-4">Flight #</th>
                             <th class="p-4">Origin</th>
                             <th class="p-4">Destination</th>
                             <th class="p-4">Aircraft</th>
@@ -78,12 +79,20 @@
                                 <td class="p-4">
                                     <div class="font-bold">
                                         {{ $flight->airline_name ?? $flight->operator ?? 'Unknown Operator' }} 
-                                        {{ $flight->flight_number }}
                                     </div>
                                     @if($flight->airline_iata || $flight->airline_icao)
                                         <div class="text-xs text-gray-400">
                                             {{ implode(' / ', array_filter([$flight->airline_iata, $flight->airline_icao])) }}
                                         </div>
+                                    @endif
+                                </td>
+                                <td class="p-4">
+                                    @if($flight->flight_number)
+                                        <span class="px-2 py-1 text-xs font-mono font-bold bg-tenant-accent/20 text-tenant-accent rounded border border-tenant-accent/30">
+                                            {{ $flight->flight_number }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-gray-500 font-mono">—</span>
                                     @endif
                                 </td>
                                 <td class="p-4">
@@ -107,7 +116,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="p-8 text-center text-gray-500">
+                                <td colspan="7" class="p-8 text-center text-gray-500">
                                     No global routes found matching your filters.
                                 </td>
                             </tr>

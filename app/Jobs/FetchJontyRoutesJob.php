@@ -125,7 +125,8 @@ class FetchJontyRoutesJob implements ShouldQueue
                             $blockTime = sprintf('%02d:%02d', $hours, $minutes);
                         }
 
-                        $flightHash = md5($depIcao . '-' . $arrIcao . '-' . $operatorKey . '-JONTY');
+                        $hashKey = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . strtoupper($operatorKey ?? 'NOOP') . '_NOFN';
+                        $flightHash = md5($hashKey);
                         $flightsUpsertData[] = [
                             'original_tenant_id' => null,
                             'flight_number' => null,

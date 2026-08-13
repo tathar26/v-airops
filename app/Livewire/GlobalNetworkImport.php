@@ -89,6 +89,7 @@ class GlobalNetworkImport extends Component
         if ($this->searchOperator) {
             $query->where(function($q) {
                 $q->where('system_global_flights.operator', 'like', '%' . $this->searchOperator . '%')
+                  ->orWhere('system_global_flights.flight_number', 'like', '%' . $this->searchOperator . '%')
                   ->orWhere('sga.name', 'like', '%' . $this->searchOperator . '%')
                   ->orWhere('sga.icao', 'like', '%' . strtoupper($this->searchOperator) . '%')
                   ->orWhere('sga.iata', 'like', '%' . strtoupper($this->searchOperator) . '%');

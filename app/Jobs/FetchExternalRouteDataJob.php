@@ -113,7 +113,7 @@ class FetchExternalRouteDataJob implements ShouldQueue
                 $equipment = $data[8] !== '\\N' ? $data[8] : null;
 
                 if (strlen($depIcao) <= 4 && strlen($arrIcao) <= 4 && $depIcao && $arrIcao) {
-                    $hashString = $depIcao . '-' . $arrIcao . '-' . ($operator ?? 'NA') . '-EXTERNAL';
+                    $hashString = strtoupper($depIcao) . '_' . strtoupper($arrIcao) . '_' . strtoupper($operator ?? 'NOOP') . '_NOFN';
                     $hash = md5($hashString);
 
                     // Map IATA equipment to ICAO equipment
