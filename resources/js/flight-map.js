@@ -360,6 +360,7 @@ document.addEventListener('alpine:init', () => {
         bookingModalOpen: false,
         availableRoutes: [],
         selectedRouteId: null,
+        isBooking: false,
 
         openBookingModal() {
             if (!this.selectedAirport) return;
@@ -368,8 +369,8 @@ document.addEventListener('alpine:init', () => {
                 r.departure_icao === this.currentAirport.icao
             );
             
-            if (this.availableRoutes.length === 1) {
-                // Only one route, auto select
+            if (this.availableRoutes.length >= 1) {
+                // Auto select first route by default
                 this.selectedRouteId = this.availableRoutes[0].id;
             } else {
                 this.selectedRouteId = null;
@@ -378,18 +379,21 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmBooking() {
-            if (!this.selectedRouteId) {
-                alert('Please select a route to book.');
+            if (!this.selectedRouteId || this.isBooking) {
+                if (!this.selectedRouteId) alert('Please select a route to book.');
                 return;
             }
 
+            this.isBooking = true;
+
             try {
+                let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                 let response = await fetch('/api/flight-centre/book', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken || ''
                     },
                     body: JSON.stringify({
                         route_id: this.selectedRouteId
@@ -398,12 +402,14 @@ document.addEventListener('alpine:init', () => {
 
                 let data = await response.json();
                 
-                if (response.ok) {
+                if (response.ok && data.booking_id) {
                     window.location.href = `/profile/dispatch/${data.booking_id}`;
                 } else {
-                    alert('Error booking flight: ' + (data.message || 'Unknown error'));
+                    this.isBooking = false;
+                    alert('Error booking flight: ' + (data.message || data.error || 'Unknown error'));
                 }
             } catch (error) {
+                this.isBooking = false;
                 console.error("Booking error:", error);
                 alert("An error occurred while booking.");
             }

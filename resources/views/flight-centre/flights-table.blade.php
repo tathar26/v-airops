@@ -68,7 +68,7 @@
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded bg-white/10 text-gray-300">{{ $route->route_type ?? 'Scheduled' }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <button class="bg-tenant-accent hover:opacity-90 text-white px-3 py-1.5 rounded text-sm font-semibold shadow transition">
+                                <button onclick="bookFlightDirect({{ $route->id }}, this)" class="bg-tenant-accent hover:opacity-90 text-white px-3 py-1.5 rounded text-sm font-semibold shadow transition flex items-center justify-end gap-1 ml-auto">
                                     Book
                                 </button>
                             </td>
@@ -83,6 +83,36 @@
                     </tbody>
                 </table>
             </div>
+
+            <script>
+                async function bookFlightDirect(routeId, btn) {
+                    btn.disabled = true;
+                    btn.innerText = 'Booking...';
+                    try {
+                        let response = await fetch('/api/flight-centre/book', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({ route_id: routeId })
+                        });
+                        let data = await response.json();
+                        if (response.ok && data.booking_id) {
+                            window.location.href = '/profile/dispatch/' + data.booking_id;
+                        } else {
+                            btn.disabled = false;
+                            btn.innerText = 'Book';
+                            alert('Error booking flight: ' + (data.message || data.error || 'Unknown error'));
+                        }
+                    } catch (e) {
+                        btn.disabled = false;
+                        btn.innerText = 'Book';
+                        alert('An error occurred while booking flight.');
+                    }
+                }
+            </script>
             
             <div class="px-6 py-4 border-t border-white/5 bg-black/10">
                 {{ $routes->links() }}

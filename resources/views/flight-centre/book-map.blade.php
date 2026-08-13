@@ -114,23 +114,25 @@
                 <p class="text-sm text-gray-300 mb-4">Multiple routes available. Please select the specific flight you wish to book.</p>
                 <div class="space-y-3 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                     <template x-for="route in availableRoutes" :key="route.id">
-                        <label class="flex items-center p-3 rounded-lg border cursor-pointer transition-colors"
-                            :class="selectedRouteId === route.id ? 'border-tenant-accent bg-tenant-accent/20' : 'border-white/10 bg-black/20 hover:bg-white/5'">
-                            <input type="radio" :value="route.id" x-model="selectedRouteId" class="hidden">
+                        <label @click="selectedRouteId = route.id" class="flex items-center p-3 rounded-lg border cursor-pointer transition-colors"
+                            :class="selectedRouteId == route.id ? 'border-tenant-accent bg-tenant-accent/20' : 'border-white/10 bg-black/20 hover:bg-white/5'">
+                            <input type="radio" :value="route.id" :checked="selectedRouteId == route.id" class="hidden">
                             <div class="flex-1">
                                 <div class="font-bold text-white flex justify-between items-center">
-                                    <span x-text="route.callsign"></span>
+                                    <span x-text="route.callsign || route.flight_number"></span>
                                     <span class="text-xs font-bold text-tenant-accent bg-tenant-accent/20 px-2 py-0.5 rounded" x-text="route.flight_number"></span>
                                 </div>
                             </div>
-                            <div class="w-4 h-4 rounded-full border border-tenant-accent flex items-center justify-center ml-3" :class="selectedRouteId === route.id ? 'bg-tenant-accent' : ''"></div>
+                            <div class="w-4 h-4 rounded-full border border-tenant-accent flex items-center justify-center ml-3" :class="selectedRouteId == route.id ? 'bg-tenant-accent' : ''"></div>
                         </label>
                     </template>
                 </div>
             </div>
             <div class="p-4 border-t border-white/10 bg-black/20 flex justify-end gap-3">
                 <button @click="bookingModalOpen = false" class="px-4 py-2 text-sm text-gray-300 hover:text-white transition">Cancel</button>
-                <button @click="confirmBooking()" :disabled="!selectedRouteId" class="px-4 py-2 text-sm bg-tenant-accent text-white font-bold rounded hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed">Confirm Booking</button>
+                <button @click="confirmBooking()" :disabled="!selectedRouteId || isBooking" class="px-4 py-2 text-sm bg-tenant-accent text-white font-bold rounded hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    <span x-text="isBooking ? 'Booking Flight...' : 'Confirm Booking'">Confirm Booking</span>
+                </button>
             </div>
         </div>
     </div>
