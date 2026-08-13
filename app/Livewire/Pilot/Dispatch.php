@@ -289,6 +289,7 @@ class Dispatch extends Component
         $timeCode = str_replace(':', '', $this->departure_time);
 
         $simbriefParams = [
+            'newflight' => '1',
             'type' => $typeCode,
             'orig' => $this->booking->route->departure_icao,
             'dest' => $this->booking->route->arrival_icao,
@@ -310,8 +311,8 @@ class Dispatch extends Component
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
-        // Navigraph SimBrief Dispatch Web API URL
-        $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/new?' . http_build_query($simbriefParams);
+        // SimBrief Web API Dispatch URL using GET
+        $simbriefPopupUrl = 'https://www.simbrief.com/system/dispatch.php?' . http_build_query($simbriefParams);
 
         return view('livewire.pilot.dispatch', [
             'fleet' => $fleet,
