@@ -51,7 +51,15 @@ class ImportGlobalDataToVAJob implements ShouldQueue
             Airport::fetchAndCreate($flight->arrival_icao);
 
             $operatorPrefix = !empty($flight->operator) ? strtoupper($flight->operator) : 'FL';
-            $flightNum = !empty($flight->flight_number) ? $flight->flight_number : ($operatorPrefix . rand(100, 9999));
+            if (!empty($flight->flight_number)) {
+                $flightNum = $flight->flight_number;
+            } else {
+                // Generate a realistic, deterministic fictional flight number based on the route.
+                // Using abs(crc32) ensures the same dep+arr+operator always gets the same number,
+                // so re-importing the same route doesn't create duplicates with different numbers.
+                $seed = abs(crc32($flight->departure_icao . $flight->arrival_icao . $operatorPrefix));
+                $flightNum = $operatorPrefix . (($seed % 8999) + 1000); // Always 4-digit suffix, e.g. EZY2345
+            }
 
             // Create or Update Route for the specific tenant
             $route = Route::updateOrCreate(

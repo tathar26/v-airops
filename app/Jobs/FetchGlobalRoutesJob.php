@@ -342,13 +342,18 @@ class FetchGlobalRoutesJob implements ShouldQueue
     /**
      * Fetch real flight numbers AND block times from the AirLabs Routes API.
      *
-     * AirLabs free plan: ~1,000 requests/month, 50 rows per request, no credit card required.
-     * Sign up at https://airlabs.co and add your key to .env as AIRLABS_API_KEY.
+     * AirLabs free plan: ~1,000 requests/month, 50 rows per request.
      *
-     * IMPORTANT: AirLabs returns one row per operating day (mon/tue/etc.) for each route,
-     * so we deduplicate by dep_icao + arr_icao + airline_iata, keeping the first flight_iata seen.
+     * CYCLE DESIGN — "don't update until all routes have been checked, then start over":
+     *   - We track progress in the Laravel cache (key: airlabs_enrichment_progress).
+     *   - Each job run fetches up to $maxRequestsPerRun airlines, accumulating data.
+     *   - We ONLY write flight numbers to the DB after ALL airlines have been processed.
+     *   - Once a full cycle completes, the cache resets and we start again next run.
+     *
+     * AirLabs deduplication: returns one row per weekday — we deduplicate by dep+arr+operator.
      *
      * Returns a map: "DEP_ICAO|ARR_ICAO|OPERATOR_IATA" => ['flight_iata' => 'U21234', 'block_time' => '01:55']
+     * Returns [] if no cycle is complete yet (DB update is deferred to a later run).
      */
     private function fetchAirlabsFlightNumbers(): array
     {
@@ -359,45 +364,76 @@ class FetchGlobalRoutesJob implements ShouldQueue
             return [];
         }
 
-        $airlabsMap = [];
+        // --- Load progress from cache ---
+        // Cache structure:
+        //   airlabs_progress.pending_iatas   => ordered list of IATA codes not yet fetched this cycle
+        //   airlabs_progress.accumulated_map => flight number map built so far this cycle
+        $cacheKey    = 'airlabs_enrichment_progress';
+        $cacheTtl    = 60 * 24 * 40; // 40 days — safely covers a monthly billing cycle
+        $progress    = \Illuminate\Support\Facades\Cache::get($cacheKey, null);
 
-        // Get all unique active airline IATA codes from the system_global_airlines table
-        $airlineIatas = SystemGlobalAirline::whereNotNull('iata')
+        // Build the full list of active airline IATAs from DB
+        $allAirlineIatas = SystemGlobalAirline::whereNotNull('iata')
             ->where('iata', '!=', '')
             ->where('active', true)
             ->distinct()
             ->pluck('iata')
             ->toArray();
 
-        Log::info('FetchGlobalRoutesJob: Fetching AirLabs flight numbers for ' . count($airlineIatas) . ' airlines...');
+        if ($progress === null) {
+            // Fresh start: first time or after a completed cycle
+            Log::info('FetchGlobalRoutesJob: Starting fresh AirLabs enrichment cycle for ' . count($allAirlineIatas) . ' airlines.');
+            $progress = [
+                'pending_iatas'   => $allAirlineIatas,
+                'accumulated_map' => [],
+            ];
+        } else {
+            Log::info('FetchGlobalRoutesJob: Resuming AirLabs enrichment cycle. ' .
+                count($progress['pending_iatas']) . ' airlines remaining out of ' . count($allAirlineIatas) . '.');
+        }
 
-        $requestCount = 0;
-        $maxRequests  = 900; // Stay safely under 1,000/month free tier limit
+        $maxRequestsPerRun = 900; // Stay safely under 1,000/month free tier limit
+        $requestCount      = 0;
+        $pendingIatas      = $progress['pending_iatas'];
+        $accumulatedMap    = $progress['accumulated_map'];
 
-        foreach ($airlineIatas as $iata) {
-            if ($requestCount >= $maxRequests) {
-                Log::warning("FetchGlobalRoutesJob: AirLabs request limit ({$maxRequests}) reached. Stopping enrichment.");
-                break;
+        foreach ($pendingIatas as $idx => $iata) {
+            if ($requestCount >= $maxRequestsPerRun) {
+                Log::warning("FetchGlobalRoutesJob: AirLabs per-run limit ({$maxRequestsPerRun}) reached. Saving progress.");
+                // Save progress — remaining airlines will be processed in the next run
+                \Illuminate\Support\Facades\Cache::put($cacheKey, [
+                    'pending_iatas'   => array_slice($pendingIatas, $idx),
+                    'accumulated_map' => $accumulatedMap,
+                ], $cacheTtl);
+                // Cycle not complete — do NOT update the DB yet
+                return [];
             }
 
             if ($this->batch() && $this->batch()->cancelled()) {
-                return $airlabsMap;
+                \Illuminate\Support\Facades\Cache::put($cacheKey, [
+                    'pending_iatas'   => array_slice($pendingIatas, $idx),
+                    'accumulated_map' => $accumulatedMap,
+                ], $cacheTtl);
+                return [];
             }
 
             try {
                 $response = Http::timeout(15)->get('https://airlabs.co/api/v9/routes', [
                     'airline_iata' => $iata,
                     'api_key'      => $apiKey,
-                    // Request all fields we need; AirLabs returns max 50 rows per request (free tier)
                 ]);
 
                 $requestCount++;
 
                 if (!$response->successful()) {
-                    // 402 = quota exceeded, 429 = rate limited
+                    // 402 = quota exceeded, 429 = rate limited → save progress and stop
                     if (in_array($response->status(), [402, 429])) {
-                        Log::warning('FetchGlobalRoutesJob: AirLabs quota exceeded. Stopping enrichment.');
-                        break;
+                        Log::warning('FetchGlobalRoutesJob: AirLabs quota exceeded. Saving progress.');
+                        \Illuminate\Support\Facades\Cache::put($cacheKey, [
+                            'pending_iatas'   => array_slice($pendingIatas, $idx),
+                            'accumulated_map' => $accumulatedMap,
+                        ], $cacheTtl);
+                        return [];
                     }
                     continue;
                 }
@@ -416,17 +452,17 @@ class FetchGlobalRoutesJob implements ShouldQueue
                     $key = "{$depIcao}|{$arrIcao}|{$opIata}";
 
                     // Deduplicate: AirLabs returns one row per operating weekday.
-                    // Only store the first flight_iata we see for this route.
-                    if (isset($airlabsMap[$key])) continue;
+                    // Only keep the first flight_iata seen for this route.
+                    if (isset($accumulatedMap[$key])) continue;
 
                     // Convert AirLabs 'duration' (minutes) to HH:MM block time
                     $blockTime = null;
-                    $duration = $route['duration'] ?? null;
+                    $duration  = $route['duration'] ?? null;
                     if ($duration && is_numeric($duration) && $duration > 0) {
                         $blockTime = sprintf('%02d:%02d', floor($duration / 60), $duration % 60);
                     }
 
-                    $airlabsMap[$key] = [
+                    $accumulatedMap[$key] = [
                         'flight_iata' => $flightIata,
                         'block_time'  => $blockTime,
                     ];
@@ -440,9 +476,14 @@ class FetchGlobalRoutesJob implements ShouldQueue
             }
         }
 
-        Log::info('FetchGlobalRoutesJob: AirLabs enrichment complete. ' . count($airlabsMap) . ' unique routes mapped in ' . $requestCount . ' requests.');
+        // ✅ FULL CYCLE COMPLETE — all airlines fetched this cycle
+        Log::info('FetchGlobalRoutesJob: AirLabs full cycle complete! ' .
+            count($accumulatedMap) . ' unique routes mapped in ' . $requestCount . ' requests. Applying to DB...');
 
-        return $airlabsMap;
+        // Reset cycle — next run will start fresh
+        \Illuminate\Support\Facades\Cache::forget($cacheKey);
+
+        return $accumulatedMap;
     }
 
     /**

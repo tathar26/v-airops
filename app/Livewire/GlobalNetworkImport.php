@@ -52,11 +52,23 @@ class GlobalNetworkImport extends Component
 
     protected function buildQuery()
     {
-        $airlinesSub = \Illuminate\Support\Facades\DB::table('system_global_airlines')
-            ->select('iata', \Illuminate\Support\Facades\DB::raw('MAX(name) as name'), \Illuminate\Support\Facades\DB::raw('MAX(icao) as icao'))
-            ->whereNotNull('iata')
-            ->where('iata', '!=', '')
-            ->groupBy('iata');
+        // Subquery picks the BEST airline record per IATA code:
+        //   1. Prefer active=1 over active=0 (eliminates defunct airline duplicates like "United Feeder Service")
+        //   2. Among actives, prefer records with a known ICAO callsign
+        //   3. Final tiebreaker: lowest ID (oldest/most established record)
+        $airlinesSub = \Illuminate\Support\Facades\DB::table('system_global_airlines as sga_inner')
+            ->select(
+                'sga_inner.iata',
+                \Illuminate\Support\Facades\DB::raw(
+                    'SUBSTRING_INDEX(GROUP_CONCAT(sga_inner.name ORDER BY sga_inner.active DESC, (sga_inner.icao IS NOT NULL AND sga_inner.icao != \'\') DESC, sga_inner.id ASC SEPARATOR \'|\'  ), \'|\', 1) as name'
+                ),
+                \Illuminate\Support\Facades\DB::raw(
+                    'SUBSTRING_INDEX(GROUP_CONCAT(sga_inner.icao ORDER BY sga_inner.active DESC, (sga_inner.icao IS NOT NULL AND sga_inner.icao != \'\') DESC, sga_inner.id ASC SEPARATOR \'|\'), \'|\', 1) as icao'
+                )
+            )
+            ->whereNotNull('sga_inner.iata')
+            ->where('sga_inner.iata', '!=', '')
+            ->groupBy('sga_inner.iata');
 
         $query = SystemGlobalFlight::query()
             ->select(
