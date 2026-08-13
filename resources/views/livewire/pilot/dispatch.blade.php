@@ -369,7 +369,7 @@
                         <div class="flex justify-between items-center mb-1">
                             <x-label for="network" value="{{ __('Network') }}" class="text-white font-medium" />
                             <div class="flex gap-2 text-xs">
-                                <a href="{{ route('preferences') }}" class="text-tenant-accent hover:underline">Preferred Network</a>
+                                <a href="{{ route('profile.preferences') }}" class="text-tenant-accent hover:underline">Preferred Network</a>
                             </div>
                         </div>
                         <select id="network" wire:model="network" class="w-full bg-[#1C212E] border-gray-700 text-white rounded-lg p-2.5 text-sm">
