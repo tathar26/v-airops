@@ -27,17 +27,7 @@ class GlobalNetworkImport extends Component
         'searchOperator' => ['except' => ''],
     ];
 
-    public function updatedSearchDeparture()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSearchArrival()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSearchOperator()
+    public function search()
     {
         $this->resetPage();
     }
@@ -54,19 +44,38 @@ class GlobalNetworkImport extends Component
     protected function buildQuery()
     {
         $query = SystemGlobalFlight::query()
-            ->select('system_global_flights.*', 'system_global_airlines.name as airline_name', 'system_global_airlines.iata as airline_iata', 'system_global_airlines.icao as airline_icao')
+            ->select(
+                'system_global_flights.*', 
+                'system_global_airlines.name as airline_name', 
+                'system_global_airlines.iata as airline_iata', 
+                'system_global_airlines.icao as airline_icao',
+                'dep_airport.name as dep_name',
+                'dep_airport.iata as dep_iata',
+                'arr_airport.name as arr_name',
+                'arr_airport.iata as arr_iata'
+            )
             ->leftJoin('system_global_airlines', function($join) {
                 $join->on('system_global_flights.operator', '=', 'system_global_airlines.iata')
                      ->orOn('system_global_flights.operator', '=', 'system_global_airlines.icao')
                      ->orOn('system_global_flights.operator', '=', 'system_global_airlines.name');
-            });
+            })
+            ->leftJoin('system_global_airports as dep_airport', 'system_global_flights.departure_icao', '=', 'dep_airport.icao')
+            ->leftJoin('system_global_airports as arr_airport', 'system_global_flights.arrival_icao', '=', 'arr_airport.icao');
 
         if ($this->searchDeparture) {
-            $query->where('system_global_flights.departure_icao', 'like', '%' . strtoupper($this->searchDeparture) . '%');
+            $query->where(function($q) {
+                $q->where('system_global_flights.departure_icao', 'like', '%' . strtoupper($this->searchDeparture) . '%')
+                  ->orWhere('dep_airport.iata', 'like', '%' . strtoupper($this->searchDeparture) . '%')
+                  ->orWhere('dep_airport.name', 'like', '%' . $this->searchDeparture . '%');
+            });
         }
 
         if ($this->searchArrival) {
-            $query->where('system_global_flights.arrival_icao', 'like', '%' . strtoupper($this->searchArrival) . '%');
+            $query->where(function($q) {
+                $q->where('system_global_flights.arrival_icao', 'like', '%' . strtoupper($this->searchArrival) . '%')
+                  ->orWhere('arr_airport.iata', 'like', '%' . strtoupper($this->searchArrival) . '%')
+                  ->orWhere('arr_airport.name', 'like', '%' . $this->searchArrival . '%');
+            });
         }
 
         if ($this->searchOperator) {

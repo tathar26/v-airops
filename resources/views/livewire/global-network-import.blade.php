@@ -30,15 +30,18 @@
 
         <div class="flex flex-col md:flex-row gap-4 mb-6">
             <div class="flex-1">
-                <x-input type="text" wire:model.live.debounce.500ms="searchDeparture" placeholder="Filter Origin (e.g. EGLL)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" maxlength="4" />
+                <x-input type="text" wire:model.defer="searchDeparture" placeholder="Filter Origin (e.g. EGLL, LHR, Heathrow)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
             </div>
             <div class="flex-1">
-                <x-input type="text" wire:model.live.debounce.500ms="searchArrival" placeholder="Filter Destination (e.g. LFPG)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" maxlength="4" />
+                <x-input type="text" wire:model.defer="searchArrival" placeholder="Filter Destination (e.g. LFPG, CDG, Paris)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
             </div>
             <div class="flex-1">
-                <x-input type="text" wire:model.live.debounce.500ms="searchOperator" placeholder="Filter Operator (e.g. EZY)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
+                <x-input type="text" wire:model.defer="searchOperator" placeholder="Filter Operator (e.g. EZY, U2, easyJet)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
             </div>
-            <div>
+            <div class="flex space-x-2">
+                <button wire:click="search" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded transition h-full flex items-center">
+                    🔍 Search
+                </button>
                 <button wire:click="importSelected" class="bg-tenant-accent hover:opacity-80 text-white font-bold py-2 px-6 rounded transition h-full flex items-center" {{ $currentBatch ? 'disabled' : '' }}>
                     <span class="mr-2">📥</span> Import Selected
                 </button>
@@ -76,8 +79,22 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="p-4 font-mono text-tenant-accent">{{ $flight->departure_icao }}</td>
-                            <td class="p-4 font-mono text-tenant-accent">{{ $flight->arrival_icao }}</td>
+                            <td class="p-4">
+                                <div class="font-mono text-tenant-accent font-bold">{{ $flight->departure_icao }}</div>
+                                @if($flight->dep_name || $flight->dep_iata)
+                                    <div class="text-xs text-gray-400">
+                                        {{ implode(' / ', array_filter([$flight->dep_iata, $flight->dep_name])) }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="p-4">
+                                <div class="font-mono text-tenant-accent font-bold">{{ $flight->arrival_icao }}</div>
+                                @if($flight->arr_name || $flight->arr_iata)
+                                    <div class="text-xs text-gray-400">
+                                        {{ implode(' / ', array_filter([$flight->arr_iata, $flight->arr_name])) }}
+                                    </div>
+                                @endif
+                            </td>
                             <td class="p-4 text-sm text-gray-400">{{ $flight->aircraft_types ?? 'Any' }}</td>
                             <td class="p-4 text-sm">{{ $flight->distance ? $flight->distance . ' NM' : 'N/A' }}</td>
                         </tr>
