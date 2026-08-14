@@ -100,4 +100,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function acarsFlights()
+    {
+        return $this->hasMany(AcarsActiveFlight::class);
+    }
+
+    public function acarsPireps()
+    {
+        return $this->hasMany(AcarsPirep::class);
+    }
 }

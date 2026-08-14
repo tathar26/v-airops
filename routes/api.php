@@ -1,44 +1,53 @@
 <?php
 
+use App\Http\Controllers\Api\FleetController;
+use App\Http\Controllers\Api\RouteController;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\FlightController;
+use App\Http\Controllers\Api\V1\AcarsController as V1AcarsController;
+use App\Http\Controllers\Api\V1\PirepController as V1PirepController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| vPilot ACARS REST API v1
+|--------------------------------------------------------------------------
+| Conforming strictly to the REST schemas and endpoints in vops-acars
+*/
+Route::prefix('v1')->group(function () {
+    // Authentication
+    Route::post('/auth/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->prefix('acars')->group(function () {
-    Route::post('/connect', [\App\Http\Controllers\Api\AcarsController::class, 'connect']);
-    Route::post('/{pirepId}/telemetry', [\App\Http\Controllers\Api\AcarsController::class, 'telemetry']);
-    Route::post('/{pirepId}/file', [\App\Http\Controllers\Api\AcarsController::class, 'filePirep']);
+    // Protected ACARS Endpoints
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/auth/me', [AuthController::class, 'me']);
+        
+        // Flights
+        Route::get('/flights/active', [FlightController::class, 'active']);
+
+        // Telemetry & Events
+        Route::post('/acars/position', [V1AcarsController::class, 'position']);
+        Route::post('/acars/event', [V1AcarsController::class, 'event']);
+
+        // PIREPs
+        Route::post('/pireps/submit', [V1PirepController::class, 'submit']);
+    });
 });
 
 /*
 |--------------------------------------------------------------------------
-| Legacy FSACARS Client Integration Routes
+| Virtual Airline Core API Routes
 |--------------------------------------------------------------------------
-| FSACARS authenticates via request params (user, pass). No Sanctum Bearer header is sent.
-| Supports /acars/*, /fsacars/*, root level, and legacy pirep_mysql.php script names.
 */
-$registerFsacarsRoutes = function (string $prefix = '') {
-    Route::prefix($prefix)->group(function () {
-        Route::match(['get', 'post'], '/userquery.php', [\App\Http\Controllers\Api\FsacarsController::class, 'authenticate']);
-        Route::match(['get', 'post'], '/dispatch.php', [\App\Http\Controllers\Api\FsacarsController::class, 'dispatch']);
-        Route::match(['get', 'post'], '/posrep.php', [\App\Http\Controllers\Api\FsacarsController::class, 'positionReport']);
-        Route::match(['get', 'post'], '/pirep.php', [\App\Http\Controllers\Api\FsacarsController::class, 'submitPirep']);
-        Route::match(['get', 'post'], '/pirep_mysql.php', [\App\Http\Controllers\Api\FsacarsController::class, 'submitPirep']);
-    });
-};
-
-$registerFsacarsRoutes('acars');
-$registerFsacarsRoutes('fsacars');
-$registerFsacarsRoutes('');
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/fleet', [\App\Http\Controllers\Api\FleetController::class, 'index']);
-    Route::post('/fleet', [\App\Http\Controllers\Api\FleetController::class, 'store']);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 
-    Route::get('/routes', [\App\Http\Controllers\Api\RouteController::class, 'index']);
-    Route::post('/routes', [\App\Http\Controllers\Api\RouteController::class, 'store']);
+    Route::get('/fleet', [FleetController::class, 'index']);
+    Route::post('/fleet', [FleetController::class, 'store']);
 
+    Route::get('/routes', [RouteController::class, 'index']);
+    Route::post('/routes', [RouteController::class, 'store']);
 });
