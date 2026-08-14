@@ -13,26 +13,39 @@ class AuthController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-        $callsign = strtoupper($request->input('callsign'));
-        $user = User::where('callsign', $callsign)->first();
+        $identifier = trim((string) ($request->input('email') ?: $request->input('callsign')));
+        $password = (string) $request->input('password');
 
-        // Auto-seed default test pilot if database is newly initialized
-        if (!$user && $callsign === 'SVK101') {
+        if (empty($identifier)) {
+            return response()->json([
+                'detail' => 'Email or callsign is required'
+            ], 400);
+        }
+
+        // Query user by email OR callsign (case-insensitive)
+        $user = User::where(function ($query) use ($identifier) {
+            $query->whereRaw('LOWER(email) = ?', [strtolower($identifier)])
+                  ->orWhereRaw('LOWER(callsign) = ?', [strtolower($identifier)]);
+        })->first();
+
+        // Auto-seed demo pilot if database is newly initialized and demo account is used
+        $demoIdentifiers = ['pilot@v-ops.com', 'demo@skyvex.com', 'svk101', 'pilot@example.com'];
+        if (!$user && in_array(strtolower($identifier), $demoIdentifiers)) {
             $user = User::create([
-                'callsign' => 'SVK101',
-                'name' => 'Skyvex Test Pilot',
-                'email' => 'svk101@vops.local',
-                'password' => Hash::make($request->input('password')),
+                'email' => str_contains($identifier, '@') ? $identifier : 'pilot@v-ops.com',
+                'callsign' => !str_contains($identifier, '@') ? strtoupper($identifier) : 'SVK101',
+                'name' => 'Demo Pilot',
+                'password' => Hash::make($password),
             ]);
         }
 
-        if (!$user || !Hash::check($request->input('password'), $user->password)) {
+        if (!$user || !Hash::check($password, $user->password)) {
             return response()->json([
-                'detail' => 'Invalid callsign or password'
+                'detail' => 'Invalid email/callsign or password'
             ], 401);
         }
 
-        // Revoke older tokens for clean session management
+        // Revoke previous tokens for clean session management
         $user->tokens()->where('name', 'vPilot-ACARS-Token')->delete();
         $token = $user->createToken('vPilot-ACARS-Token')->plainTextToken;
 
@@ -43,9 +56,10 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'pilot' => [
                 'id' => $user->id,
-                'callsign' => $user->callsign,
+                'email' => $user->email,
+                'callsign' => $user->callsign ?? 'PILOT',
                 'name' => $user->name,
-                'rank' => $pilotProfile?->rank?->name ?? 'Captain',
+                'rank' => $pilotProfile?->rank?->name ?? 'Senior Captain',
                 'total_flights' => $user->pireps()->count(),
                 'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
             ]
@@ -59,9 +73,10 @@ class AuthController extends Controller
 
         return response()->json([
             'id' => $user->id,
-            'callsign' => $user->callsign,
+            'email' => $user->email,
+            'callsign' => $user->callsign ?? 'PILOT',
             'name' => $user->name,
-            'rank' => $pilotProfile?->rank?->name ?? 'Captain',
+            'rank' => $pilotProfile?->rank?->name ?? 'Senior Captain',
             'total_flights' => $user->pireps()->count(),
             'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
         ]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\DispatchFlightRequest;
 use App\Models\AcarsActiveFlight;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,45 @@ class FlightController extends Controller
                 'status' => 'active',
             ]);
         }
+
+        return response()->json([
+            'id' => $flight->id,
+            'flight_number' => $flight->flight_number,
+            'origin_icao' => $flight->origin_icao,
+            'destination_icao' => $flight->destination_icao,
+            'route' => $flight->route,
+            'aircraft_type' => $flight->aircraft_type,
+            'planned_altitude' => $flight->planned_altitude,
+            'planned_fuel_kg' => (float) $flight->planned_fuel_kg,
+            'planned_zfw_kg' => (float) $flight->planned_zfw_kg,
+            'simbrief_ofp_id' => $flight->simbrief_ofp_id,
+            'status' => $flight->status,
+            'created_at' => $flight->created_at->toISOString(),
+        ]);
+    }
+
+    public function dispatch(DispatchFlightRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Archive previous active flights for this user
+        AcarsActiveFlight::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->update(['status' => 'archived']);
+
+        $flight = AcarsActiveFlight::create([
+            'user_id' => $user->id,
+            'flight_number' => strtoupper($request->input('flight_number')),
+            'origin_icao' => strtoupper($request->input('origin_icao')),
+            'destination_icao' => strtoupper($request->input('destination_icao')),
+            'route' => $request->input('route'),
+            'aircraft_type' => $request->input('aircraft_type', 'A320'),
+            'planned_altitude' => (int) $request->input('planned_altitude', 34000),
+            'planned_fuel_kg' => (float) $request->input('planned_fuel_kg', 6500.0),
+            'planned_zfw_kg' => (float) $request->input('planned_zfw_kg', 58000.0),
+            'simbrief_ofp_id' => $request->input('simbrief_ofp_id'),
+            'status' => 'active',
+        ]);
 
         return response()->json([
             'id' => $flight->id,

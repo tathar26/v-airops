@@ -25,6 +25,7 @@ Route::prefix('v1')->group(function () {
         
         // Flights
         Route::get('/flights/active', [FlightController::class, 'active']);
+        Route::post('/flights/dispatch', [FlightController::class, 'dispatch']);
 
         // Telemetry & Events
         Route::post('/acars/position', [V1AcarsController::class, 'position']);

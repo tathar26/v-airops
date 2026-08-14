@@ -14,8 +14,21 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'callsign' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'string', 'max:255'],
+            'callsign' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    /**
+     * Configure the validator instance to require at least email or callsign.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($v) {
+            if (empty($this->input('email')) && empty($this->input('callsign'))) {
+                $v->errors()->add('identifier', 'Email or callsign is required.');
+            }
+        });
     }
 }
