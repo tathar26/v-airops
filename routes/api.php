@@ -23,9 +23,12 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         
-        // Flights
+        // Flights & Dispatch
         Route::get('/flights/active', [FlightController::class, 'active']);
         Route::post('/flights/dispatch', [FlightController::class, 'dispatch']);
+
+        // Active Booking Alignment
+        Route::get('/booking/active', [FlightController::class, 'bookingActive']);
 
         // Telemetry & Events
         Route::post('/acars/position', [V1AcarsController::class, 'position']);
@@ -45,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::get('/booking/active', [FlightController::class, 'bookingActive']);
 
     Route::get('/fleet', [FleetController::class, 'index']);
     Route::post('/fleet', [FleetController::class, 'store']);

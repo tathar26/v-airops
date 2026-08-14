@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\DispatchFlightRequest;
 use App\Models\AcarsActiveFlight;
+use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,21 +20,45 @@ class FlightController extends Controller
             ->latest('id')
             ->first();
 
+        // If no active ACARS flight, check if user has an active booking in the VA system
         if (!$flight) {
-            // Auto-generate test dispatch for seamless first-run experience
-            $flight = AcarsActiveFlight::create([
-                'user_id' => $user->id,
-                'flight_number' => 'SVK204',
-                'origin_icao' => 'EGLL',
-                'destination_icao' => 'LFPG',
-                'route' => 'DVR L10 RCM UN874 KENT DCT',
-                'aircraft_type' => 'A320',
-                'planned_altitude' => 34000,
-                'planned_fuel_kg' => 6800.0,
-                'planned_zfw_kg' => 59500.0,
-                'simbrief_ofp_id' => '1049281',
-                'status' => 'active',
-            ]);
+            $booking = Booking::where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'dispatched'])
+                ->with(['route', 'airframe.aircraftType'])
+                ->latest('id')
+                ->first();
+
+            if ($booking) {
+                $sb = $booking->simbrief_data ?? [];
+                $flight = AcarsActiveFlight::create([
+                    'user_id' => $user->id,
+                    'flight_number' => $booking->route?->flight_number ?? $booking->route?->callsign ?? 'SVK204',
+                    'origin_icao' => $booking->route?->departure_icao ?? 'EGLL',
+                    'destination_icao' => $booking->route?->arrival_icao ?? 'LFPG',
+                    'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DVR L10 RCM UN874 KENT DCT'),
+                    'aircraft_type' => $booking->airframe?->aircraftType?->code ?? 'A320',
+                    'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? 34000),
+                    'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? 6800.0),
+                    'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? 59500.0),
+                    'simbrief_ofp_id' => (string) ($sb['params']['ofp_id'] ?? $booking->id),
+                    'status' => 'active',
+                ]);
+            } else {
+                // Fallback default dispatch
+                $flight = AcarsActiveFlight::create([
+                    'user_id' => $user->id,
+                    'flight_number' => 'SVK204',
+                    'origin_icao' => 'EGLL',
+                    'destination_icao' => 'LFPG',
+                    'route' => 'DVR L10 RCM UN874 KENT DCT',
+                    'aircraft_type' => 'A320',
+                    'planned_altitude' => 34000,
+                    'planned_fuel_kg' => 6800.0,
+                    'planned_zfw_kg' => 59500.0,
+                    'simbrief_ofp_id' => '1049281',
+                    'status' => 'active',
+                ]);
+            }
         }
 
         return response()->json([
@@ -88,6 +113,35 @@ class FlightController extends Controller
             'simbrief_ofp_id' => $flight->simbrief_ofp_id,
             'status' => $flight->status,
             'created_at' => $flight->created_at->toISOString(),
+        ]);
+    }
+
+    public function bookingActive(Request $request): JsonResponse
+    {
+        $booking = Booking::where('user_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'dispatched'])
+            ->with(['route', 'airframe.aircraftType'])
+            ->latest('id')
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'has_booking' => false,
+                'message' => 'No active booking found'
+            ], 404);
+        }
+
+        return response()->json([
+            'has_booking' => true,
+            'id' => $booking->id,
+            'flight_number' => $booking->route?->flight_number ?? $booking->route?->callsign ?? 'SVK101',
+            'origin_icao' => $booking->route?->departure_icao,
+            'destination_icao' => $booking->route?->arrival_icao,
+            'route' => $booking->route?->route_string,
+            'aircraft_type' => $booking->airframe?->aircraftType?->code ?? 'A320',
+            'airframe' => $booking->airframe?->registration,
+            'simbrief_data' => $booking->simbrief_data,
+            'status' => $booking->status,
         ]);
     }
 }
