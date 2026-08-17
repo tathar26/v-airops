@@ -86,6 +86,34 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
+    public function userAirlines()
+    {
+        return $this->hasMany(UserAirline::class);
+    }
+
+    public function airlines()
+    {
+        return $this->belongsToMany(Tenant::class, 'user_airlines', 'user_id', 'tenant_id')
+                    ->withPivot(['callsign', 'join_date', 'rank', 'is_active'])
+                    ->withTimestamps();
+    }
+
+    public function activeUserAirline()
+    {
+        $activeTenantId = session('active_airline_id');
+        if (!$activeTenantId) {
+            return $this->userAirlines()->first();
+        }
+
+        return $this->userAirlines()->where('tenant_id', $activeTenantId)->first();
+    }
+
+    public function activeCallsign(): ?string
+    {
+        $activeRecord = $this->activeUserAirline();
+        return $activeRecord ? $activeRecord->callsign : $this->callsign;
+    }
+
     public function pilotProfiles()
     {
         return $this->hasMany(PilotProfile::class);

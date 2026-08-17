@@ -6,6 +6,25 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Auth & Verification Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [\App\Http\Controllers\Auth\CustomAuthController::class, 'register']);
+    Route::post('/custom-login', [\App\Http\Controllers\Auth\CustomAuthController::class, 'login'])->name('custom-login');
+});
+
+Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice');
+Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'verifyEmail'])->name('auth.verify');
+
+// Onboarding & Session Switcher Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/onboarding/select-airline', [\App\Http\Controllers\AirlineOnboardingController::class, 'showSelectionPage'])->name('onboarding.select-airline');
+    Route::post('/onboarding/join', [\App\Http\Controllers\AirlineOnboardingController::class, 'joinAirlines'])->name('onboarding.join');
+
+    Route::get('/session/select-airline', [\App\Http\Controllers\SessionAirlineController::class, 'showSelectActiveAirlinePage'])->name('session.select-airline');
+    Route::post('/session/switch-airline', [\App\Http\Controllers\SessionAirlineController::class, 'switchActiveAirline'])->name('session.switch-airline');
+});
+
 // Airport Coordinate Lookup API
 Route::get('/api/airport/{icao}', function ($icao) {
     $icao = strtoupper($icao);

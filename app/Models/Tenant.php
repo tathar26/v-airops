@@ -21,6 +21,18 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    public function userAirlines()
+    {
+        return $this->hasMany(UserAirline::class, 'tenant_id');
+    }
+
+    public function enrolledUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_airlines', 'tenant_id', 'user_id')
+                    ->withPivot(['callsign', 'join_date', 'rank', 'is_active'])
+                    ->withTimestamps();
+    }
+
     public function hubs()
     {
         return $this->hasMany(TenantHub::class);
