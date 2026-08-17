@@ -11,3 +11,7 @@ use Illuminate\Support\Facades\Schedule;
 
 // Run the global data aggregation daily at midnight
 Schedule::command('system:aggregate-airline-data')->daily();
+
+// Automatically process missing pilot callsigns hourly
+Schedule::job(new \App\Jobs\AssignMissingCallsignsJob)->hourly();
+

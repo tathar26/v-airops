@@ -27,6 +27,9 @@ return new class extends Migration
             // Prevent user from joining the same airline twice
             $table->unique(['user_id', 'tenant_id'], 'unique_user_tenant');
         });
+
+        // Automatically dispatch callsign backfill job for existing legacy users
+        \App\Jobs\AssignMissingCallsignsJob::dispatch();
     }
 
     /**
