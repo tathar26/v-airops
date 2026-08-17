@@ -45,19 +45,8 @@ class CustomAuthController extends Controller
         // Build verification link
         $verificationUrl = route('auth.verify', ['token' => $verificationToken]);
 
-        // Send Email (Logged or mailed via raw mail callback)
-        try {
-            Mail::raw(
-                "Welcome to Virtual Airline Operations, {$user->name}!\n\nPlease click the following link to verify your account:\n{$verificationUrl}\n\nThis link will expire in 24 hours.",
-                function ($message) use ($user) {
-                    $message->to($user->email)
-                        ->subject('Verify Your Virtual Airline Pilot Account');
-                }
-            );
-        } catch (\Exception $e) {
-            // Log mail failure if local driver is active
-            \Illuminate\Support\Facades\Log::warning("Verification mail send notice: " . $e->getMessage());
-        }
+        // Dispatch queued email job
+        \App\Jobs\SendVerificationEmailJob::dispatch($user, $verificationUrl);
 
         return redirect()->route('auth.verify-notice')->with('email_sent', $user->email);
     }

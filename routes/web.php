@@ -90,6 +90,10 @@ Route::middleware([
         ->middleware('role:Master Admin')
         ->name('admin.dashboard');
 
+    Route::get('/admin/email-queue', \App\Livewire\Admin\EmailQueueManager::class)
+        ->middleware('role:Master Admin|VA Owner')
+        ->name('admin.email-queue');
+
     Route::get('/fleet', \App\Livewire\FleetManager::class)
         ->middleware('role:VA Owner|Pilot')
         ->name('fleet');

@@ -180,6 +180,14 @@
                 VA Settings
             </a>
         </li>
+
+        <!-- Email Queue -->
+        <li>
+            <a href="{{ route('admin.email-queue') }}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('admin.email-queue') ? 'bg-tenant-accent/10 text-tenant-accent border-r-4 border-tenant-accent' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.email-queue') ? 'text-tenant-accent' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                Email Queue
+            </a>
+        </li>
         @endif
     </ul>
     
