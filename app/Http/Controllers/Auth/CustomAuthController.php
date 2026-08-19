@@ -64,34 +64,125 @@ class CustomAuthController extends Controller
     }
 
     /**
-     * Verify user email via token link.
+     * Display email verification prompt landing page (safe for Office 365 / Spam filters).
+     */
+    public function showVerifyPrompt(Request $request)
+    {
+        $token = $request->query('token') ?? $request->input('token');
+
+        if ($token) {
+            $user = User::where('verification_token', $token)->first();
+
+            if (!$user) {
+                return view('auth.verify-confirm', [
+                    'status' => 'invalid',
+                    'message' => 'This verification token was not found or has already been used.',
+                ]);
+            }
+
+            if ($user->email_verified_at) {
+                return view('auth.verify-confirm', [
+                    'status' => 'already_verified',
+                    'user' => $user,
+                ]);
+            }
+
+            if ($user->verification_token_expires_at && $user->verification_token_expires_at->isPast()) {
+                return view('auth.verify-confirm', [
+                    'status' => 'expired',
+                    'user' => $user,
+                ]);
+            }
+
+            return view('auth.verify-confirm', [
+                'status' => 'valid',
+                'user' => $user,
+                'token' => $token,
+            ]);
+        }
+
+        $id = $request->route('id') ?? $request->input('route_id');
+        $hash = $request->route('hash') ?? $request->input('route_hash');
+
+        if ($id && $hash) {
+            $user = User::find($id);
+
+            if ($user && hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+                if ($user->hasVerifiedEmail()) {
+                    return view('auth.verify-confirm', [
+                        'status' => 'already_verified',
+                        'user' => $user,
+                    ]);
+                }
+
+                return view('auth.verify-confirm', [
+                    'status' => 'valid',
+                    'user' => $user,
+                    'routeId' => $id,
+                    'routeHash' => $hash,
+                ]);
+            }
+        }
+
+        return view('auth.verify-confirm', [
+            'status' => 'invalid',
+            'message' => 'Invalid or missing verification parameters.',
+        ]);
+    }
+
+    /**
+     * Process human POST confirmation to verify email and activate user account.
+     */
+    public function confirmVerifyEmail(Request $request)
+    {
+        $token = $request->input('token') ?? $request->query('token');
+
+        if ($token) {
+            $user = User::where('verification_token', $token)->first();
+
+            if (!$user) {
+                return redirect()->route('login')->withErrors(['verification' => 'Verification token not found or already verified.']);
+            }
+
+            if ($user->verification_token_expires_at && $user->verification_token_expires_at->isPast()) {
+                return redirect()->route('login')->withErrors(['verification' => 'Verification token has expired. Please request a new verification link.']);
+            }
+
+            $user->email_verified_at = now();
+            $user->verification_token = null;
+            $user->verification_token_expires_at = null;
+            $user->save();
+
+            Auth::login($user);
+
+            return redirect()->route('onboarding.select-airline')->with('success', 'Email verified successfully! Please select your first Virtual Airline to get started.');
+        }
+
+        $id = $request->input('route_id') ?? $request->route('id');
+        $hash = $request->input('route_hash') ?? $request->route('hash');
+
+        if ($id && $hash) {
+            $user = User::find($id);
+
+            if ($user && hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+                if (!$user->hasVerifiedEmail()) {
+                    $user->markEmailAsVerified();
+                }
+
+                Auth::login($user);
+                return redirect()->route('onboarding.select-airline')->with('success', 'Email verified successfully! Please select your first Virtual Airline to get started.');
+            }
+        }
+
+        return redirect()->route('login')->withErrors(['verification' => 'Invalid verification request.']);
+    }
+
+    /**
+     * Fallback alias for direct email verification.
      */
     public function verifyEmail(Request $request)
     {
-        $token = $request->query('token');
-
-        if (!$token) {
-            return redirect()->route('login')->withErrors(['verification' => 'Invalid verification token provided.']);
-        }
-
-        $user = User::where('verification_token', $token)->first();
-
-        if (!$user) {
-            return redirect()->route('login')->withErrors(['verification' => 'Verification token not found or already verified.']);
-        }
-
-        if ($user->verification_token_expires_at && $user->verification_token_expires_at->isPast()) {
-            return redirect()->route('login')->withErrors(['verification' => 'Verification token has expired. Please request a new verification link.']);
-        }
-
-        $user->email_verified_at = now();
-        $user->verification_token = null;
-        $user->verification_token_expires_at = null;
-        $user->save();
-
-        Auth::login($user);
-
-        return redirect()->route('onboarding.select-airline')->with('success', 'Email verified successfully! Please select your first Virtual Airline to get started.');
+        return $this->showVerifyPrompt($request);
     }
 
     /**

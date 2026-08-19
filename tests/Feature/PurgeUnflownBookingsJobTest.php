@@ -16,9 +16,19 @@ class PurgeUnflownBookingsJobTest extends TestCase
 
     public function test_purge_job_deletes_unflown_bookings_older_than_24_hours(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::create([
+            'name' => 'Test Tenant',
+            'domain' => 'test.vops.test',
+            'icao' => 'TST',
+        ]);
         $user = User::factory()->create(['tenant_id' => $tenant->id]);
-        $route = Route::factory()->create(['tenant_id' => $tenant->id]);
+        $route = Route::create([
+            'tenant_id' => $tenant->id,
+            'flight_number' => 'TST101',
+            'departure_icao' => 'EGLL',
+            'arrival_icao' => 'LFPG',
+            'block_time' => '01:15:00',
+        ]);
 
         // Old booking (>24h old)
         $oldBooking = Booking::create([
@@ -26,8 +36,10 @@ class PurgeUnflownBookingsJobTest extends TestCase
             'tenant_id' => $tenant->id,
             'route_id' => $route->id,
             'status' => 'pending',
-            'created_at' => now()->subHours(25),
         ]);
+        $oldBooking->timestamps = false;
+        $oldBooking->created_at = now()->subHours(25);
+        $oldBooking->save();
 
         // Recent booking (<24h old)
         $recentBooking = Booking::create([
@@ -35,7 +47,6 @@ class PurgeUnflownBookingsJobTest extends TestCase
             'tenant_id' => $tenant->id,
             'route_id' => $route->id,
             'status' => 'dispatched',
-            'created_at' => now()->subHours(5),
         ]);
 
         PurgeUnflownBookingsJob::dispatchSync();
@@ -46,17 +57,29 @@ class PurgeUnflownBookingsJobTest extends TestCase
 
     public function test_artisan_command_purges_unflown_bookings(): void
     {
-        $tenant = Tenant::factory()->create();
+        $tenant = Tenant::create([
+            'name' => 'Test Tenant',
+            'domain' => 'test.vops.test',
+            'icao' => 'TST',
+        ]);
         $user = User::factory()->create(['tenant_id' => $tenant->id]);
-        $route = Route::factory()->create(['tenant_id' => $tenant->id]);
+        $route = Route::create([
+            'tenant_id' => $tenant->id,
+            'flight_number' => 'TST101',
+            'departure_icao' => 'EGLL',
+            'arrival_icao' => 'LFPG',
+            'block_time' => '01:15:00',
+        ]);
 
         $oldBooking = Booking::create([
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'route_id' => $route->id,
             'status' => 'pending',
-            'created_at' => now()->subHours(30),
         ]);
+        $oldBooking->timestamps = false;
+        $oldBooking->created_at = now()->subHours(30);
+        $oldBooking->save();
 
         $this->artisan('bookings:purge-unflown')
             ->assertExitCode(0);

@@ -47,42 +47,41 @@ class AcarsApiTest extends TestCase
 
     public function test_acars_full_flight_flow()
     {
-        // 1. Connect
-        $response = $this->actingAs($this->user)->postJson('/api/acars/connect', [
-            'route_id' => $this->route->id,
-            'airframe_id' => $this->airframe->id,
-        ]);
-        
+        // 1. Get or Dispatch Active Flight
+        $response = $this->actingAs($this->user)->getJson('/api/v1/flights/active');
         $response->assertStatus(200);
-        $pirepId = $response->json('pirep_id');
-        $this->assertNotNull($pirepId);
+        $flightId = $response->json('id');
+        $this->assertNotNull($flightId);
 
-        // 2. Telemetry
-        $response = $this->actingAs($this->user)->postJson("/api/acars/{$pirepId}/telemetry", [
-            'lat' => 51.47,
-            'lon' => -0.45,
-            'alt' => 10000,
-            'gs' => 250,
-            'phase' => 'climb'
+        // 2. Position Ping
+        $response = $this->actingAs($this->user)->postJson('/api/v1/acars/position', [
+            'flight_id' => $flightId,
+            'latitude' => 51.47,
+            'longitude' => -0.45,
+            'altitude_ft' => 10000,
+            'ground_speed_kt' => 250,
+            'indicated_airspeed_kt' => 240,
+            'vertical_speed_fpm' => 1500,
+            'pitch_deg' => 2.5,
+            'bank_deg' => 0.0,
+            'heading_deg' => 270,
+            'fuel_qty_kg' => 6000.0,
+            'flight_phase' => 'climb',
         ]);
-        
         $response->assertStatus(200);
 
-        // 3. File PIREP
-        $response = $this->actingAs($this->user)->postJson("/api/acars/{$pirepId}/file", [
-            'block_fuel' => 5000,
-            'zfw' => 55000,
-            'touchdown_rate_fpm' => -150,
-            'cost_index' => 15,
+        // 3. Submit PIREP
+        $response = $this->actingAs($this->user)->postJson('/api/v1/pireps/submit', [
+            'flight_id' => $flightId,
+            'block_time_minutes' => 75,
+            'fuel_used_kg' => 1800.0,
+            'touchdown_fpm' => -150.0,
         ]);
-        
         $response->assertStatus(200);
         
-        $this->assertDatabaseHas('pireps', [
-            'id' => $pirepId,
-            'status' => 'filed',
-            'block_fuel' => 5000,
-            'touchdown_rate_fpm' => -150
+        $this->assertDatabaseHas('acars_pireps', [
+            'flight_id' => $flightId,
+            'touchdown_fpm' => -150.0,
         ]);
     }
 }

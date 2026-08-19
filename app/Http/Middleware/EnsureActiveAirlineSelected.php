@@ -22,7 +22,7 @@ class EnsureActiveAirlineSelected
 
         // 1. Email Verification Guard
         if (!$user->email_verified_at) {
-            if (!$request->routeIs('auth.verify-notice', 'auth.verify', 'logout')) {
+            if (!$request->routeIs('auth.verify*', 'verification.*', 'logout')) {
                 return redirect()->route('auth.verify-notice');
             }
         }

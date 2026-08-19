@@ -16,7 +16,10 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice');
 Route::get('/email/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('verification.notice');
-Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'verifyEmail'])->name('auth.verify');
+Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyPrompt'])->name('auth.verify');
+Route::post('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'confirmVerifyEmail'])->name('auth.verify.confirm');
+Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyPrompt'])->name('verification.verify');
+Route::post('/email/verify/{id}/{hash}', [\App\Http\Controllers\Auth\CustomAuthController::class, 'confirmVerifyEmail'])->name('verification.verify.confirm');
 
 // Onboarding & Session Switcher Routes
 Route::middleware(['auth'])->group(function () {

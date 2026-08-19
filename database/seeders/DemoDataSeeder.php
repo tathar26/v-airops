@@ -27,7 +27,10 @@ class DemoDataSeeder extends Seeder
             'email' => 'admin@vops.test',
         ], [
             'name' => 'System Admin',
+            'first_name' => 'System',
+            'last_name' => 'Admin',
             'password' => bcrypt('password'),
+            'email_verified_at' => now(),
             'tenant_id' => null,
         ]);
         $admin->assignRole($masterAdminRole);
@@ -45,7 +48,10 @@ class DemoDataSeeder extends Seeder
             'email' => 'owner@demo.vops.test',
         ], [
             'name' => 'VA Owner',
+            'first_name' => 'VA',
+            'last_name' => 'Owner',
             'password' => bcrypt('password'),
+            'email_verified_at' => now(),
             'tenant_id' => $tenant->id,
         ]);
         $owner->assignRole($vaOwnerRole);
@@ -55,7 +61,10 @@ class DemoDataSeeder extends Seeder
             'email' => 'pilot@demo.vops.test',
         ], [
             'name' => 'Test Pilot',
+            'first_name' => 'Test',
+            'last_name' => 'Pilot',
             'password' => bcrypt('password'),
+            'email_verified_at' => now(),
             'tenant_id' => $tenant->id,
         ]);
         $pilot->assignRole($pilotRole);
@@ -119,7 +128,10 @@ class DemoDataSeeder extends Seeder
                 'email' => "pilot{$i}@demo.vops.test",
             ], [
                 'name' => "Line Pilot {$i}",
+                'first_name' => 'Line',
+                'last_name' => "Pilot {$i}",
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'tenant_id' => $tenant->id,
             ]);
             $newPilot->assignRole($pilotRole);

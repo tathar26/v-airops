@@ -39,15 +39,20 @@ class RegistrationTest extends TestCase
             $this->markTestSkipped('Registration support is not enabled.');
         }
 
+        \Illuminate\Support\Facades\Queue::fake();
+
         $response = $this->post('/register', [
-            'name' => 'Test User',
+            'username' => 'TestPilot',
+            'first_name' => 'Test',
+            'last_name' => 'Pilot',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+            'password' => 'password123',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertDatabaseHas('users', [
+            'name' => 'TestPilot',
+            'email' => 'test@example.com',
+        ]);
+        $response->assertRedirect(route('auth.verify-notice', absolute: false));
     }
 }
