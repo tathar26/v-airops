@@ -31,31 +31,31 @@
 
     <!-- Structured Data JSON-LD (AI Crawlers & Google Schema.org) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "V-Air Ops Virtual Airline Platform",
-      "operatingSystem": "Web, Windows, macOS",
-      "applicationCategory": "BusinessApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0.00",
-        "priceCurrency": "USD",
-        "seller": {
-          "@type": "Organization",
-          "name": "V-Air Ops SaaS"
-        }
-      },
-      "description": "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
-      "url": "https://vops-dev.artmex-hosting.com/",
-      "featureList": [
+    {!! json_encode([
+      "@context" => "https://schema.org",
+      "@type" => "SoftwareApplication",
+      "name" => "V-Air Ops Virtual Airline Platform",
+      "operatingSystem" => "Web, Windows, macOS",
+      "applicationCategory" => "BusinessApplication",
+      "offers" => [
+        "@type" => "Offer",
+        "price" => "0.00",
+        "priceCurrency" => "USD",
+        "seller" => [
+          "@type" => "Organization",
+          "name" => "V-Air Ops SaaS"
+        ]
+      ],
+      "description" => "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
+      "url" => "https://vops-dev.artmex-hosting.com/",
+      "featureList" => [
         "One-click SimBrief LIDO OFP dispatching",
         "Sub-second ACARS flight tracking & telemetry",
         "Automated pilot rank progression & hour calculation",
         "Discord bot integration with auto role syncing",
         "Vertical flight profile and touchdown G-force scoring"
       ]
-    }
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 
     <!-- Google Fonts -->
@@ -196,27 +196,18 @@
 
             <!-- Authentication / CTAs -->
             <div class="flex items-center gap-4">
-                @if (Route::has('login'))
-                    @auth
-                        <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition">
-                            GO TO CONSOLE &rarr;
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-xs font-bold text-slate-300 hover:text-white px-4 py-2 transition">
-                            Sign In
-                        </a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-bold text-xs shadow-lg shadow-cyan-500/25 transition">
-                                Start 14-Day Trial
-                            </a>
-                        @endif
-                    @endauth
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition">
+                        GO TO CONSOLE &rarr;
+                    </a>
                 @else
-                    <a href="/login" class="text-xs font-bold text-slate-300 hover:text-white px-4 py-2 transition">Sign In</a>
-                    <a href="/register" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-bold text-xs shadow-lg shadow-cyan-500/25 transition">
+                    <a href="{{ route('login') }}" class="text-xs font-bold text-slate-300 hover:text-white px-4 py-2 transition">
+                        Sign In
+                    </a>
+                    <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-bold text-xs shadow-lg shadow-cyan-500/25 transition">
                         Start 14-Day Trial
                     </a>
-                @endif
+                @endauth
             </div>
         </div>
     </header>
