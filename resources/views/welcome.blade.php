@@ -31,31 +31,31 @@
 
     <!-- Structured Data JSON-LD (AI Crawlers & Google Schema.org) -->
     <script type="application/ld+json">
-    {!! json_encode([
-      "@context" => "https://schema.org",
-      "@type" => "SoftwareApplication",
-      "name" => "V-Air Ops Virtual Airline Platform",
-      "operatingSystem" => "Web, Windows, macOS",
-      "applicationCategory" => "BusinessApplication",
-      "offers" => [
-        "@type" => "Offer",
-        "price" => "0.00",
-        "priceCurrency" => "USD",
-        "seller" => [
-          "@type" => "Organization",
-          "name" => "V-Air Ops SaaS"
-        ]
-      ],
-      "description" => "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
-      "url" => "https://vops-dev.artmex-hosting.com/",
-      "featureList" => [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "V-Air Ops Virtual Airline Platform",
+      "operatingSystem": "Web, Windows, macOS",
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD",
+        "seller": {
+          "@type": "Organization",
+          "name": "V-Air Ops SaaS"
+        }
+      },
+      "description": "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
+      "url": "https://vops-dev.artmex-hosting.com/",
+      "featureList": [
         "One-click SimBrief LIDO OFP dispatching",
         "Sub-second ACARS flight tracking & telemetry",
         "Automated pilot rank progression & hour calculation",
         "Discord bot integration with auto role syncing",
         "Vertical flight profile and touchdown G-force scoring"
       ]
-    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    }
     </script>
 
     <!-- Google Fonts -->
