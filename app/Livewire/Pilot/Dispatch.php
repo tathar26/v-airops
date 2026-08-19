@@ -425,10 +425,11 @@ class Dispatch extends Component
             $airlineCode = $this->booking->tenant->icao ?? 'VOPS';
         }
 
-        $regCode = $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE';
-        $dateCode = date('dMY', strtotime($this->departure_date));
-        $depH = (int)date('H', strtotime($this->departure_time));
-        $depM = (int)date('i', strtotime($this->departure_time));
+        $regCode = $selectedAirframe ? $selectedAirframe->registration : ($this->booking->airframe?->registration ?? 'HB-AYE');
+        $typeCode = $selectedAirframe?->aircraftType?->code ?? ($this->booking->airframe?->aircraftType?->code ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+        $dateCode = date('dMY', strtotime($this->departure_date ?: date('Y-m-d')));
+        $depH = (int)date('H', strtotime($this->departure_time ?: date('H:i')));
+        $depM = (int)date('i', strtotime($this->departure_time ?: date('H:i')));
 
         // Navigraph SimBrief Dispatch Redirect Parameters
         $simbriefParams = [
@@ -436,8 +437,8 @@ class Dispatch extends Component
             'fltnum' => $fltNumDigits,
             'callsign' => $callsignCode,
             'type' => $typeCode,
-            'orig' => $this->booking->route->departure_icao,
-            'dest' => $this->booking->route->arrival_icao,
+            'orig' => $this->booking->route?->departure_icao ?? 'EGLL',
+            'dest' => $this->booking->route?->arrival_icao ?? 'LFPG',
             'date' => $dateCode,
             'deph' => $depH,
             'depm' => $depM,
