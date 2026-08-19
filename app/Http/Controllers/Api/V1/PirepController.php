@@ -97,6 +97,23 @@ class PirepController extends Controller
 
             // Also create main VA Pirep record for tenant statistics
             if ($tenantId) {
+                $sb = $booking?->simbrief_data ?? [];
+                $callsignVal = $sb['params']['callsign'] 
+                    ?? ($sb['atc']['callsign'] 
+                    ?? ($flight->flight_number 
+                    ?? ($booking?->route?->callsign 
+                    ?? 'SVK101')));
+
+                $flightNumVal = $sb['general']['flight_number'] 
+                    ?? ($sb['params']['fltnum'] 
+                    ?? ($booking?->route?->flight_number 
+                    ?? $callsignVal));
+
+                $routeString = $flight->route 
+                    ?? ($sb['general']['route'] 
+                    ?? ($booking?->route?->route_string 
+                    ?? 'DIRECT'));
+
                 Pirep::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $user->id,
@@ -109,11 +126,24 @@ class PirepController extends Controller
                     'points_awarded' => max(10, (int) round($totalScore)),
                     'flight_log' => [
                         'flight_id' => $flight->id,
-                        'callsign' => $flight->flight_number,
-                        'origin' => $flight->origin_icao,
-                        'destination' => $flight->destination_icao,
+                        'callsign' => strtoupper($callsignVal),
+                        'flight_number' => strtoupper($flightNumVal),
+                        'origin' => strtoupper($flight->origin_icao),
+                        'destination' => strtoupper($flight->destination_icao),
+                        'route' => $routeString,
+                        'aircraft_type' => $flight->aircraft_type,
+                        'planned_altitude' => $flight->planned_altitude,
+                        'planned_fuel_kg' => $flight->planned_fuel_kg,
+                        'planned_zfw_kg' => $flight->planned_zfw_kg,
+                        'touchdown_fpm' => (float) $request->input('touchdown_fpm'),
+                        'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
                         'landing_grade' => $landingGradeResult['grade'],
                         'penalties' => $penaltiesApplied,
+                        'block_off_time' => $request->input('block_off_time'),
+                        'block_on_time' => $request->input('block_on_time'),
+                        'block_time_minutes' => (int) $request->input('block_time_minutes'),
+                        'fuel_used_kg' => (float) $request->input('fuel_used_kg', 0.0),
+                        'simbrief_data' => $sb,
                     ],
                     'created_at' => Carbon::now(),
                 ]);
@@ -123,16 +153,8 @@ class PirepController extends Controller
                 $booking->delete();
             }
 
-            // Update pilot profile flight hours and score points
-            $profile = ($tenantId ? $user->pilotProfiles()->where('tenant_id', $tenantId)->first() : null)
-                ?? $user->pilotProfiles()->first();
-
-            if ($profile) {
-                $additionalHours = round($request->input('block_time_minutes') / 60.0, 2);
-                $profile->flight_time = ($profile->flight_time ?? 0.0) + $additionalHours;
-                $profile->points = ($profile->points ?? 0) + max(10, (int) round($totalScore));
-                $profile->save();
-            }
+            // Immediately trigger accurate statistic and rank recalculation for this pilot
+            \App\Jobs\RecalculatePilotStatistics::dispatchSync($user->id);
 
             return $newPirep;
         });

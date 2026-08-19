@@ -36,11 +36,17 @@ class RecalculatePilotStatistics implements ShouldQueue
             
             $pireps = Pirep::where('user_id', $this->userId)
                 ->where('tenant_id', $tenantId)
-                ->where('status', 'Accepted')
+                ->where(function ($query) {
+                    $query->whereIn('status', ['Accepted', 'accepted', 'Complete', 'complete', 'Approved', 'approved']);
+                })
                 ->with(['route', 'airframe.aircraftType'])
                 ->get();
 
             if ($pireps->isEmpty()) {
+                $profile->flight_time = 0;
+                $profile->points = 0;
+                $profile->save();
+
                 UserStatistic::updateOrCreate([
                     'user_id' => $this->userId,
                     'tenant_id' => $tenantId
@@ -56,10 +62,26 @@ class RecalculatePilotStatistics implements ShouldQueue
             }
 
             $total_flights = $pireps->count();
-            $total_flight_time = $pireps->sum('flight_time');
+            $total_flight_time = (int) $pireps->sum('flight_time');
+            $total_points = (int) $pireps->sum('points_awarded');
             $total_passengers = $pireps->sum('passengers');
             $total_freight = $pireps->sum('freight');
-            $total_block_fuel = $pireps->sum('block_fuel');
+            $total_block_fuel = $pireps->sum('fuel_used') ?: $pireps->sum('block_fuel');
+            
+            // Update PilotProfile hours and points
+            $profile->flight_time = $total_flight_time;
+            $profile->points = $total_points;
+
+            // Automatically upgrade rank if qualified based on hours
+            $qualifyingRank = \App\Models\Rank::where('tenant_id', $tenantId)
+                ->where('min_hours', '<=', floor($total_flight_time / 60))
+                ->orderBy('min_hours', 'desc')
+                ->first();
+
+            if ($qualifyingRank) {
+                $profile->rank_id = $qualifyingRank->id;
+            }
+            $profile->save();
             
             $landing_rates = $pireps->pluck('touchdown_rate_fpm')->filter();
             $avg_landing_rate = $landing_rates->count() > 0 ? (int) $landing_rates->avg() : null;
