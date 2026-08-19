@@ -102,6 +102,10 @@ document.addEventListener('alpine:init', () => {
 
                 const latLng = [flight.latitude, flight.longitude];
                 bounds.extend(latLng);
+                if (flight.dep_lat && flight.arr_lat) {
+                    bounds.extend([flight.dep_lat, flight.dep_lon]);
+                    bounds.extend([flight.arr_lat, flight.arr_lon]);
+                }
 
                 // Create airplane icon rotated by flight heading
                 const heading = flight.heading_deg || 0;
