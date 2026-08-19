@@ -156,6 +156,33 @@
                                 <x-input-error for="button_secondary_text_color" class="mt-2" />
                             </div>
 
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="input_bg_color" value="{{ __('Text Field / Input Background Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="input_bg_color_picker" type="color" wire:model.live="input_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="input_bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="input_bg_color" placeholder="#0a0d14" />
+                                </div>
+                                <x-input-error for="input_bg_color" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="input_text_color" value="{{ __('Text Field / Input Text Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="input_text_color_picker" type="color" wire:model.live="input_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="input_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="input_text_color" placeholder="#ffffff" />
+                                </div>
+                                <x-input-error for="input_text_color" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="input_border_color" value="{{ __('Text Field / Input Border Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="input_border_color_picker" type="color" wire:model.live="input_border_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="input_border_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="input_border_color" placeholder="#374151" />
+                                </div>
+                                <x-input-error for="input_border_color" class="mt-2" />
+                            </div>
+
                             <!-- Dispatch Settings -->
                             <div class="col-span-6">
                                 <hr class="border-white/10 my-2">

@@ -35,6 +35,13 @@
             $tenantBtnSecText  = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_secondary_text_color
                                     ? auth()->user()->tenant->button_secondary_text_color : '#f3f4f6';
 
+            $tenantInputBg     = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_bg_color
+                                    ? auth()->user()->tenant->input_bg_color : '#0a0d14';
+            $tenantInputText   = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_text_color
+                                    ? auth()->user()->tenant->input_text_color : '#ffffff';
+            $tenantInputBorder = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_border_color
+                                    ? auth()->user()->tenant->input_border_color : '#374151';
+
             /* Luminance helper */
             $hexLuminance = function(string $hex): float {
                 $hex = ltrim($hex, '#');
@@ -98,6 +105,11 @@
                 --tenant-btn-sec-bg:         {{ $tenantBtnSecBg }};
                 --tenant-btn-sec-text:       {{ $tenantBtnSecText }};
 
+                /* Form Controls / Inputs */
+                --tenant-input-bg:           {{ $tenantInputBg }};
+                --tenant-input-text:         {{ $tenantInputText }};
+                --tenant-input-border:       {{ $tenantInputBorder }};
+
                 /* Sidebar / Topbar shell — follows VA accent color */
                 --sidebar-bg:                var(--tenant-accent);
                 --sidebar-border:            var(--tenant-accent-border);
@@ -140,7 +152,8 @@
 
             .btn-secondary,
             button.bg-slate-800,
-            a.bg-slate-800 {
+            a.bg-slate-800,
+            .bg-slate-800 {
                 background-color: var(--tenant-btn-sec-bg) !important;
                 color: var(--tenant-btn-sec-text) !important;
             }
@@ -148,6 +161,32 @@
             button.bg-slate-800:hover,
             a.bg-slate-800:hover {
                 filter: brightness(0.92);
+            }
+
+            /* ── Form Control & Text Field Styling (Follows VA Settings) ─ */
+            input[type="text"],
+            input[type="number"],
+            input[type="email"],
+            input[type="password"],
+            input[type="time"],
+            input[type="date"],
+            select,
+            textarea,
+            .glass-input,
+            .bg-\[\#212631\],
+            .bg-\[\#1e2532\],
+            .bg-\[\#0a0d14\],
+            .bg-\[\#111827\],
+            .bg-black\/40 {
+                background-color: var(--tenant-input-bg) !important;
+                color: var(--tenant-input-text) !important;
+                border-color: var(--tenant-input-border) !important;
+            }
+
+            /* Sub-panels inside cards */
+            .bg-\[\#141a24\] {
+                background-color: var(--tenant-card-bg) !important;
+                border: 1px solid var(--tenant-input-border) !important;
             }
 
             /* ── Master Back Card & Inner Cards (Controlled by VA Settings) ─ */

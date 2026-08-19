@@ -31,6 +31,9 @@ class TenantSettings extends Component
     public $button_text_color = '';
     public $button_secondary_bg_color = '';
     public $button_secondary_text_color = '';
+    public $input_bg_color = '';
+    public $input_text_color = '';
+    public $input_border_color = '';
     public $logo;
     public $default_simbrief_ofp_format = 'lido';
 
@@ -58,6 +61,9 @@ class TenantSettings extends Component
         $this->button_text_color = $tenant->button_text_color ?? '#ffffff';
         $this->button_secondary_bg_color = $tenant->button_secondary_bg_color ?? '#1f2937';
         $this->button_secondary_text_color = $tenant->button_secondary_text_color ?? '#f3f4f6';
+        $this->input_bg_color = $tenant->input_bg_color ?? '#0a0d14';
+        $this->input_text_color = $tenant->input_text_color ?? '#ffffff';
+        $this->input_border_color = $tenant->input_border_color ?? '#374151';
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
 
         // Fetch simbrief formats and cache for 24 hours
@@ -138,6 +144,9 @@ class TenantSettings extends Component
             'button_text_color' => 'nullable|string|max:7',
             'button_secondary_bg_color' => 'nullable|string|max:7',
             'button_secondary_text_color' => 'nullable|string|max:7',
+            'input_bg_color' => 'nullable|string|max:7',
+            'input_text_color' => 'nullable|string|max:7',
+            'input_border_color' => 'nullable|string|max:7',
             'logo' => 'nullable|image|max:1024',
             'default_simbrief_ofp_format' => 'required|string|max:20',
         ]);
@@ -165,6 +174,9 @@ class TenantSettings extends Component
         $tenant->button_text_color = $this->button_text_color ?: '#ffffff';
         $tenant->button_secondary_bg_color = $this->button_secondary_bg_color ?: '#1f2937';
         $tenant->button_secondary_text_color = $this->button_secondary_text_color ?: '#f3f4f6';
+        $tenant->input_bg_color = $this->input_bg_color ?: '#0a0d14';
+        $tenant->input_text_color = $this->input_text_color ?: '#ffffff';
+        $tenant->input_border_color = $this->input_border_color ?: '#374151';
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
 
         if ($this->logo) {
