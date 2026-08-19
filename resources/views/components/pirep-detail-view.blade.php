@@ -158,14 +158,63 @@
                 maxZoom: 20
             }).addTo(map);
 
-            let pathCoordinates = [];
+            const getPhaseColor = (phase, alt) => {
+                const p = (phase || '').toUpperCase();
+                if (p.includes('CLIMB') || p.includes('TAKEOFF')) return '#38bdf8'; // Cyan / Sky Blue (Climb)
+                if (p.includes('CRUISE') || p.includes('ENROUTE') || p.includes('LEVEL')) return '#a855f7'; // Purple (Cruise)
+                if (p.includes('DESCENT')) return '#f97316'; // Orange (Descent)
+                if (p.includes('APPROACH') || p.includes('LANDING') || p.includes('TOUCHDOWN') || p.includes('FINAL')) return '#22c55e'; // Green (Approach & Landing)
+                if (p.includes('TAXI') || p.includes('BOARD') || p.includes('PREFLIGHT') || p.includes('PARKED')) return '#eab308'; // Amber (Ground/Taxi)
+                
+                // Altitude gradient fallback
+                if (alt >= 28000) return '#a855f7'; // Cruise (Purple)
+                if (alt >= 18000) return '#818cf8'; // High altitude (Indigo)
+                if (alt >= 8000) return '#38bdf8';  // Climb (Sky Blue)
+                if (alt >= 2000) return '#f97316';  // Descent (Orange)
+                return '#22c55e';                   // Terminal/Landing (Green)
+            };
 
-            if (this.telemetry && this.telemetry.length > 0) {
-                this.telemetry.forEach(point => {
-                    if (point.lat && point.lon) {
-                        pathCoordinates.push([point.lat, point.lon]);
+            let bounds = [];
+
+            if (this.telemetry && this.telemetry.length > 1) {
+                for (let i = 0; i < this.telemetry.length - 1; i++) {
+                    const p1 = this.telemetry[i];
+                    const p2 = this.telemetry[i+1];
+                    if (p1.lat && p1.lon && p2.lat && p2.lon) {
+                        const seg = [[p1.lat, p1.lon], [p2.lat, p2.lon]];
+                        bounds.push([p1.lat, p1.lon]);
+                        const color = getPhaseColor(p1.phase, p1.alt);
+                        
+                        L.polyline(seg, {
+                            color: color,
+                            weight: 4,
+                            opacity: 0.95,
+                            smoothFactor: 1
+                        }).bindPopup(`<strong>Phase:</strong> ${p1.phase || 'Enroute'}<br><strong>Altitude:</strong> ${p1.alt} ft<br><strong>Speed:</strong> ${p1.spd} kts<br><strong>Time:</strong> ${p1.time}`).addTo(map);
                     }
-                });
+                }
+                const lastPt = this.telemetry[this.telemetry.length - 1];
+                bounds.push([lastPt.lat, lastPt.lon]);
+
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+
+                // Departure & Arrival Airport Markers
+                L.circleMarker(bounds[0], { 
+                    radius: 7, 
+                    color: '#38bdf8', 
+                    fillColor: '#0284c7', 
+                    fillOpacity: 1,
+                    weight: 2 
+                }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
+
+                L.circleMarker(bounds[bounds.length - 1], { 
+                    radius: 7, 
+                    color: '#22c55e', 
+                    fillColor: '#16a34a', 
+                    fillOpacity: 1,
+                    weight: 2 
+                }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
+
             } else {
                 let getCoords = async (icao) => {
                     if(!icao) return null;
@@ -186,6 +235,7 @@
                     getCoords(this.arrIcao)
                 ]);
                 
+                let pathCoordinates = [];
                 if(depCoords && arrCoords) {
                     pathCoordinates = [depCoords, arrCoords];
                 } else if (depCoords) {
@@ -196,37 +246,18 @@
                         [51.148, -0.190]
                     ];
                 }
-            }
 
-            if (pathCoordinates.length > 0) {
                 const flightPath = L.polyline(pathCoordinates, {
-                    color: '#f97316', 
+                    color: '#a855f7', 
                     weight: 3.5,
                     opacity: 0.9,
-                    smoothFactor: 1
+                    dashArray: '6, 6'
                 }).addTo(map);
 
                 map.fitBounds(flightPath.getBounds(), { padding: [50, 50], maxZoom: 12 });
 
-                // Departure & Arrival Airport Markers
-                const startPoint = pathCoordinates[0];
-                const endPoint = pathCoordinates[pathCoordinates.length - 1];
-
-                L.circleMarker(startPoint, { 
-                    radius: 7, 
-                    color: '#38bdf8', 
-                    fillColor: '#0284c7', 
-                    fillOpacity: 1,
-                    weight: 2 
-                }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
-
-                L.circleMarker(endPoint, { 
-                    radius: 7, 
-                    color: '#4ade80', 
-                    fillColor: '#16a34a', 
-                    fillOpacity: 1,
-                    weight: 2 
-                }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
+                L.circleMarker(pathCoordinates[0], { radius: 7, color: '#38bdf8', fillColor: '#0284c7', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
+                L.circleMarker(pathCoordinates[pathCoordinates.length - 1], { radius: 7, color: '#22c55e', fillColor: '#16a34a', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
             }
 
             // 2. Initialize Chart.js with Real or Interpolated Telemetry
@@ -368,6 +399,30 @@
             <!-- Map Card -->
             <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl relative" style="height: 480px;" x-init="init()">
                 <div id="flightMap" x-ref="mapContainer" wire:ignore class="w-full h-full bg-[#0d111a]"></div>
+
+                <!-- Flight Status Color Gradient Legend Overlay -->
+                <div class="absolute top-3 right-3 bg-[#0a0d14]/85 backdrop-blur border border-white/10 px-3 py-2 rounded-xl text-[10px] font-mono text-gray-300 z-[1000] shadow-2xl flex flex-wrap items-center gap-2.5">
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-[#eab308]"></span>
+                        <span>Taxi</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span>
+                        <span>Climb</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-[#a855f7]"></span>
+                        <span>Cruise</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-[#f97316]"></span>
+                        <span>Descent</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-[#22c55e]"></span>
+                        <span>Landing</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Flight Profile Card -->
