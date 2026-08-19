@@ -18,29 +18,29 @@
         @livewireStyles
         @php
             /* ── Tenant colour computation ────────────────────────── */
-            $tenantAccent   = auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->accent_color  : '#f97316';
-            $tenantBg       = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->bg_color
-                                ? auth()->user()->tenant->bg_color : '#0f1117';
-            $tenantPanelBg  = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->panel_bg_color
-                                ? auth()->user()->tenant->panel_bg_color : $tenantAccent;
-            $tenantCardBg   = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->card_bg_color
-                                ? auth()->user()->tenant->card_bg_color : $tenantBg;
+            $activeTenant = null;
+            if (auth()->check()) {
+                $activeTenantId = session('active_airline_id', auth()->user()->tenant_id);
+                if ($activeTenantId) {
+                    $activeTenant = \App\Models\Tenant::find($activeTenantId);
+                }
+                if (!$activeTenant) {
+                    $activeTenant = auth()->user()->tenant;
+                }
+            }
+            $tenantAccent   = $activeTenant && $activeTenant->accent_color ? $activeTenant->accent_color : '#f97316';
+            $tenantBg       = $activeTenant && $activeTenant->bg_color ? $activeTenant->bg_color : '#0f1117';
+            $tenantPanelBg  = $activeTenant && $activeTenant->panel_bg_color ? $activeTenant->panel_bg_color : $tenantAccent;
+            $tenantCardBg   = $activeTenant && $activeTenant->card_bg_color ? $activeTenant->card_bg_color : $tenantBg;
 
-            $tenantBtnBg       = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_bg_color
-                                    ? auth()->user()->tenant->button_bg_color : $tenantAccent;
-            $tenantBtnText     = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_text_color
-                                    ? auth()->user()->tenant->button_text_color : null;
-            $tenantBtnSecBg    = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_secondary_bg_color
-                                    ? auth()->user()->tenant->button_secondary_bg_color : '#1f2937';
-            $tenantBtnSecText  = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_secondary_text_color
-                                    ? auth()->user()->tenant->button_secondary_text_color : '#f3f4f6';
+            $tenantBtnBg       = $activeTenant && $activeTenant->button_bg_color ? $activeTenant->button_bg_color : $tenantAccent;
+            $tenantBtnText     = $activeTenant && $activeTenant->button_text_color ? $activeTenant->button_text_color : null;
+            $tenantBtnSecBg    = $activeTenant && $activeTenant->button_secondary_bg_color ? $activeTenant->button_secondary_bg_color : '#1f2937';
+            $tenantBtnSecText  = $activeTenant && $activeTenant->button_secondary_text_color ? $activeTenant->button_secondary_text_color : '#f3f4f6';
 
-            $tenantInputBg     = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_bg_color
-                                    ? auth()->user()->tenant->input_bg_color : '#0a0d14';
-            $tenantInputText   = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_text_color
-                                    ? auth()->user()->tenant->input_text_color : '#ffffff';
-            $tenantInputBorder = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->input_border_color
-                                    ? auth()->user()->tenant->input_border_color : '#374151';
+            $tenantInputBg     = $activeTenant && $activeTenant->input_bg_color ? $activeTenant->input_bg_color : '#0a0d14';
+            $tenantInputText   = $activeTenant && $activeTenant->input_text_color ? $activeTenant->input_text_color : '#ffffff';
+            $tenantInputBorder = $activeTenant && $activeTenant->input_border_color ? $activeTenant->input_border_color : '#374151';
 
             /* Luminance helper */
             $hexLuminance = function(string $hex): float {
@@ -203,25 +203,49 @@
                 color: var(--tenant-panel-text) !important;
             }
 
+            /* Inner cards and headers across all views */
+            .va-card,
+            .va-card-body,
+            .va-card-header,
+            .glass-panel,
+            .va-main-panel .va-card,
+            .va-main-panel .va-card-body,
+            .va-main-panel .va-card-header,
             .va-main-panel .bg-\[\#12161F\],
+            .va-main-panel .bg-\[\#181D29\],
+            .va-main-panel .bg-\[\#0d111a\],
+            .va-main-panel .bg-\[\#0d131f\],
+            .va-main-panel .bg-\[\#090d15\],
+            .va-main-panel .bg-\[\#1C212E\],
+            .va-main-panel .bg-\[\#0f172a\],
+            .va-main-panel .bg-\[\#2c323f\],
+            .bg-\[\#12161F\],
+            .bg-\[\#181D29\],
+            .bg-\[\#0d111a\],
+            .bg-\[\#0d131f\],
+            .bg-\[\#090d15\],
+            .bg-\[\#1C212E\],
+            .bg-\[\#0f172a\],
+            .bg-\[\#2c323f\] {
+                background-color: var(--tenant-card-bg) !important;
+            }
+
             .va-card,
             .glass-panel {
-                background-color: var(--tenant-card-bg) !important;
                 border: 1px solid rgba(255, 255, 255, 0.12) !important;
                 box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
             }
 
-            .va-main-panel .bg-\[\#181D29\],
             .va-card-header {
-                background-color: var(--tenant-card-bg) !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
                 border-top: 2px solid var(--tenant-accent) !important;
             }
 
-            .va-main-panel .bg-\[\#0a0d14\],
-            .va-main-panel .bg-\[\#111827\] {
+            .va-main-panel thead,
+            .va-main-panel thead tr,
+            thead.bg-\[\#181D29\],
+            tbody.bg-\[\#12161F\] {
                 background-color: var(--tenant-card-bg) !important;
-                border-color: rgba(255, 255, 255, 0.15) !important;
             }
 
             /* ── Light Theme Adaptations ─────────────── */
@@ -421,7 +445,7 @@
 
                 <!-- Page Content -->
                 <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8">
-                    <div class="max-w-[1600px] mx-auto w-full bg-[#181D29]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[calc(100vh-8rem)] space-y-6">
+                    <div class="va-main-panel max-w-[1600px] mx-auto w-full backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[calc(100vh-8rem)] space-y-6">
                         {{ $slot }}
                     </div>
                 </main>

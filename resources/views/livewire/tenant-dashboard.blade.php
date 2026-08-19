@@ -115,7 +115,7 @@
 
     <!-- ── 3. LIVE FLIGHT MAP (Placed at Bottom) ──────────────────── -->
     <div class="va-card overflow-hidden shadow-2xl relative">
-        <div class="va-card-header flex justify-between items-center bg-[#0d111a] border-b border-white/10 px-4 py-3">
+        <div class="va-card-header flex justify-between items-center border-b border-white/10 px-4 py-3">
             <div class="flex items-center gap-2.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span class="font-bold text-sm text-slate-100 tracking-wide">LIVE OPERATIONS RADAR</span>
@@ -136,7 +136,7 @@
     <!-- ── 4. LIVE FLIGHTS TABLE (Placed at Bottom) ───────────────── -->
     <div class="va-card overflow-hidden shadow-2xl">
         <!-- Table Header Bar -->
-        <div class="va-card-header flex justify-between items-center bg-[#0d131f] border-b border-white/10 px-6 py-3.5">
+        <div class="va-card-header flex justify-between items-center border-b border-white/10 px-6 py-3.5">
             <div class="flex items-center gap-3">
                 <h3 class="text-base font-extrabold text-white tracking-wide" x-text="flights.length + ' LIVE FLIGHTS'"></h3>
             </div>
@@ -154,7 +154,7 @@
         <div class="overflow-x-auto">
             <table class="va-table w-full">
                 <thead>
-                    <tr class="bg-[#090d15] text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-white/10">
+                    <tr class="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-white/10">
                         <th class="px-5 py-3 text-left">PILOT</th>
                         <th class="px-4 py-3 text-left">CALLSIGN</th>
                         <th class="px-4 py-3 text-left">DEPARTURE</th>
