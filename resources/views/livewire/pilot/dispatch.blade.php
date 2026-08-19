@@ -18,6 +18,59 @@
         </div>
     @endif
 
+    @php
+        $sbData = $booking->simbrief_data ?? [];
+        
+        // Origin / Destination
+        $headerDep = $sbData['origin']['icao_code'] ?? ($sbData['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL'));
+        $headerArr = $sbData['destination']['icao_code'] ?? ($sbData['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
+        
+        // Distance
+        $headerDist = (int) ($sbData['general']['route_distance'] ?? ($sbData['general']['air_distance'] ?? ($booking->route?->distance ?? 374)));
+        
+        // Callsign / Flight Number
+        $headerCallsign = strtoupper($sbData['params']['callsign'] ?? ($sbData['atc']['callsign'] ?? ($sbData['general']['callsign'] ?? ($callsign ?? 'FL101'))));
+        
+        // Times (ETD, ETA, ETE)
+        $headerEtd = $departure_time;
+        if (!empty($sbData['times']['sched_out'])) {
+            $headerEtd = is_numeric($sbData['times']['sched_out']) ? date('H:i', (int)$sbData['times']['sched_out']) : substr((string)$sbData['times']['sched_out'], 0, 5);
+        } elseif (!empty($sbData['times']['est_out'])) {
+            $headerEtd = is_numeric($sbData['times']['est_out']) ? date('H:i', (int)$sbData['times']['est_out']) : substr((string)$sbData['times']['est_out'], 0, 5);
+        }
+        
+        $headerEte = '01:30';
+        if (!empty($sbData['times']['est_time_enroute'])) {
+            $eteSec = (int) $sbData['times']['est_time_enroute'];
+            $headerEte = sprintf('%02d:%02d', floor($eteSec / 3600), floor(($eteSec % 3600) / 60));
+        } elseif (!empty($sbData['general']['est_time_enroute'])) {
+            $headerEte = $sbData['general']['est_time_enroute'];
+        } elseif ($booking->route?->flight_time) {
+            $headerEte = sprintf('%02d:%02d', floor($booking->route->flight_time / 60), $booking->route->flight_time % 60);
+        }
+        
+        $headerEta = '--:--';
+        if (!empty($sbData['times']['sched_in'])) {
+            $headerEta = is_numeric($sbData['times']['sched_in']) ? date('H:i', (int)$sbData['times']['sched_in']) : substr((string)$sbData['times']['sched_in'], 0, 5);
+        } elseif (!empty($sbData['times']['est_in'])) {
+            $headerEta = is_numeric($sbData['times']['est_in']) ? date('H:i', (int)$sbData['times']['est_in']) : substr((string)$sbData['times']['est_in'], 0, 5);
+        } elseif ($headerEtd && !empty($sbData['times']['est_time_enroute'])) {
+            $headerEta = date('H:i', strtotime($headerEtd . ' +' . round((int)$sbData['times']['est_time_enroute']/60) . ' minutes'));
+        }
+        
+        // Operator
+        $headerOperator = $sbData['general']['icao_airline'] 
+            ?? ($sbData['general']['airline'] 
+            ?? ($booking->route?->operator 
+            ?? ($booking->tenant?->name ?? 'V-Ops Airline')));
+            
+        // Airframe / Registration
+        $headerReg = $sbData['aircraft']['reg'] 
+            ?? ($selectedAirframe ? $selectedAirframe->registration : ($booking->airframe?->registration ?? 'HB-AYE'));
+        $headerType = $sbData['aircraft']['icao_code'] 
+            ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320')));
+    @endphp
+
     @if($is_loading_simbrief && !$showOfpView)
         <!-- FULL SCREEN SIMBRIEF GENERATION LOADING PAGE -->
         <div class="bg-[#12161F] border border-blue-500/30 rounded-2xl p-8 sm:p-12 shadow-2xl space-y-8 text-center my-6 relative overflow-hidden">
@@ -48,17 +101,17 @@
             <div class="inline-flex flex-wrap items-center justify-center gap-4 bg-black/50 border border-white/10 px-6 py-3.5 rounded-2xl text-xs font-mono text-gray-300 shadow-inner">
                 <div class="flex items-center gap-1.5">
                     <span class="text-gray-500 uppercase font-bold text-[10px]">Flight:</span>
-                    <strong class="text-white text-sm font-sans">{{ $booking->route->departure_icao }} ➔ {{ $booking->route->arrival_icao }}</strong>
+                    <strong class="text-white text-sm font-sans">{{ $headerDep }} ➔ {{ $headerArr }}</strong>
                 </div>
                 <span class="text-gray-600">|</span>
                 <div class="flex items-center gap-1.5">
                     <span class="text-gray-500 uppercase font-bold text-[10px]">Callsign:</span>
-                    <strong class="text-tenant-accent font-mono">{{ strtoupper($callsign) }}</strong>
+                    <strong class="text-tenant-accent font-mono">{{ strtoupper($headerCallsign) }}</strong>
                 </div>
                 <span class="text-gray-600">|</span>
                 <div class="flex items-center gap-1.5">
                     <span class="text-gray-500 uppercase font-bold text-[10px]">Airframe:</span>
-                    <strong class="text-white">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }}</strong>
+                    <strong class="text-white">{{ $headerReg }} ({{ $headerType }})</strong>
                 </div>
                 <span class="text-gray-600">|</span>
                 <div class="flex items-center gap-1.5">
@@ -106,13 +159,13 @@
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-white">
-                        {{ $booking->route->departure_icao }} <span class="text-gray-400 font-normal">→</span> {{ $booking->route->arrival_icao }}
+                        {{ $headerDep }} <span class="text-gray-400 font-normal">→</span> {{ $headerArr }}
                     </h1>
                     <span class="text-xs font-semibold px-2.5 py-1 rounded bg-white/10 text-gray-300">
-                        {{ $booking->route->distance ?? 374 }} nm
+                        {{ $headerDist }} nm
                     </span>
                     <span class="text-xs font-semibold px-2.5 py-1 rounded bg-tenant-accent/20 text-tenant-accent font-mono">
-                        {{ strtoupper($callsign) }}
+                        {{ $headerCallsign }}
                     </span>
                     @if($showOfpView || $booking->status === 'dispatched')
                         <span class="text-xs font-semibold px-2.5 py-1 rounded bg-green-500/20 text-green-400 flex items-center gap-1.5">
@@ -129,7 +182,7 @@
                     <button wire:click="cancelBooking" class="px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-md text-red-300 hover:text-white hover:bg-red-500/30 transition flex items-center gap-1">
                         Cancel Booking
                     </button>
-                    <a href="https://www.flightradar24.com/data/flights/{{ strtolower($callsign) }}" target="_blank" class="px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition">
+                    <a href="https://www.flightradar24.com/data/flights/{{ strtolower($headerCallsign) }}" target="_blank" class="px-3 py-1.5 bg-white/5 border border-white/10 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition">
                         Flight Radar 24
                     </a>
                     <button wire:click="$toggle('showRouteDetails')" class="text-gray-400 hover:text-white transition flex items-center gap-1">
@@ -139,22 +192,23 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-6 text-sm text-gray-400 pt-2 border-t border-white/5">
-                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETD</span> <span class="text-white font-medium">{{ $departure_time }}</span></div>
-                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETA</span> <span class="text-white font-medium">{{ date('H:i', strtotime($departure_time . ' +1 hour 30 minutes')) }}</span></div>
-                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETE</span> <span class="text-white font-medium">01:30</span></div>
-                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">Operator</span> <span class="text-white font-medium">{{ $booking->route->operator ?? 'EZS / DS' }}</span></div>
+                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETD</span> <span class="text-white font-medium">{{ $headerEtd }}</span></div>
+                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETA</span> <span class="text-white font-medium">{{ $headerEta }}</span></div>
+                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">ETE</span> <span class="text-white font-medium">{{ $headerEte }}</span></div>
+                <div><span class="text-gray-500 uppercase text-xs font-bold mr-1">Operator</span> <span class="text-white font-medium">{{ $headerOperator }}</span></div>
             </div>
 
             @if($showRouteDetails)
                 <div class="mt-4 p-4 bg-black/40 rounded-lg border border-white/5 space-y-2 text-xs text-gray-300">
-                    <p><strong class="text-white">Departure Airport:</strong> {{ $booking->route->departure_icao }}</p>
-                    <p><strong class="text-white">Arrival Airport:</strong> {{ $booking->route->arrival_icao }}</p>
-                    <p><strong class="text-white">Planned Route:</strong> {{ $routing ?: 'Direct / SimBrief Auto-routing' }}</p>
+                    <p><strong class="text-white">Departure Airport:</strong> {{ $headerDep }}</p>
+                    <p><strong class="text-white">Arrival Airport:</strong> {{ $headerArr }}</p>
+                    <p><strong class="text-white">Aircraft & Registration:</strong> {{ $headerType }} ({{ $headerReg }})</p>
+                    <p><strong class="text-white">Planned Route:</strong> {{ $sbData['general']['route'] ?? ($routing ?: 'Direct / SimBrief Auto-routing') }}</p>
                 </div>
             @endif
         </div>
 
-        @if($showOfpView && isset($booking->simbrief_data['weights']))
+        @if($showOfpView && (isset($booking->simbrief_data['weights']) || isset($booking->simbrief_data['fuel'])))
             <!-- DISPATCHED FLIGHT / OFP PRESENTATION VIEW -->
             @php $ofp = $booking->simbrief_data; @endphp
 
