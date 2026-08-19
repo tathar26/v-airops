@@ -474,9 +474,84 @@
 
         </div>
 
-        <!-- Right Column (Comments, Time, Points, Route) -->
+        <!-- Right Column (Route & Dispatch, Comments, Flight Time, Points & Scoring) -->
         <div class="space-y-6">
             
+            <!-- ROUTE & DISPATCH -->
+            <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between">
+                    <span>ROUTE &amp; DISPATCH</span>
+                </div>
+                <div class="p-6 bg-[#12161F] space-y-4 text-xs font-mono">
+                    <div class="flex justify-between">
+                        <div>
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Departure</span>
+                            <span class="text-base text-sky-400 font-bold">{{ $depIcao }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Arrival</span>
+                            <span class="text-base text-sky-400 font-bold">{{ $arrIcao }}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between border-t border-white/5 pt-3">
+                        <div>
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">ATC Callsign</span>
+                            <span class="text-sm text-tenant-accent font-bold">{{ strtoupper($callsignVal) }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Flight Number</span>
+                            <span class="text-sm text-white font-bold">{{ strtoupper($flightNumVal) }}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between border-t border-white/5 pt-3">
+                        <div>
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Airframe</span>
+                            <span class="text-xs text-gray-200 font-bold">{{ $airframeRegVal }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Aircraft Type</span>
+                            <span class="text-xs text-gray-200 font-bold">{{ $aircraftTypeVal }}</span>
+                        </div>
+                    </div>
+                    <div class="border-t border-white/5 pt-3">
+                        <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Flown ATC Routing</span>
+                        <div class="p-2.5 bg-[#0a0d14] rounded text-green-400 break-words border border-white/5 leading-relaxed text-[11px]">
+                            {{ $pilotRoute }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIREP COMMENTS -->
+            <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between">
+                    <span>PIREP COMMENTS</span>
+                </div>
+                <div class="p-6 bg-[#12161F] space-y-4">
+                    @forelse($pirep->comments ?? [] as $comment)
+                        <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-bold text-white">{{ $comment->user->name ?? 'Pilot' }}</span>
+                                <span class="text-gray-500 text-[10px]">{{ $comment->created_at->diffForHumans() }}</span>
+                            </div>
+                            <div class="text-xs text-gray-300 leading-relaxed">{{ $comment->comment }}</div>
+                        </div>
+                    @empty
+                        <div class="text-xs text-gray-500 italic mb-2">No comments filed on this PIREP yet.</div>
+                    @endforelse
+                    
+                    <form wire:submit.prevent="addComment" class="mt-4 border-t border-white/5 pt-4">
+                        <textarea wire:model="newComment" rows="2" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-500 focus:ring-1 focus:ring-tenant-accent focus:border-tenant-accent focus:outline-none" placeholder="Write a flight debrief comment..."></textarea>
+                        @error('newComment') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                        
+                        <button type="submit" class="mt-3 w-full bg-tenant-accent hover:opacity-90 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            Post Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <!-- TIME -->
             <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
                 <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between">
@@ -575,81 +650,7 @@
                 </div>
             </div>
 
-            <!-- ROUTE & FLIGHT SPECS -->
-            <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
-                <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between">
-                    <span>ROUTE &amp; DISPATCH</span>
-                </div>
-                <div class="p-6 bg-[#12161F] space-y-4 text-xs font-mono">
-                    <div class="flex justify-between">
-                        <div>
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Departure</span>
-                            <span class="text-base text-sky-400 font-bold">{{ $depIcao }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Arrival</span>
-                            <span class="text-base text-sky-400 font-bold">{{ $arrIcao }}</span>
-                        </div>
-                    </div>
-                    <div class="flex justify-between border-t border-white/5 pt-3">
-                        <div>
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">ATC Callsign</span>
-                            <span class="text-sm text-tenant-accent font-bold">{{ strtoupper($callsignVal) }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Flight Number</span>
-                            <span class="text-sm text-white font-bold">{{ strtoupper($flightNumVal) }}</span>
-                        </div>
-                    </div>
-                    <div class="flex justify-between border-t border-white/5 pt-3">
-                        <div>
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Airframe</span>
-                            <span class="text-xs text-gray-200 font-bold">{{ $airframeRegVal }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Aircraft Type</span>
-                            <span class="text-xs text-gray-200 font-bold">{{ $aircraftTypeVal }}</span>
-                        </div>
-                    </div>
-                    <div class="border-t border-white/5 pt-3">
-                        <span class="block text-[10px] text-gray-500 uppercase font-bold mb-1">Flown ATC Routing</span>
-                        <div class="p-2.5 bg-[#0a0d14] rounded text-green-400 break-words border border-white/5 leading-relaxed text-[11px]">
-                            {{ $pilotRoute }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PIREP COMMENTS -->
-            <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
-                <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between">
-                    <span>PIREP COMMENTS</span>
-                </div>
-                <div class="p-6 bg-[#12161F] space-y-4">
-                    @forelse($pirep->comments ?? [] as $comment)
-                        <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-                            <div class="flex justify-between items-center mb-1.5 text-xs">
-                                <span class="font-bold text-white">{{ $comment->user->name ?? 'Pilot' }}</span>
-                                <span class="text-gray-500 text-[10px]">{{ $comment->created_at->diffForHumans() }}</span>
-                            </div>
-                            <div class="text-xs text-gray-300 leading-relaxed">{{ $comment->comment }}</div>
-                        </div>
-                    @empty
-                        <div class="text-xs text-gray-500 italic mb-2">No comments filed on this PIREP yet.</div>
-                    @endforelse
-                    
-                    <form wire:submit.prevent="addComment" class="mt-4 border-t border-white/5 pt-4">
-                        <textarea wire:model="newComment" rows="2" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-500 focus:ring-1 focus:ring-tenant-accent focus:border-tenant-accent focus:outline-none" placeholder="Write a flight debrief comment..."></textarea>
-                        @error('newComment') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                        
-                        <button type="submit" class="mt-3 w-full bg-tenant-accent hover:opacity-90 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                            Post Comment
-                        </button>
-                    </form>
-                </div>
-            </div>
-
         </div>
+
     </div>
 </div>
