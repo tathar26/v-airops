@@ -54,24 +54,24 @@
 
     <!-- Add/Edit Modal -->
     @if($showModal)
-    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="display: none;" x-data="{ show: @entangle('showModal') }" x-show="show" x-transition>
-        <div class="glass-panel rounded-xl shadow-2xl w-full max-w-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" style="display: none;" x-data="{ show: @entangle('showModal') }" x-show="show" x-transition>
+        <div class="rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" style="background-color: #0f172a !important; border: 1px solid #334155 !important;">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/20">
+            <div class="px-6 py-4 flex justify-between items-center border-b border-slate-800" style="background-color: #020617 !important;">
                 <h3 class="text-lg font-bold text-white">{{ $editMode ? 'Edit Airport' : 'Add Airport' }}</h3>
-                <button wire:click="$set('showModal', false)" class="text-gray-400 hover:text-white transition">✕</button>
+                <button wire:click="$set('showModal', false)" class="text-slate-400 hover:text-white transition text-lg font-bold">✕</button>
             </div>
             
             <!-- Body -->
-            <div class="p-6 overflow-y-auto custom-scrollbar">
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4">
                 
                 @if (session()->has('success'))
-                    <div class="mb-4 p-3 bg-green-500/20 border border-green-500/50 text-green-200 rounded-md text-sm">
+                    <div class="p-3 bg-green-500/20 border border-green-500/50 text-green-200 rounded-xl text-sm">
                         {{ session('success') }}
                     </div>
                 @endif
                 @if (session()->has('error'))
-                    <div class="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-md text-sm">
+                    <div class="p-3 bg-red-500/20 border border-red-500/50 text-red-200 rounded-xl text-sm">
                         {{ session('error') }}
                     </div>
                 @endif
@@ -80,45 +80,45 @@
                     
                     <div class="flex gap-4 items-end">
                         <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">ICAO Code</label>
-                            <input type="text" wire:model.defer="icao" class="w-full bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent uppercase" maxlength="4" placeholder="e.g., EGLL">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">ICAO Code</label>
+                            <input type="text" wire:model.defer="icao" class="w-full rounded-xl py-2.5 px-3 uppercase text-sm font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" maxlength="4" placeholder="e.g., EGLL">
                         </div>
-                        <button type="button" wire:click="fetchAirportData" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition h-[42px] flex items-center">
+                        <button type="button" wire:click="fetchAirportData" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl transition h-[44px] flex items-center shadow">
                             Auto-Fetch
                         </button>
                     </div>
                     @error('icao') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Airport Name</label>
-                        <input type="text" wire:model.defer="name" class="w-full bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent" placeholder="e.g., London Heathrow">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Airport Name</label>
+                        <input type="text" wire:model.defer="name" class="w-full rounded-xl py-2.5 px-3 text-sm" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" placeholder="e.g., London Heathrow">
                         @error('name') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Latitude</label>
-                            <input type="text" wire:model.defer="lat" class="w-full bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Latitude</label>
+                            <input type="text" wire:model.defer="lat" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                             @error('lat') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Longitude</label>
-                            <input type="text" wire:model.defer="lon" class="w-full bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Longitude</label>
+                            <input type="text" wire:model.defer="lon" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                             @error('lon') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Elevation (ft)</label>
-                        <input type="number" wire:model.defer="elevation" class="w-full bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Elevation (ft)</label>
+                        <input type="number" wire:model.defer="elevation" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                         @error('elevation') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Metadata Fields -->
-                    <div class="mt-8 pt-6 border-t border-white/10">
-                        <div class="flex justify-between items-center mb-4">
+                    <div class="mt-6 pt-4 border-t border-slate-800">
+                        <div class="flex justify-between items-center mb-3">
                             <label class="block text-xs font-bold text-tenant-accent uppercase tracking-wider">Extra Variables (Metadata)</label>
-                            <button type="button" wire:click="addMetadataField" class="text-xs bg-white/10 hover:bg-white/20 text-white py-1 px-3 rounded transition">
+                            <button type="button" wire:click="addMetadataField" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 py-1 px-3 rounded-lg border border-slate-700 transition">
                                 + Add Variable
                             </button>
                         </div>
@@ -126,14 +126,14 @@
                         <div class="space-y-3">
                             @foreach($metadata_keys as $index => $key)
                                 <div class="flex gap-2">
-                                    <input type="text" wire:model.defer="metadata_keys.{{ $index }}" placeholder="Key (e.g., stands_used)" class="w-1/3 bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent text-sm">
-                                    <input type="text" wire:model.defer="metadata_values.{{ $index }}" placeholder="Value" class="flex-1 bg-black/40 border border-white/10 rounded-md py-2 px-3 text-white focus:outline-none focus:border-tenant-accent text-sm">
-                                    <button type="button" wire:click="removeMetadataField({{ $index }})" class="text-red-400 hover:text-red-300 px-2 transition">✕</button>
+                                    <input type="text" wire:model.defer="metadata_keys.{{ $index }}" placeholder="Key (e.g., stands_used)" class="w-1/3 rounded-xl py-2 px-3 text-sm" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
+                                    <input type="text" wire:model.defer="metadata_values.{{ $index }}" placeholder="Value" class="flex-1 rounded-xl py-2 px-3 text-sm" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
+                                    <button type="button" wire:click="removeMetadataField({{ $index }})" class="text-red-400 hover:text-red-300 px-2 transition font-bold">✕</button>
                                 </div>
                             @endforeach
                             
                             @if(count($metadata_keys) === 0)
-                                <p class="text-xs text-gray-500 italic">No extra variables added.</p>
+                                <p class="text-xs text-slate-500 italic">No extra variables added.</p>
                             @endif
                         </div>
                     </div>
@@ -142,9 +142,9 @@
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-white/10 bg-black/20 flex justify-end gap-3">
-                <button wire:click="$set('showModal', false)" class="px-4 py-2 text-sm font-semibold text-gray-300 hover:text-white transition">Cancel</button>
-                <button wire:click="saveAirport" class="bg-tenant-accent hover:opacity-80 text-white font-bold py-2 px-6 rounded-md transition shadow-lg">
+            <div class="px-6 py-4 border-t border-slate-800 flex justify-end gap-3" style="background-color: #020617 !important;">
+                <button wire:click="$set('showModal', false)" class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition">Cancel</button>
+                <button wire:click="saveAirport" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2 px-6 rounded-xl transition shadow-md">
                     {{ $editMode ? 'Update Airport' : 'Save Airport' }}
                 </button>
             </div>

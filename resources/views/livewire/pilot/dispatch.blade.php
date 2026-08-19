@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white font-sans" @if($is_loading_simbrief && !$showOfpView) wire:poll.3s="checkLiveSimbriefOfp" @endif>
+<div class="dispatch-console max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white font-sans" @if($is_loading_simbrief && !$showOfpView) wire:poll.3s="checkLiveSimbriefOfp" @endif>
     
     @if (session()->has('message'))
         <div class="p-4 bg-green-500/20 border border-green-500 text-green-100 rounded-lg relative" role="alert">
