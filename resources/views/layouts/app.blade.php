@@ -152,75 +152,55 @@
                 filter: brightness(0.92);
             }
 
-            /* ── Dynamic Accent & Background Tinted Card Styling ───────── */
+            /* ── Back Card & Inner Cards (Tenant Accent vs Background) ───────── */
             .va-main-panel {
-                background-color: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                backdrop-filter: blur(16px);
-                box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.3);
+                background-color: var(--tenant-accent) !important;
+                color: var(--tenant-accent-text) !important;
+                border: 1px solid var(--tenant-accent-border) !important;
+                box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.35);
+            }
+            .va-main-panel h1,
+            .va-main-panel h2,
+            .va-main-panel h3,
+            .va-main-panel h4 {
+                color: var(--tenant-accent-text) !important;
             }
 
             .va-main-panel .bg-\[\#12161F\],
             .va-card,
             .glass-panel {
-                background-color: rgba(0, 0, 0, 0.25) !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
-                backdrop-filter: blur(12px);
+                background-color: var(--tenant-bg) !important;
+                border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
             }
 
             .va-main-panel .bg-\[\#181D29\],
             .va-card-header {
-                background: linear-gradient(90deg, rgba(var(--tenant-accent-rgb), 0.22) 0%, rgba(0, 0, 0, 0.3) 100%) !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+                background-color: var(--tenant-bg) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
                 border-top: 2px solid var(--tenant-accent) !important;
             }
 
             .va-main-panel .bg-\[\#0a0d14\],
             .va-main-panel .bg-\[\#111827\] {
-                background-color: rgba(0, 0, 0, 0.35) !important;
-                border-color: rgba(255, 255, 255, 0.1) !important;
+                background-color: var(--tenant-bg) !important;
+                border-color: rgba(255, 255, 255, 0.15) !important;
             }
 
-            /* ── Light Theme Adaptations (Accent-tinted) ─────────────── */
-            body.theme-light .va-main-panel {
-                background-color: rgba(255, 255, 255, 0.65) !important;
-                border-color: rgba(0, 0, 0, 0.08) !important;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.04) !important;
-            }
-            body.theme-light .va-main-panel .text-white:not(.bg-tenant-accent):not(.btn-primary):not(.badge) {
-                color: #0f172a !important;
-            }
-            body.theme-light .va-main-panel .text-gray-200,
-            body.theme-light .va-main-panel .text-gray-300 {
-                color: #334155 !important;
-            }
-            body.theme-light .va-main-panel .text-gray-400 {
-                color: #475569 !important;
-            }
+            /* ── Light Theme Adaptations ─────────────── */
             body.theme-light .va-main-panel .bg-\[\#12161F\],
             body.theme-light .va-card,
             body.theme-light .glass-panel {
-                background-color: rgba(255, 255, 255, 0.85) !important;
-                border-color: rgba(0, 0, 0, 0.08) !important;
+                background-color: var(--tenant-bg) !important;
+                border-color: rgba(0, 0, 0, 0.1) !important;
+                color: #0f172a !important;
             }
             body.theme-light .va-main-panel .bg-\[\#181D29\],
             body.theme-light .va-card-header {
-                background: linear-gradient(90deg, rgba(var(--tenant-accent-rgb), 0.15) 0%, rgba(255, 255, 255, 0.95) 100%) !important;
-                border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+                background-color: var(--tenant-bg) !important;
+                border-bottom-color: rgba(0, 0, 0, 0.1) !important;
                 border-top: 2px solid var(--tenant-accent) !important;
                 color: #0f172a !important;
-            }
-            body.theme-light .va-main-panel .bg-\[\#0a0d14\],
-            body.theme-light .va-main-panel .bg-\[\#111827\] {
-                background-color: #f8fafc !important;
-                border-color: #cbd5e1 !important;
-                color: #0f172a !important;
-            }
-            body.theme-light .va-main-panel table thead {
-                background-color: #f1f5f9 !important;
-            }
-            body.theme-light .va-main-panel table tbody tr:hover {
-                background-color: #f8fafc !important;
             }
 
             /* ── Dispatch Console & Dark Cards (avionics — always dark) */
