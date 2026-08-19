@@ -186,6 +186,28 @@ class FlightController extends Controller
         $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
         $targetAircraft = $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
         $targetRegistration = $booking->airframe?->registration ?? ($sb['aircraft']['reg'] ?? '');
+        $targetOfpId = (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id));
+
+        // Construct clean lightweight OFP summary (~1KB) to prevent Nginx FastCGI buffer overflow
+        $compactSimbrief = [
+            'ofp_id' => $targetOfpId,
+            'simbrief_id' => $targetOfpId,
+            'flight_number' => strtoupper($targetFlightNum),
+            'origin_icao' => strtoupper($targetDep),
+            'destination_icao' => strtoupper($targetArr),
+            'origin_name' => $sb['origin']['name'] ?? $targetDep,
+            'destination_name' => $sb['destination']['name'] ?? $targetArr,
+            'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? ''),
+            'aircraft_type' => strtoupper($targetAircraft),
+            'aircraft_name' => $booking->airframe?->name ?? ($sb['aircraft']['name'] ?? strtoupper($targetAircraft)),
+            'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? 34000)),
+            'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? ($sb['fuel']['ramp'] ?? 6500.0)),
+            'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? ($sb['weights']['zfw'] ?? 58000.0)),
+            'cost_index' => (int) ($sb['general']['cost_index'] ?? 4),
+            'alternate_icao' => $sb['alternate']['icao_code'] ?? ($sb['general']['alternate'] ?? ''),
+            'passengers' => (int) ($sb['weights']['pax_count'] ?? 170),
+            'cargo_kg' => (float) ($sb['weights']['cargo'] ?? 1500.0),
+        ];
 
         return response()->json([
             'has_booking' => true,
@@ -198,8 +220,11 @@ class FlightController extends Controller
             'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? ''),
             'aircraft_type' => strtoupper($targetAircraft),
             'airframe' => $targetRegistration,
-            'simbrief_data' => $booking->simbrief_data,
-            'simbrief_ofp_id' => (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id)),
+            'planned_altitude' => $compactSimbrief['planned_altitude'],
+            'planned_fuel_kg' => $compactSimbrief['planned_fuel_kg'],
+            'planned_zfw_kg' => $compactSimbrief['planned_zfw_kg'],
+            'simbrief_data' => $compactSimbrief,
+            'simbrief_ofp_id' => $targetOfpId,
             'status' => $booking->status,
         ]);
     }
