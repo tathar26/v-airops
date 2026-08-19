@@ -31,6 +31,8 @@ class FlightController extends Controller
 
         if ($booking) {
             $sb = $booking->simbrief_data ?? [];
+            $targetTenantId = $booking->tenant_id ?? ($user->getActiveTenantId() ?? $user->tenant_id);
+
             $targetFlightNum = $sb['params']['callsign'] 
                 ?? ($sb['atc']['callsign'] 
                 ?? ($sb['general']['flight_number'] 
@@ -43,6 +45,13 @@ class FlightController extends Controller
             $targetAircraft = $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
             $targetOfpId = (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id));
 
+            $rawAlt = (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? ($sb['params']['fl'] ?? ($booking->route?->flight_level ?? 36000))));
+            $plannedAltitude = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt * 100 : $rawAlt;
+
+            $plannedFuel = (float) ($sb['fuel']['plan_ramp'] ?? ($sb['fuel']['ramp'] ?? ($sb['fuel']['plan_takeoff'] ?? 6500.0)));
+            $plannedZfw = (float) ($sb['weights']['est_zfw'] ?? ($sb['weights']['zfw'] ?? 58000.0));
+            $routeString = $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT');
+
             // Find or synchronize active flight for this booking
             $flight = AcarsActiveFlight::where('user_id', $user->id)
                 ->where('status', 'active')
@@ -52,27 +61,29 @@ class FlightController extends Controller
             if ($flight) {
                 // Update flight with latest booking details if changed
                 $flight->update([
+                    'tenant_id' => $targetTenantId,
                     'flight_number' => strtoupper($targetFlightNum),
                     'origin_icao' => strtoupper($targetDep ?? $flight->origin_icao),
                     'destination_icao' => strtoupper($targetArr ?? $flight->destination_icao),
-                    'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? $flight->route),
+                    'route' => $routeString,
                     'aircraft_type' => strtoupper($targetAircraft),
-                    'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? ($flight->planned_altitude ?? 34000)),
-                    'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? $flight->planned_fuel_kg),
-                    'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? $flight->planned_zfw_kg),
+                    'planned_altitude' => $plannedAltitude,
+                    'planned_fuel_kg' => $plannedFuel,
+                    'planned_zfw_kg' => $plannedZfw,
                     'simbrief_ofp_id' => $targetOfpId,
                 ]);
             } else {
                 $flight = AcarsActiveFlight::create([
                     'user_id' => $user->id,
+                    'tenant_id' => $targetTenantId,
                     'flight_number' => strtoupper($targetFlightNum),
                     'origin_icao' => strtoupper($targetDep ?? 'EGLL'),
                     'destination_icao' => strtoupper($targetArr ?? 'LFPG'),
-                    'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT'),
+                    'route' => $routeString,
                     'aircraft_type' => strtoupper($targetAircraft),
-                    'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? 34000),
-                    'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? 6500.0),
-                    'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? 58000.0),
+                    'planned_altitude' => $plannedAltitude,
+                    'planned_fuel_kg' => $plannedFuel,
+                    'planned_zfw_kg' => $plannedZfw,
                     'simbrief_ofp_id' => $targetOfpId,
                     'status' => 'active',
                 ]);
@@ -113,20 +124,25 @@ class FlightController extends Controller
     public function dispatch(DispatchFlightRequest $request): JsonResponse
     {
         $user = $request->user();
+        $targetTenantId = $user->getActiveTenantId() ?? $user->tenant_id;
 
         // Archive previous active flights for this user
         AcarsActiveFlight::where('user_id', $user->id)
             ->where('status', 'active')
             ->update(['status' => 'archived']);
 
+        $rawAlt = (int) $request->input('planned_altitude', 34000);
+        $plannedAltitude = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt * 100 : $rawAlt;
+
         $flight = AcarsActiveFlight::create([
             'user_id' => $user->id,
+            'tenant_id' => $targetTenantId,
             'flight_number' => strtoupper($request->input('flight_number')),
             'origin_icao' => strtoupper($request->input('origin_icao')),
             'destination_icao' => strtoupper($request->input('destination_icao')),
             'route' => $request->input('route'),
             'aircraft_type' => $request->input('aircraft_type', 'A320'),
-            'planned_altitude' => (int) $request->input('planned_altitude', 34000),
+            'planned_altitude' => $plannedAltitude,
             'planned_fuel_kg' => (float) $request->input('planned_fuel_kg', 6500.0),
             'planned_zfw_kg' => (float) $request->input('planned_zfw_kg', 58000.0),
             'simbrief_ofp_id' => $request->input('simbrief_ofp_id'),
@@ -188,6 +204,13 @@ class FlightController extends Controller
         $targetRegistration = $booking->airframe?->registration ?? ($sb['aircraft']['reg'] ?? '');
         $targetOfpId = (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id));
 
+        $rawAlt = (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? ($sb['params']['fl'] ?? ($booking->route?->flight_level ?? 36000))));
+        $plannedAltitude = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt * 100 : $rawAlt;
+
+        $plannedFuel = (float) ($sb['fuel']['plan_ramp'] ?? ($sb['fuel']['ramp'] ?? ($sb['fuel']['plan_takeoff'] ?? 6500.0)));
+        $plannedZfw = (float) ($sb['weights']['est_zfw'] ?? ($sb['weights']['zfw'] ?? 58000.0));
+        $routeString = $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT');
+
         // Construct clean lightweight OFP summary (~1KB) to prevent Nginx FastCGI buffer overflow
         $compactSimbrief = [
             'ofp_id' => $targetOfpId,
@@ -197,12 +220,12 @@ class FlightController extends Controller
             'destination_icao' => strtoupper($targetArr),
             'origin_name' => $sb['origin']['name'] ?? $targetDep,
             'destination_name' => $sb['destination']['name'] ?? $targetArr,
-            'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? ''),
+            'route' => $routeString,
             'aircraft_type' => strtoupper($targetAircraft),
             'aircraft_name' => $booking->airframe?->name ?? ($sb['aircraft']['name'] ?? strtoupper($targetAircraft)),
-            'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? 34000)),
-            'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? ($sb['fuel']['ramp'] ?? 6500.0)),
-            'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? ($sb['weights']['zfw'] ?? 58000.0)),
+            'planned_altitude' => $plannedAltitude,
+            'planned_fuel_kg' => $plannedFuel,
+            'planned_zfw_kg' => $plannedZfw,
             'cost_index' => (int) ($sb['general']['cost_index'] ?? 4),
             'alternate_icao' => $sb['alternate']['icao_code'] ?? ($sb['general']['alternate'] ?? ''),
             'passengers' => (int) ($sb['weights']['pax_count'] ?? 170),
@@ -217,12 +240,12 @@ class FlightController extends Controller
             'flight_number' => strtoupper($targetFlightNum),
             'origin_icao' => strtoupper($targetDep),
             'destination_icao' => strtoupper($targetArr),
-            'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? ''),
+            'route' => $routeString,
             'aircraft_type' => strtoupper($targetAircraft),
             'airframe' => $targetRegistration,
-            'planned_altitude' => $compactSimbrief['planned_altitude'],
-            'planned_fuel_kg' => $compactSimbrief['planned_fuel_kg'],
-            'planned_zfw_kg' => $compactSimbrief['planned_zfw_kg'],
+            'planned_altitude' => $plannedAltitude,
+            'planned_fuel_kg' => $plannedFuel,
+            'planned_zfw_kg' => $plannedZfw,
             'simbrief_data' => $compactSimbrief,
             'simbrief_ofp_id' => $targetOfpId,
             'status' => $booking->status,

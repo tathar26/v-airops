@@ -209,7 +209,12 @@
 
                     <div class="bg-black/40 border border-white/5 p-4 rounded-xl space-y-2">
                         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Flight Profile</span>
-                        <div class="text-2xl font-bold text-blue-400 font-mono">{{ $ofp['general']['initial_altitude'] ?? 'FL350' }}</div>
+                        @php
+                            $rawOfpAlt = (int) ($ofp['general']['initial_altitude'] ?? ($ofp['general']['cruise_altitude'] ?? ($ofp['params']['fl'] ?? 36000)));
+                            $ofpFl = ($rawOfpAlt >= 1000) ? 'FL' . floor($rawOfpAlt / 100) : 'FL' . $rawOfpAlt;
+                            $ofpFt = ($rawOfpAlt >= 1000) ? $rawOfpAlt : $rawOfpAlt * 100;
+                        @endphp
+                        <div class="text-2xl font-bold text-blue-400 font-mono">{{ $ofpFl }} <span class="text-xs text-gray-400 font-normal">({{ number_format($ofpFt) }} ft)</span></div>
                         <div class="text-xs text-gray-400 space-y-1 pt-2 border-t border-white/5">
                             <div class="flex justify-between"><span>Cost Index:</span> <span class="text-white font-mono">{{ $ofp['general']['cost_index'] ?? 4 }}</span></div>
                             <div class="flex justify-between"><span>Est. ETE:</span> <span class="text-white font-mono">{{ $ofp['general']['est_time_enroute'] ?? '01:30' }}</span></div>

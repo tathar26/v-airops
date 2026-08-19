@@ -16,6 +16,7 @@ class AcarsActiveFlight extends Model
 
     protected $fillable = [
         'user_id',
+        'tenant_id',
         'flight_number',
         'origin_icao',
         'destination_icao',
@@ -42,6 +43,11 @@ class AcarsActiveFlight extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     public function positions(): HasMany

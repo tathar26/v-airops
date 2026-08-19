@@ -33,7 +33,7 @@ class LiveFlightService
             ->where('updated_at', '<', $cutoff)
             ->update(['status' => 'archived']);
 
-        // 1. Query active bookings for this tenant within the last 24h (status: pending, dispatched, in_flight)
+        // 1. Query active bookings strictly for this tenant within the last 24h (status: pending, dispatched, in_flight)
         $activeBookings = Booking::withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
@@ -43,21 +43,21 @@ class LiveFlightService
             ->get()
             ->keyBy('user_id');
 
-        // 2. Query active ACARS flights for users belonging to this tenant within the last 24h
+        // 2. Query active ACARS flights strictly for this tenant (or matching active bookings for this tenant)
         $activeAcarsFlights = AcarsActiveFlight::where('status', 'active')
             ->where('updated_at', '>=', $cutoff)
-            ->whereHas('user', function ($q) use ($tenantId) {
-                $q->where('tenant_id', $tenantId)
-                  ->orWhereHas('userAirlines', function ($ua) use ($tenantId) {
-                      $ua->where('tenant_id', $tenantId);
-                  });
+            ->where(function ($q) use ($tenantId, $activeBookings) {
+                $q->where('tenant_id', $tenantId);
+                if ($activeBookings->isNotEmpty()) {
+                    $q->orWhereIn('user_id', $activeBookings->keys());
+                }
             })
             ->with('user')
             ->latest('updated_at')
             ->get()
             ->keyBy('user_id');
 
-        // Get all unique user IDs with active activity
+        // Get all unique user IDs with active activity strictly within this tenant
         $activeUserIds = $activeBookings->keys()->merge($activeAcarsFlights->keys())->unique();
 
         if ($activeUserIds->isEmpty()) {
@@ -179,10 +179,12 @@ class LiveFlightService
 
             // ── FLIGHT LEVEL ─────────────────────────────────────
             if ($status === 'Preflight' || $status === 'Pushback' || $status === 'Taxiing') {
-                $plannedFl = (int) ($sb['general']['initial_altitude'] ?? ($sb['params']['fl'] ?? ($acars?->planned_altitude ?? 34000)));
-                $flightLevel = 'FL' . str_pad((string) floor($plannedFl / 100), 3, '0', STR_PAD_LEFT);
+                $rawAlt = (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? ($sb['params']['fl'] ?? ($acars?->planned_altitude ?? 36000))));
+                $flNumber = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt : (int) floor($rawAlt / 100);
+                $flightLevel = 'FL' . str_pad((string) $flNumber, 3, '0', STR_PAD_LEFT);
             } else {
-                $flightLevel = 'FL' . str_pad((string) floor($alt / 100), 3, '0', STR_PAD_LEFT);
+                $flNumber = (int) floor($alt / 100);
+                $flightLevel = 'FL' . str_pad((string) $flNumber, 3, '0', STR_PAD_LEFT);
             }
 
             // ── DISTANCE & ETE ───────────────────────────────────
