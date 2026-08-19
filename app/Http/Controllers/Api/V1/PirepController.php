@@ -155,6 +155,32 @@ class PirepController extends Controller
                 ]);
             }
 
+            // Update pilot's current location to flight arrival airport
+            $destIcao = strtoupper($request->input('actual_destination_icao') 
+                ?? ($flight->destination_icao 
+                ?? ($booking?->route?->arrival_icao 
+                ?? null)));
+
+            if ($destIcao && $tenantId) {
+                $arrivalAirport = \App\Models\Airport::where('icao', $destIcao)->first();
+                if (!$arrivalAirport) {
+                    $arrivalAirport = \App\Models\Airport::create([
+                        'icao' => $destIcao,
+                        'name' => $destIcao,
+                        'lat' => 0.0,
+                        'lon' => 0.0,
+                    ]);
+                }
+                if ($arrivalAirport) {
+                    $profile = \App\Models\PilotProfile::firstOrCreate(
+                        ['user_id' => $user->id, 'tenant_id' => $tenantId],
+                        ['flight_time' => 0, 'points' => 0]
+                    );
+                    $profile->current_airport_id = $arrivalAirport->id;
+                    $profile->save();
+                }
+            }
+
             if ($booking) {
                 $booking->delete();
             }
@@ -172,7 +198,7 @@ class PirepController extends Controller
             'touchdown_gforce' => (float) $pirep->touchdown_gforce,
             'landing_grade' => $pirep->landing_grade,
             'total_score' => $pirep->total_score,
-            'penalties_applied' => $penaltiesApplied,
+            'penalties_applied' => $evalResult['penalties'] ?? [],
             'submitted_at' => $pirep->submitted_at->toISOString(),
         ]);
     }

@@ -28,15 +28,15 @@ class FlightCentreController extends Controller
 
     public function flightsTable(Request $request)
     {
-        $tenantId = $request->user()->tenant_id;
+        $tenantId = $request->user()->getActiveTenantId() ?? $request->user()->tenant_id;
         $query = \App\Models\Route::where('tenant_id', $tenantId);
 
         // Get pilot's current location
-        $profile = $request->user()->pilotProfiles()->first();
-        if ($profile && $profile->current_airport_id) {
-            $airport = \App\Models\Airport::find($profile->current_airport_id);
-            if ($airport) {
-                $query->where('departure_icao', $airport->icao);
+        $profile = $request->user()->pilotProfiles()->where('tenant_id', $tenantId)->first();
+        if ($profile) {
+            $locationIcao = $profile->current_location_icao;
+            if ($locationIcao) {
+                $query->where('departure_icao', strtoupper($locationIcao));
             }
         }
 

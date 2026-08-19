@@ -89,6 +89,33 @@ class RecalculatePilotStatistics implements ShouldQueue
             if ($qualifyingRank) {
                 $profile->rank_id = $qualifyingRank->id;
             }
+
+            // Sync pilot location to the arrival airport of the latest PIREP
+            $latestPirep = $validPireps->sortByDesc('created_at')->first();
+            if ($latestPirep) {
+                $destIcao = null;
+                if ($latestPirep->route && $latestPirep->route->arrival_icao) {
+                    $destIcao = strtoupper($latestPirep->route->arrival_icao);
+                } elseif (is_array($latestPirep->flight_log) && !empty($latestPirep->flight_log['destination'])) {
+                    $destIcao = strtoupper($latestPirep->flight_log['destination']);
+                }
+
+                if ($destIcao) {
+                    $arrivalAirport = \App\Models\Airport::where('icao', $destIcao)->first();
+                    if (!$arrivalAirport) {
+                        $arrivalAirport = \App\Models\Airport::create([
+                            'icao' => $destIcao,
+                            'name' => $destIcao,
+                            'lat' => 0.0,
+                            'lon' => 0.0,
+                        ]);
+                    }
+                    if ($arrivalAirport) {
+                        $profile->current_airport_id = $arrivalAirport->id;
+                    }
+                }
+            }
+
             $profile->save();
             
             $landing_rates = $pireps->pluck('touchdown_rate_fpm')->filter();
