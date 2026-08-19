@@ -70,9 +70,13 @@
             @endforeach
         </div>
 
-        <div class="text-center pt-2">
-            <a href="{{ route('onboarding.select-airline') }}" class="text-xs text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-4">
+        <div class="flex items-center justify-center gap-6 pt-2 text-xs">
+            <a href="{{ route('onboarding.select-airline') }}" class="text-sky-400 hover:text-sky-300 font-medium transition-colors">
                 + Join Another Virtual Airline
+            </a>
+            <span class="text-slate-700">&bull;</span>
+            <a href="{{ route('onboarding.select-airline') }}" class="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                ✨ Create New Virtual Airline
             </a>
         </div>
     </div>

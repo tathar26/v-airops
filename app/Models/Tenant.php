@@ -14,7 +14,27 @@ class Tenant extends Model
         'bg_color',
         'logo_path',
         'default_simbrief_ofp_format',
+        'is_approved',
+        'status',
+        'created_by',
+        'approved_by',
+        'approved_at',
     ];
+
+    protected $casts = [
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
+    ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
 
     public function users()
     {
@@ -36,5 +56,15 @@ class Tenant extends Model
     public function hubs()
     {
         return $this->hasMany(TenantHub::class);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true)->where('status', 'active');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 }

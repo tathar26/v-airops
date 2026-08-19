@@ -148,27 +148,112 @@
                             <span x-text="time"></span>
                         </div>
 
-                        <div class="text-right hidden sm:block border-l border-white/10 pl-6">
-                            <div class="text-sm font-semibold text-tenant-accent flex items-center justify-end gap-2">
-                                <span>{{ Auth::user()->full_name }}</span>
-                                @if(Auth::user()->hasRole('Master Admin'))
-                                    <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">System Admin</span>
-                                @elseif(Auth::user()->hasRole('VA Owner'))
-                                    <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">VA Owner</span>
-                                @endif
-                            </div>
-                            <div class="text-xs text-gray-400 flex items-center justify-end gap-1.5 font-mono">
-                                <span class="text-sky-400 font-bold">{{ Auth::user()->activeCallsign() }}</span>
-                                <span>&bull;</span>
-                                <span class="text-gray-300">{{ Auth::user()->active_rank_name }}</span>
+                        @php
+                            $user = Auth::user();
+                            $userAirlines = $user ? $user->userAirlines()->with('tenant')->get() : collect();
+                            $activeTenantId = session('active_airline_id', $user->tenant_id ?? null);
+                        @endphp
+
+                        <!-- User Profile & Airline Quick Switcher Dropdown (Hover/Click) -->
+                        <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                            <button @click="open = !open" type="button" class="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all text-right group focus:outline-none">
+                                <div>
+                                    <div class="text-sm font-semibold text-tenant-accent flex items-center justify-end gap-2">
+                                        <span>{{ $user->full_name }}</span>
+                                        @if($user->hasRole('Master Admin'))
+                                            <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">System Admin</span>
+                                        @elseif($user->hasRole('VA Owner'))
+                                            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">VA Owner</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-400 flex items-center justify-end gap-1.5 font-mono">
+                                        <span class="text-sky-400 font-bold">{{ $user->activeCallsign() }}</span>
+                                        <span>&bull;</span>
+                                        <span class="text-gray-300">{{ $user->active_rank_name }}</span>
+                                    </div>
+                                </div>
+
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900/95 border border-slate-700 shadow-2xl backdrop-blur-xl z-50 overflow-hidden divide-y divide-slate-800" style="display: none;">
+                                
+                                <!-- User Summary Header -->
+                                <div class="p-4 bg-slate-950/70">
+                                    <p class="text-xs font-bold text-white">{{ $user->full_name }}</p>
+                                    <p class="text-[11px] text-gray-400 truncate">{{ $user->email }}</p>
+                                </div>
+
+                                <!-- Quick Access: Enrolled Virtual Airlines -->
+                                <div class="p-3 bg-slate-950/40">
+                                    <div class="flex items-center justify-between mb-2 px-1">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">My Virtual Airlines</span>
+                                        <span class="text-[10px] text-slate-500 font-mono">{{ $userAirlines->count() }} Joined</span>
+                                    </div>
+
+                                    <div class="space-y-1 max-h-48 overflow-y-auto">
+                                        @forelse ($userAirlines as $ua)
+                                            @php
+                                                $isActive = ($activeTenantId == $ua->tenant_id);
+                                            @endphp
+                                            <form action="{{ route('session.switch-airline') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="tenant_id" value="{{ $ua->tenant_id }}">
+                                                <button type="submit" class="w-full text-left p-2 rounded-xl flex items-center justify-between transition-colors group {{ $isActive ? 'bg-sky-500/10 border border-sky-500/30' : 'hover:bg-slate-800/80 border border-transparent' }}">
+                                                    <div class="flex items-center gap-2.5">
+                                                        <div class="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-xs font-bold text-sky-400 font-mono">
+                                                            {{ strtoupper($ua->tenant->icao ?? 'VA') }}
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-xs font-bold {{ $isActive ? 'text-sky-300' : 'text-white group-hover:text-sky-400' }} transition-colors">
+                                                                {{ $ua->tenant->name }}
+                                                            </p>
+                                                            <p class="text-[10px] text-slate-400 font-mono">{{ $ua->callsign }} &bull; {{ $ua->rank ?? 'Cadet' }}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    @if ($isActive)
+                                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20">
+                                                            <span>Active</span>
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                        </span>
+                                                    @else
+                                                        <span class="text-[10px] text-gray-500 group-hover:text-white transition-colors">Switch &rarr;</span>
+                                                    @endif
+                                                </button>
+                                            </form>
+                                        @empty
+                                            <p class="text-xs text-gray-500 py-2 px-1">No virtual airlines enrolled yet.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                <!-- Actions & Links -->
+                                <div class="p-2 space-y-1 bg-slate-950/60 text-xs">
+                                    <a href="{{ route('onboarding.select-airline') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 transition-colors font-medium">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        Join / Create Virtual Airline
+                                    </a>
+
+                                    <a href="{{ route('profile.account') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        Account Settings
+                                    </a>
+
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                            Sign Out
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="text-gray-400 hover:text-white transition-colors">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            </button>
-                        </form>
                     </div>
                 </header>
 

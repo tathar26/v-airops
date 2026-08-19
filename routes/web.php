@@ -27,6 +27,7 @@ Route::post('/email/verify/{id}/{hash}', [\App\Http\Controllers\Auth\CustomAuthC
 Route::middleware(['auth'])->group(function () {
     Route::get('/onboarding/select-airline', [\App\Http\Controllers\AirlineOnboardingController::class, 'showSelectionPage'])->name('onboarding.select-airline');
     Route::post('/onboarding/join', [\App\Http\Controllers\AirlineOnboardingController::class, 'joinAirlines'])->name('onboarding.join');
+    Route::post('/onboarding/create-airline', [\App\Http\Controllers\AirlineOnboardingController::class, 'createAirline'])->name('onboarding.create-va');
 
     Route::get('/session/select-airline', [\App\Http\Controllers\SessionAirlineController::class, 'showSelectActiveAirlinePage'])->name('session.select-airline');
     Route::post('/session/switch-airline', [\App\Http\Controllers\SessionAirlineController::class, 'switchActiveAirline'])->name('session.switch-airline');
