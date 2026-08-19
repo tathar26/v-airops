@@ -19,18 +19,21 @@ class AcarsController extends Controller
         $payload = $request->validated();
         $payload['timestamp'] = $payload['timestamp'] ?? Carbon::now();
 
-        // Check if queue connection is configured (e.g. redis or database); otherwise synchronous insert
+        // Always create position record synchronously so live radar and flight parameters update in real-time
+        $ping = AcarsPosition::create($payload);
+
+        // Also dispatch background job for scoring and safety checks if queue is enabled
         if (in_array(config('queue.default'), ['redis', 'database'])) {
-            ProcessTelemetryPingJob::dispatch($payload);
-            $pingId = (int) (AcarsPosition::max('id') ?? 0) + 1;
-        } else {
-            $ping = AcarsPosition::create($payload);
-            $pingId = $ping->id;
+            try {
+                ProcessTelemetryPingJob::dispatch($payload);
+            } catch (\Exception $e) {
+                // Non-blocking fallback
+            }
         }
 
         return response()->json([
             'status' => 'success',
-            'ping_id' => (int) $pingId,
+            'ping_id' => (int) $ping->id,
         ]);
     }
 

@@ -138,6 +138,10 @@ class LiveFlightService
 
             // ── TELEMETRY & LIVE POSITION FROM acars_positions TABLE ──
             $userFlightIds = AcarsActiveFlight::where('user_id', $userId)->pluck('id');
+            if ($booking?->id) {
+                $userFlightIds->push($booking->id);
+            }
+            $userFlightIds = $userFlightIds->filter()->unique();
             $latestPos = null;
 
             if ($userFlightIds->isNotEmpty()) {
