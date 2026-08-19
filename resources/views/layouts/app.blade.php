@@ -32,6 +32,9 @@
             $tenantBg       = $activeTenant && $activeTenant->bg_color ? $activeTenant->bg_color : '#0f1117';
             $tenantPanelBg  = $activeTenant && $activeTenant->panel_bg_color ? $activeTenant->panel_bg_color : $tenantAccent;
             $tenantCardBg   = $activeTenant && $activeTenant->card_bg_color ? $activeTenant->card_bg_color : $tenantBg;
+            $tenantCardText = $activeTenant && $activeTenant->card_text_color ? $activeTenant->card_text_color : null;
+            $tenantCardMuted = $activeTenant && $activeTenant->card_muted_text_color ? $activeTenant->card_muted_text_color : null;
+            $tenantPanelText = $activeTenant && $activeTenant->panel_text_color ? $activeTenant->panel_text_color : null;
 
             $tenantBtnBg       = $activeTenant && $activeTenant->button_bg_color ? $activeTenant->button_bg_color : $tenantAccent;
             $tenantBtnText     = $activeTenant && $activeTenant->button_text_color ? $activeTenant->button_text_color : null;
@@ -58,12 +61,25 @@
                                  ? $hexLuminance($tenantBg) : 0;
             $panelLuminance  = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantPanelBg)
                                  ? $hexLuminance($tenantPanelBg) : 0;
+            $cardLuminance   = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantCardBg)
+                                 ? $hexLuminance($tenantCardBg) : 0;
             $accentLuminance = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantAccent)
                                  ? $hexLuminance($tenantAccent) : 0;
 
             $isLight              = $bgLuminance > 0.6;
             $isPanelLight         = $panelLuminance > 0.55;
-            $panelTextColor       = $isPanelLight ? '#0f172a' : '#ffffff';
+            $isCardLight          = $cardLuminance > 0.55;
+
+            if (!$tenantPanelText) {
+                $tenantPanelText = $isPanelLight ? '#0f172a' : '#ffffff';
+            }
+            if (!$tenantCardText) {
+                $tenantCardText  = $isCardLight ? '#0f172a' : '#f8fafc';
+            }
+            if (!$tenantCardMuted) {
+                $tenantCardMuted = $isCardLight ? '#475569' : '#94a3b8';
+            }
+
             $isAccentLight        = $accentLuminance > 0.55;
             $accentTextColor      = $isAccentLight ? '#0f172a' : '#ffffff';
             $accentMutedColor     = $isAccentLight ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.8)';
@@ -96,8 +112,10 @@
                 --tenant-accent-border:      {{ $accentBorderColor }};
                 --tenant-bg:                 {{ $tenantBg }};
                 --tenant-panel-bg:           {{ $tenantPanelBg }};
-                --tenant-panel-text:         {{ $panelTextColor }};
+                --tenant-panel-text:         {{ $tenantPanelText }};
                 --tenant-card-bg:            {{ $tenantCardBg }};
+                --tenant-card-text:          {{ $tenantCardText }};
+                --tenant-card-muted:         {{ $tenantCardMuted }};
 
                 /* Buttons */
                 --tenant-btn-bg:             {{ $tenantBtnBg }};
@@ -249,20 +267,68 @@
                 background-color: var(--tenant-card-bg) !important;
             }
 
-            /* ── Light Theme Adaptations ─────────────── */
-            body.theme-light .va-main-panel .bg-\[\#12161F\],
-            body.theme-light .va-card,
-            body.theme-light .glass-panel {
-                background-color: var(--tenant-bg) !important;
-                border-color: rgba(0, 0, 0, 0.1) !important;
-                color: #0f172a !important;
+            /* ── Global Typography & Contrast Hierarchy ────────────────── */
+            .va-main-panel h1,
+            .va-main-panel h2,
+            .va-main-panel h3,
+            .va-main-panel h4 {
+                color: var(--tenant-panel-text) !important;
             }
-            body.theme-light .va-main-panel .bg-\[\#181D29\],
-            body.theme-light .va-card-header {
-                background-color: var(--tenant-bg) !important;
-                border-bottom-color: rgba(0, 0, 0, 0.1) !important;
-                border-top: 2px solid var(--tenant-accent) !important;
-                color: #0f172a !important;
+
+            .va-card,
+            .va-card-body,
+            .glass-panel,
+            .va-main-panel .va-card,
+            .va-main-panel .va-card-body,
+            .va-main-panel .glass-panel,
+            .va-table td,
+            table.va-table td,
+            .va-card table td,
+            .va-main-panel table td {
+                color: var(--tenant-card-text) !important;
+            }
+
+            .va-card h1, .va-card h2, .va-card h3, .va-card h4, .va-card h5, .va-card h6,
+            .va-card-header h1, .va-card-header h2, .va-card-header h3, .va-card-header h4,
+            .glass-panel h1, .glass-panel h2, .glass-panel h3, .glass-panel h4,
+            .va-card .text-white,
+            .va-card-header .text-white,
+            .glass-panel .text-white,
+            .va-table .text-white,
+            .va-main-panel .text-white,
+            .va-card .text-gray-300,
+            .va-card .text-gray-200,
+            .va-card .text-slate-300,
+            .va-card .text-slate-200,
+            .va-main-panel .text-gray-300,
+            .va-main-panel .text-slate-300,
+            .va-card .font-bold.text-white,
+            .va-card-header .font-bold,
+            .va-card label,
+            .glass-panel label {
+                color: var(--tenant-card-text) !important;
+            }
+
+            /* Subtitles, muted metadata, table column headers, and timestamps */
+            .va-card .text-slate-400,
+            .va-card .text-slate-500,
+            .va-card .text-slate-600,
+            .va-card .text-gray-400,
+            .va-card .text-gray-500,
+            .va-card .text-gray-600,
+            .va-card-header .text-slate-400,
+            .va-card-header .text-gray-400,
+            .glass-panel .text-gray-400,
+            .glass-panel .text-slate-400,
+            .va-main-panel .text-slate-400,
+            .va-main-panel .text-gray-400,
+            .va-main-panel .text-slate-500,
+            .va-main-panel .text-gray-500,
+            .va-main-panel thead th,
+            .va-card thead th,
+            .va-table thead th,
+            table thead th {
+                color: var(--tenant-card-muted) !important;
             }
 
             /* ── Dispatch Console & Dark Cards (avionics — always dark) */

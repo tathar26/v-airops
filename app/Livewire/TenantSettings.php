@@ -26,7 +26,10 @@ class TenantSettings extends Component
     public $accent_color = '';
     public $bg_color = '';
     public $panel_bg_color = '';
+    public $panel_text_color = '';
     public $card_bg_color = '';
+    public $card_text_color = '';
+    public $card_muted_text_color = '';
     public $button_bg_color = '';
     public $button_text_color = '';
     public $button_secondary_bg_color = '';
@@ -57,6 +60,24 @@ class TenantSettings extends Component
         $this->bg_color = $tenant->bg_color ?? '#0f1117';
         $this->panel_bg_color = $tenant->panel_bg_color ?? $this->accent_color;
         $this->card_bg_color = $tenant->card_bg_color ?? $this->bg_color;
+
+        $hexLuminance = function(?string $hex): float {
+            if (!$hex) return 0.0;
+            $hex = ltrim($hex, '#');
+            if (strlen($hex) === 3) {
+                $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+            }
+            if (strlen($hex) !== 6) return 0.0;
+            $r = hexdec(substr($hex, 0, 2)) / 255;
+            $g = hexdec(substr($hex, 2, 2)) / 255;
+            $b = hexdec(substr($hex, 4, 2)) / 255;
+            return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
+        };
+
+        $this->panel_text_color = $tenant->panel_text_color ?? ($hexLuminance($this->panel_bg_color) > 0.5 ? '#0f172a' : '#f8fafc');
+        $this->card_text_color = $tenant->card_text_color ?? ($hexLuminance($this->card_bg_color) > 0.5 ? '#0f172a' : '#ffffff');
+        $this->card_muted_text_color = $tenant->card_muted_text_color ?? ($hexLuminance($this->card_bg_color) > 0.5 ? '#475569' : '#94a3b8');
+
         $this->button_bg_color = $tenant->button_bg_color ?? $this->accent_color;
         $this->button_text_color = $tenant->button_text_color ?? '#ffffff';
         $this->button_secondary_bg_color = $tenant->button_secondary_bg_color ?? '#1f2937';
@@ -139,7 +160,10 @@ class TenantSettings extends Component
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
             'panel_bg_color' => 'nullable|string|max:7',
+            'panel_text_color' => 'nullable|string|max:7',
             'card_bg_color' => 'nullable|string|max:7',
+            'card_text_color' => 'nullable|string|max:7',
+            'card_muted_text_color' => 'nullable|string|max:7',
             'button_bg_color' => 'nullable|string|max:7',
             'button_text_color' => 'nullable|string|max:7',
             'button_secondary_bg_color' => 'nullable|string|max:7',
@@ -169,7 +193,10 @@ class TenantSettings extends Component
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
         $tenant->panel_bg_color = $this->panel_bg_color ?: $this->accent_color;
+        $tenant->panel_text_color = $this->panel_text_color ?: null;
         $tenant->card_bg_color = $this->card_bg_color ?: $this->bg_color;
+        $tenant->card_text_color = $this->card_text_color ?: null;
+        $tenant->card_muted_text_color = $this->card_muted_text_color ?: null;
         $tenant->button_bg_color = $this->button_bg_color ?: $this->accent_color;
         $tenant->button_text_color = $this->button_text_color ?: '#ffffff';
         $tenant->button_secondary_bg_color = $this->button_secondary_bg_color ?: '#1f2937';

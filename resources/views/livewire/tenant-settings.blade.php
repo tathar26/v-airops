@@ -111,6 +111,16 @@
                             </div>
 
                             <div class="col-span-6 md:col-span-3">
+                                <x-label for="panel_text_color" value="{{ __('Master Outer Panel Text / Title Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="panel_text_color_picker" type="color" wire:model.live="panel_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="panel_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="panel_text_color" placeholder="#ffffff" />
+                                </div>
+                                <x-input-error for="panel_text_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">Color of headings and text on the master outer background card.</p>
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
                                 <x-label for="card_bg_color" value="{{ __('Inner Cards & Table Background Color') }}" class="text-white" />
                                 <div class="flex items-center space-x-3 mt-1">
                                     <input id="card_bg_color_picker" type="color" wire:model.live="card_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
@@ -118,6 +128,26 @@
                                 </div>
                                 <x-input-error for="card_bg_color" class="mt-2" />
                                 <p class="text-xs text-gray-400 mt-1">Controls the background of inner cards, table headers, and form panels.</p>
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="card_text_color" value="{{ __('Inner Cards & Table Primary Text Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="card_text_color_picker" type="color" wire:model.live="card_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="card_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="card_text_color" placeholder="#ffffff" />
+                                </div>
+                                <x-input-error for="card_text_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">Main text, pilot names, callsigns, and data inside cards and tables.</p>
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="card_muted_text_color" value="{{ __('Inner Cards & Table Muted / Subtitle Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="card_muted_text_color_picker" type="color" wire:model.live="card_muted_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="card_muted_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="card_muted_text_color" placeholder="#94a3b8" />
+                                </div>
+                                <x-input-error for="card_muted_text_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">Table column headers, timestamps, subtitled metadata, and labels.</p>
                             </div>
 
                             <div class="col-span-6 md:col-span-3">
