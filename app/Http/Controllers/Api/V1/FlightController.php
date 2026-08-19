@@ -21,9 +21,10 @@ class FlightController extends Controller
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
             ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
             ->with([
-                'route:id,flight_number,callsign,departure_icao,arrival_icao,route_string',
-                'airframe:id,aircraft_type_id,registration',
-                'airframe.aircraftType:id,code,name'
+                'route' => function ($q) { $q->withoutGlobalScopes(); },
+                'airframe' => function ($q) { $q->withoutGlobalScopes(); },
+                'airframe.aircraftType' => function ($q) { $q->withoutGlobalScopes(); },
+                'tenant' => function ($q) { $q->withoutGlobalScopes(); },
             ])
             ->latest('id')
             ->first();
@@ -34,11 +35,13 @@ class FlightController extends Controller
                 ?? ($sb['atc']['callsign'] 
                 ?? ($sb['general']['flight_number'] 
                 ?? ($booking->route?->callsign 
-                ?? ($booking->route?->flight_number ?? 'SVK101'))));
+                ?? ($booking->route?->flight_number 
+                ?? ($booking->tenant?->icao ? $booking->tenant->icao . '101' : 'SVK101')))));
 
-            $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? $booking->route?->departure_icao);
-            $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? $booking->route?->arrival_icao);
-            $targetOfpId = (string) ($sb['params']['ofp_id'] ?? $booking->id);
+            $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL'));
+            $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
+            $targetAircraft = $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+            $targetOfpId = (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id));
 
             // Find or synchronize active flight for this booking
             $flight = AcarsActiveFlight::where('user_id', $user->id)
@@ -53,7 +56,7 @@ class FlightController extends Controller
                     'origin_icao' => strtoupper($targetDep ?? $flight->origin_icao),
                     'destination_icao' => strtoupper($targetArr ?? $flight->destination_icao),
                     'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? $flight->route),
-                    'aircraft_type' => $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? $flight->aircraft_type),
+                    'aircraft_type' => strtoupper($targetAircraft),
                     'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? ($flight->planned_altitude ?? 34000)),
                     'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? $flight->planned_fuel_kg),
                     'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? $flight->planned_zfw_kg),
@@ -66,7 +69,7 @@ class FlightController extends Controller
                     'origin_icao' => strtoupper($targetDep ?? 'EGLL'),
                     'destination_icao' => strtoupper($targetArr ?? 'LFPG'),
                     'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT'),
-                    'aircraft_type' => $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? 'A320'),
+                    'aircraft_type' => strtoupper($targetAircraft),
                     'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? 34000),
                     'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? 6500.0),
                     'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? 58000.0),
@@ -89,7 +92,10 @@ class FlightController extends Controller
         }
 
         return response()->json([
+            'has_booking' => true,
             'id' => $flight->id,
+            'flight_id' => $flight->id,
+            'booking_id' => $booking?->id ?? $flight->id,
             'flight_number' => $flight->flight_number,
             'origin_icao' => $flight->origin_icao,
             'destination_icao' => $flight->destination_icao,
@@ -128,7 +134,10 @@ class FlightController extends Controller
         ]);
 
         return response()->json([
+            'has_booking' => true,
             'id' => $flight->id,
+            'flight_id' => $flight->id,
+            'booking_id' => $flight->id,
             'flight_number' => $flight->flight_number,
             'origin_icao' => $flight->origin_icao,
             'destination_icao' => $flight->destination_icao,
@@ -150,9 +159,10 @@ class FlightController extends Controller
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
             ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
             ->with([
-                'route:id,flight_number,callsign,departure_icao,arrival_icao,route_string',
-                'airframe:id,aircraft_type_id,registration',
-                'airframe.aircraftType:id,code,name'
+                'route' => function ($q) { $q->withoutGlobalScopes(); },
+                'airframe' => function ($q) { $q->withoutGlobalScopes(); },
+                'airframe.aircraftType' => function ($q) { $q->withoutGlobalScopes(); },
+                'tenant' => function ($q) { $q->withoutGlobalScopes(); },
             ])
             ->latest('id')
             ->first();
@@ -164,16 +174,32 @@ class FlightController extends Controller
             ], 404);
         }
 
+        $sb = $booking->simbrief_data ?? [];
+        $targetFlightNum = $sb['params']['callsign'] 
+            ?? ($sb['atc']['callsign'] 
+            ?? ($sb['general']['flight_number'] 
+            ?? ($booking->route?->callsign 
+            ?? ($booking->route?->flight_number 
+            ?? ($booking->tenant?->icao ? $booking->tenant->icao . '101' : 'SVK101')))));
+
+        $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL'));
+        $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
+        $targetAircraft = $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+        $targetRegistration = $booking->airframe?->registration ?? ($sb['aircraft']['reg'] ?? '');
+
         return response()->json([
             'has_booking' => true,
             'id' => $booking->id,
-            'flight_number' => $booking->route?->flight_number ?? $booking->route?->callsign ?? 'SVK101',
-            'origin_icao' => $booking->route?->departure_icao,
-            'destination_icao' => $booking->route?->arrival_icao,
-            'route' => $booking->route?->route_string,
-            'aircraft_type' => $booking->airframe?->aircraftType?->code ?? 'A320',
-            'airframe' => $booking->airframe?->registration,
+            'flight_id' => $booking->id,
+            'booking_id' => $booking->id,
+            'flight_number' => strtoupper($targetFlightNum),
+            'origin_icao' => strtoupper($targetDep),
+            'destination_icao' => strtoupper($targetArr),
+            'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? ''),
+            'aircraft_type' => strtoupper($targetAircraft),
+            'airframe' => $targetRegistration,
             'simbrief_data' => $booking->simbrief_data,
+            'simbrief_ofp_id' => (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $booking->id)),
             'status' => $booking->status,
         ]);
     }

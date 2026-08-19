@@ -27,8 +27,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/flights/active', [FlightController::class, 'active']);
         Route::post('/flights/dispatch', [FlightController::class, 'dispatch']);
 
-        // Active Booking Alignment
+        // Active Booking Alignment (Aliases for ACARS Clients)
         Route::get('/booking/active', [FlightController::class, 'bookingActive']);
+        Route::get('/acars/booking', [FlightController::class, 'bookingActive']);
+        Route::get('/bookings/active', [FlightController::class, 'bookingActive']);
+        Route::get('/bids/active', [FlightController::class, 'bookingActive']);
+        Route::get('/pilot/booking', [FlightController::class, 'bookingActive']);
 
         // Telemetry & Events
         Route::post('/acars/position', [V1AcarsController::class, 'position']);
