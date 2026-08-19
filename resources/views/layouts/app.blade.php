@@ -152,61 +152,45 @@
                 filter: brightness(0.92);
             }
 
-            /* ── Light Theme Adaptations (Content Panels) ─────────── */
-            body.theme-light .va-card {
-                background-color: rgba(255,255,255,0.92) !important;
-                border-color: rgba(0,0,0,0.08) !important;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.07) !important;
+            /* ── Master Main Panel background adaptation ────────────── */
+            .va-main-panel {
+                background-color: rgba(24, 29, 41, 0.85);
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
-            body.theme-light .va-card-header {
-                background-color: rgba(0,0,0,0.03) !important;
-                border-color: rgba(0,0,0,0.08) !important;
+            body.theme-light .va-main-panel {
+                background-color: rgba(255, 255, 255, 0.88) !important;
+                border-color: rgba(0, 0, 0, 0.1) !important;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03) !important;
+            }
+            body.theme-light .va-main-panel .text-white:not(.bg-tenant-accent):not(.btn-primary):not(.badge) {
+                color: #0f172a !important;
+            }
+            body.theme-light .va-main-panel .text-gray-200,
+            body.theme-light .va-main-panel .text-gray-300 {
+                color: #334155 !important;
+            }
+            body.theme-light .va-main-panel .text-gray-400 {
                 color: #475569 !important;
             }
-            body.theme-light .va-card-body {
-                background-color: rgba(255,255,255,0.95) !important;
-                color: #0f172a !important;
+            body.theme-light .va-main-panel .bg-\[\#12161F\] {
+                background-color: #ffffff !important;
+                border-color: rgba(0, 0, 0, 0.1) !important;
             }
-            body.theme-light .va-table thead tr {
+            body.theme-light .va-main-panel .bg-\[\#181D29\] {
                 background-color: #f1f5f9 !important;
-                border-color: rgba(0,0,0,0.08) !important;
+                border-color: rgba(0, 0, 0, 0.1) !important;
             }
-            body.theme-light .va-table thead th { color: #475569 !important; }
-            body.theme-light .va-table tbody tr {
-                background-color: #ffffff !important;
-                border-color: rgba(0,0,0,0.06) !important;
-            }
-            body.theme-light .va-table tbody tr:hover { background-color: #f8fafc !important; }
-            body.theme-light .va-table tbody td { color: #1e293b !important; }
-
-            /* Glass panels light theme */
-            body.theme-light .glass-panel {
-                background-color: rgba(255,255,255,0.95) !important;
-                border-color: rgba(0,0,0,0.08) !important;
-                color: #1e293b !important;
-                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05) !important;
-            }
-            body.theme-light .glass-panel h1,
-            body.theme-light .glass-panel h2,
-            body.theme-light .glass-panel h3,
-            body.theme-light .glass-panel h4 { color: #0f172a !important; }
-            body.theme-light .glass-panel .text-white:not(.bg-tenant-accent):not(.bg-vops-primary):not(.bg-emerald-600):not(.bg-red-600) { color: #0f172a !important; }
-            body.theme-light .glass-panel .text-gray-200,
-            body.theme-light .glass-panel .text-gray-300 { color: #334155 !important; }
-            body.theme-light .glass-panel .text-gray-400 { color: #475569 !important; }
-            body.theme-light .glass-panel .text-gray-500 { color: #64748b !important; }
-            body.theme-light .glass-panel .border-white\/5,
-            body.theme-light .glass-panel .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
-            body.theme-light .glass-panel .bg-white\/5 { background-color: rgba(0,0,0,0.03) !important; }
-            body.theme-light .glass-panel input[type="text"],
-            body.theme-light .glass-panel input[type="number"],
-            body.theme-light .glass-panel input[type="email"],
-            body.theme-light .glass-panel input[type="password"],
-            body.theme-light .glass-panel select,
-            body.theme-light .glass-panel textarea {
-                background-color: #ffffff !important;
+            body.theme-light .va-main-panel .bg-\[\#0a0d14\],
+            body.theme-light .va-main-panel .bg-\[\#111827\] {
+                background-color: #f8fafc !important;
                 border-color: #cbd5e1 !important;
                 color: #0f172a !important;
+            }
+            body.theme-light .va-main-panel table thead {
+                background-color: #f1f5f9 !important;
+            }
+            body.theme-light .va-main-panel table tbody tr:hover {
+                background-color: #f8fafc !important;
             }
 
             /* ── Dispatch Console & Dark Cards (avionics — always dark) */
