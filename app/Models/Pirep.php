@@ -73,14 +73,4 @@ class Pirep extends Model
     {
         return $this->belongsTo(Airframe::class);
     }
-
-    public function comments()
-    {
-        return $this->hasMany(PirepComment::class);
-    }
-
-    public function telemetries()
-    {
-        return $this->hasMany(PirepTelemetry::class);
-    }
 }

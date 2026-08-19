@@ -20,7 +20,11 @@ class FlightController extends Controller
             ->where('user_id', $user->id)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
             ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
-            ->with(['route', 'airframe.aircraftType'])
+            ->with([
+                'route:id,flight_number,callsign,departure_icao,arrival_icao,route_string',
+                'airframe:id,aircraft_type_id,registration',
+                'airframe.aircraftType:id,code,name'
+            ])
             ->latest('id')
             ->first();
 
@@ -30,10 +34,10 @@ class FlightController extends Controller
                 ?? ($sb['atc']['callsign'] 
                 ?? ($sb['general']['flight_number'] 
                 ?? ($booking->route?->callsign 
-                ?? ($booking->route?->flight_number ?? 'SVK204'))));
+                ?? ($booking->route?->flight_number ?? 'SVK101'))));
 
-            $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL'));
-            $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
+            $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? $booking->route?->departure_icao);
+            $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? $booking->route?->arrival_icao);
             $targetOfpId = (string) ($sb['params']['ofp_id'] ?? $booking->id);
 
             // Find or synchronize active flight for this booking
@@ -46,8 +50,8 @@ class FlightController extends Controller
                 // Update flight with latest booking details if changed
                 $flight->update([
                     'flight_number' => strtoupper($targetFlightNum),
-                    'origin_icao' => strtoupper($targetDep),
-                    'destination_icao' => strtoupper($targetArr),
+                    'origin_icao' => strtoupper($targetDep ?? $flight->origin_icao),
+                    'destination_icao' => strtoupper($targetArr ?? $flight->destination_icao),
                     'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? $flight->route),
                     'aircraft_type' => $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? $flight->aircraft_type),
                     'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? ($flight->planned_altitude ?? 34000)),
@@ -59,13 +63,13 @@ class FlightController extends Controller
                 $flight = AcarsActiveFlight::create([
                     'user_id' => $user->id,
                     'flight_number' => strtoupper($targetFlightNum),
-                    'origin_icao' => strtoupper($targetDep),
-                    'destination_icao' => strtoupper($targetArr),
-                    'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DVR L10 RCM UN874 KENT DCT'),
+                    'origin_icao' => strtoupper($targetDep ?? 'EGLL'),
+                    'destination_icao' => strtoupper($targetArr ?? 'LFPG'),
+                    'route' => $booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT'),
                     'aircraft_type' => $booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? 'A320'),
                     'planned_altitude' => (int) ($sb['general']['initial_altitude'] ?? 34000),
-                    'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? 6800.0),
-                    'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? 59500.0),
+                    'planned_fuel_kg' => (float) ($sb['fuel']['plan_ramp'] ?? 6500.0),
+                    'planned_zfw_kg' => (float) ($sb['weights']['est_zfw'] ?? 58000.0),
                     'simbrief_ofp_id' => $targetOfpId,
                     'status' => 'active',
                 ]);
@@ -77,20 +81,10 @@ class FlightController extends Controller
                 ->first();
 
             if (!$flight) {
-                // Fallback default dispatch
-                $flight = AcarsActiveFlight::create([
-                    'user_id' => $user->id,
-                    'flight_number' => 'SVK204',
-                    'origin_icao' => 'EGLL',
-                    'destination_icao' => 'LFPG',
-                    'route' => 'DVR L10 RCM UN874 KENT DCT',
-                    'aircraft_type' => 'A320',
-                    'planned_altitude' => 34000,
-                    'planned_fuel_kg' => 6800.0,
-                    'planned_zfw_kg' => 59500.0,
-                    'simbrief_ofp_id' => '1049281',
-                    'status' => 'active',
-                ]);
+                return response()->json([
+                    'has_booking' => false,
+                    'message' => 'No active flight or booking found for pilot'
+                ], 404);
             }
         }
 
@@ -155,7 +149,11 @@ class FlightController extends Controller
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
             ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
-            ->with(['route', 'airframe.aircraftType'])
+            ->with([
+                'route:id,flight_number,callsign,departure_icao,arrival_icao,route_string',
+                'airframe:id,aircraft_type_id,registration',
+                'airframe.aircraftType:id,code,name'
+            ])
             ->latest('id')
             ->first();
 

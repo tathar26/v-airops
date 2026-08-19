@@ -22,8 +22,11 @@ class AcarsController extends Controller
 
         // Ensure telemetry position strictly belongs to the authenticated pilot's active flight
         if ($user) {
-            $flight = AcarsActiveFlight::find($payload['flight_id']);
-            if (!$flight || $flight->user_id !== $user->id) {
+            $flight = AcarsActiveFlight::where('id', $payload['flight_id'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$flight) {
                 $userFlight = AcarsActiveFlight::where('user_id', $user->id)
                     ->where('status', 'active')
                     ->latest('id')
@@ -31,6 +34,11 @@ class AcarsController extends Controller
 
                 if ($userFlight) {
                     $payload['flight_id'] = $userFlight->id;
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'detail' => 'No active flight found for authenticated pilot'
+                    ], 404);
                 }
             }
         }
@@ -61,8 +69,11 @@ class AcarsController extends Controller
 
         // Ensure event strictly belongs to authenticated pilot's active flight
         if ($user) {
-            $flight = AcarsActiveFlight::find($payload['flight_id']);
-            if (!$flight || $flight->user_id !== $user->id) {
+            $flight = AcarsActiveFlight::where('id', $payload['flight_id'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$flight) {
                 $userFlight = AcarsActiveFlight::where('user_id', $user->id)
                     ->where('status', 'active')
                     ->latest('id')
@@ -70,6 +81,11 @@ class AcarsController extends Controller
 
                 if ($userFlight) {
                     $payload['flight_id'] = $userFlight->id;
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'detail' => 'No active flight found for authenticated pilot'
+                    ], 404);
                 }
             }
         }
