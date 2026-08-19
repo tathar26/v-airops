@@ -60,7 +60,18 @@ class CustomAuthController extends Controller
      */
     public function showVerifyNotice()
     {
-        return view('auth.verify-notice');
+        $devVerificationUrl = null;
+        if (app()->environment('local') || config('app.debug')) {
+            $email = session('email_sent');
+            $user = $email ? User::where('email', $email)->first() : User::whereNull('email_verified_at')->whereNotNull('verification_token')->latest('id')->first();
+            if ($user && $user->verification_token) {
+                $devVerificationUrl = route('auth.verify', ['token' => $user->verification_token]);
+            }
+        }
+
+        return view('auth.verify-notice', [
+            'devVerificationUrl' => $devVerificationUrl,
+        ]);
     }
 
     /**
@@ -87,7 +98,8 @@ class CustomAuthController extends Controller
                 ]);
             }
 
-            if ($user->verification_token_expires_at && $user->verification_token_expires_at->isPast()) {
+            $isExpired = $user->verification_token_expires_at && \Carbon\Carbon::parse($user->verification_token_expires_at)->isPast();
+            if ($isExpired) {
                 return view('auth.verify-confirm', [
                     'status' => 'expired',
                     'user' => $user,
@@ -144,7 +156,8 @@ class CustomAuthController extends Controller
                 return redirect()->route('login')->withErrors(['verification' => 'Verification token not found or already verified.']);
             }
 
-            if ($user->verification_token_expires_at && $user->verification_token_expires_at->isPast()) {
+            $isExpired = $user->verification_token_expires_at && \Carbon\Carbon::parse($user->verification_token_expires_at)->isPast();
+            if ($isExpired) {
                 return redirect()->route('login')->withErrors(['verification' => 'Verification token has expired. Please request a new verification link.']);
             }
 

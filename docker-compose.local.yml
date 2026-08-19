@@ -32,10 +32,11 @@ services:
                 WWWGROUP: '${WWWGROUP}'
                 MYSQL_CLIENT: mariadb-client
         image: 'sail-8.5/app'
+        restart: unless-stopped
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
-        command: ['php', 'artisan', 'schedule:work']
+        command: ['sh', '-c', 'while true; do php artisan schedule:work; sleep 2; done']
         volumes:
             - '.:/var/www/html'
         networks:
@@ -50,10 +51,11 @@ services:
                 WWWGROUP: '${WWWGROUP}'
                 MYSQL_CLIENT: mariadb-client
         image: 'sail-8.5/app'
+        restart: unless-stopped
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
-        command: ['php', 'artisan', 'queue:work']
+        command: ['sh', '-c', 'while true; do php artisan queue:work --tries=3 --timeout=90; sleep 1; done']
         volumes:
             - '.:/var/www/html'
         networks:
@@ -84,6 +86,13 @@ services:
                 - '--innodb_initialized'
             retries: 3
             timeout: 5s
+    mailpit:
+        image: 'axllent/mailpit:latest'
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+        networks:
+            - sail
 networks:
     sail:
         driver: bridge

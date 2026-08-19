@@ -50,13 +50,13 @@ class SendVerificationEmailJob implements ShouldQueue
         Log::info("Processing queued verification email for User #{$this->user->id} ({$this->user->email})");
 
         try {
-            Mail::raw(
-                "Welcome to Virtual Airline Operations, {$this->user->name}!\n\nPlease click the following link to verify your account:\n{$this->verificationUrl}\n\nThis link will expire in 24 hours.",
-                function ($message) {
-                    $message->to($this->user->email)
-                        ->subject('Verify Your Virtual Airline Pilot Account');
-                }
-            );
+            Mail::send('emails.verify-email', [
+                'user' => $this->user,
+                'verificationUrl' => $this->verificationUrl,
+            ], function ($message) {
+                $message->to($this->user->email)
+                    ->subject('Verify Your Virtual Airline Pilot Account');
+            });
 
             Log::info("Successfully delivered verification email to {$this->user->email}");
         } catch (Exception $e) {
