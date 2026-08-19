@@ -5,7 +5,7 @@
             <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="h-8 w-auto object-contain">
         @else
             <div class="font-bold text-sm uppercase tracking-widest leading-tight text-inherit">
-                {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Ops Admin' }}
+                {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops Admin' }}
             </div>
         @endif
     </div>
@@ -166,6 +166,6 @@
     </ul>
 
     <div class="px-5 py-3 border-t border-black/20 text-[10px] opacity-60 font-mono">
-        v-ops v1.0
+        v-air-ops v1.0
     </div>
 </nav>

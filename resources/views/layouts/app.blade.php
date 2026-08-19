@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'V-Ops') }}</title>
+        <title>{{ config('app.name', 'V-Air Ops') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -287,7 +287,7 @@
                             <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="block h-8 w-auto mr-3 object-contain">
                         @else
                             <h1 class="text-base font-bold tracking-widest uppercase">
-                                {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Ops' }}
+                                {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops' }}
                             </h1>
                         @endif
                     </div>
@@ -295,7 +295,7 @@
                     <!-- Desktop: VA name (sidebar has brand, topbar shows page context) -->
                     <div class="hidden md:flex items-center">
                         <h1 class="text-sm font-bold tracking-widest uppercase">
-                            {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Ops' }}
+                            {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops' }}
                         </h1>
                     </div>
 

@@ -3,29 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>V-Ops &mdash; Next-Gen Virtual Airline Management SaaS Platform</title>
+    <title>V-Air Ops &mdash; Next-Gen Virtual Airline Management SaaS Platform</title>
 
     <!-- Primary SEO Meta Tags -->
-    <meta name="title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta name="title" content="V-Air Ops — Next-Gen Virtual Airline Management SaaS Platform">
     <meta name="description" content="The modern, high-performance SaaS platform for virtual aviation communities. Featuring smart SimBrief dispatching, sub-second telemetry ACARS, automated pilot rosters, and zero-maintenance cloud infrastructure. Perfect for MSFS 2024 and X-Plane 12.">
     <meta name="keywords" content="Virtual Airline, ACARS, MSFS 2024, X-Plane 12, SimBrief, Flight Simulation, PMDG 737, Fenix A320, Virtual Aviation, Pilot Logbook, Flight Tracking, vAMSYS alternative, phpVMS alternative">
-    <meta name="author" content="V-Ops Platform Team">
+    <meta name="author" content="V-Air Ops Platform Team">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
     <link rel="canonical" href="https://vops-dev.artmex-hosting.com/">
 
     <!-- Open Graph / Facebook / Discord SEO -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="V-Ops Platform">
+    <meta property="og:site_name" content="V-Air Ops Platform">
     <meta property="og:url" content="https://vops-dev.artmex-hosting.com/">
-    <meta property="og:title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta property="og:title" content="V-Air Ops — Next-Gen Virtual Airline Management SaaS Platform">
     <meta property="og:description" content="Run your virtual airline like the real thing. Smart SimBrief LIDO dispatching, sub-second ACARS telemetry, and automated pilot management for MSFS 2024 & X-Plane 12.">
     <meta property="og:image" content="https://vops-dev.artmex-hosting.com/og-preview.png">
 
     <!-- Twitter Card SEO -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://vops-dev.artmex-hosting.com/">
-    <meta name="twitter:title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta name="twitter:title" content="V-Air Ops — Next-Gen Virtual Airline Management SaaS Platform">
     <meta name="twitter:description" content="Run your virtual airline like the real thing. Smart SimBrief LIDO dispatching, sub-second ACARS telemetry, and automated pilot management for MSFS 2024 & X-Plane 12.">
     <meta name="twitter:image" content="https://vops-dev.artmex-hosting.com/og-preview.png">
 
@@ -34,7 +34,7 @@
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "V-Ops Virtual Airline Platform",
+      "name": "V-Air Ops Virtual Airline Platform",
       "operatingSystem": "Web, Windows, macOS",
       "applicationCategory": "BusinessApplication",
       "offers": {
@@ -43,7 +43,7 @@
         "priceCurrency": "USD",
         "seller": {
           "@type": "Organization",
-          "name": "V-Ops SaaS"
+          "name": "V-Air Ops SaaS"
         }
       },
       "description": "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
@@ -179,7 +179,7 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="font-heading font-black text-xl tracking-tight text-white flex items-center gap-1.5">
-                        V-OPS <span class="text-[10px] font-mono uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold">PLATFORM</span>
+                        V-AIR OPS <span class="text-[10px] font-mono uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold">PLATFORM</span>
                     </span>
                     <span class="text-[10px] text-slate-400 font-mono tracking-wider">NEXT-GEN VA INFRASTRUCTURE</span>
                 </div>
@@ -668,7 +668,7 @@
                         <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-orange-500 flex items-center justify-center text-white">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                         </div>
-                        <span class="font-heading font-black text-lg text-white">V-OPS</span>
+                        <span class="font-heading font-black text-lg text-white">V-AIR OPS</span>
                     </div>
                     <p class="text-slate-400 max-w-sm leading-relaxed">
                         High-performance Virtual Airline SaaS platform &amp; sub-second ACARS telemetry engine for modern flight simulation communities.
@@ -710,7 +710,7 @@
             </div>
 
             <div class="border-t border-white/5 pt-8 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px]">
-                <p>&copy; {{ date('Y') }} V-Ops SaaS Platform. All rights reserved. Not affiliated with any real-world airline.</p>
+                <p>&copy; {{ date('Y') }} V-Air Ops SaaS Platform. All rights reserved. Not affiliated with any real-world airline.</p>
                 <div class="flex items-center gap-2 text-emerald-400">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>ALL SYSTEMS OPERATIONAL</span>

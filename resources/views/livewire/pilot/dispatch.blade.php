@@ -62,7 +62,7 @@
         $headerOperator = $sbData['general']['icao_airline'] 
             ?? ($sbData['general']['airline'] 
             ?? ($booking->route?->operator 
-            ?? ($booking->tenant?->name ?? 'V-Ops Airline')));
+            ?? ($booking->tenant?->name ?? 'V-Air Ops Airline')));
             
         // Airframe / Registration
         $headerReg = $sbData['aircraft']['reg'] 
@@ -93,7 +93,7 @@
                     Generating & Syncing SimBrief OFP...
                 </h2>
                 <p class="text-sm text-gray-300 leading-relaxed">
-                    SimBrief has been opened in a new tab with your pre-filled options. Click <strong class="text-tenant-accent font-bold">Generate Flight</strong> on SimBrief. V-Ops is waiting to fetch your official flight plan.
+                    SimBrief has been opened in a new tab with your pre-filled options. Click <strong class="text-tenant-accent font-bold">Generate Flight</strong> on SimBrief. V-Air Ops is waiting to fetch your official flight plan.
                 </p>
             </div>
 
@@ -133,7 +133,7 @@
                     <div class="bg-gradient-to-r from-blue-500 via-indigo-400 to-purple-500 h-full w-full animate-pulse"></div>
                 </div>
                 <p class="text-[11px] text-gray-400 text-left">
-                    🔒 <strong class="text-gray-200">Strict Match Verification:</strong> V-Ops ensures older SimBrief OFPs won't be matched unless origin (<span class="text-white font-mono">{{ $booking->route->departure_icao }}</span>), destination (<span class="text-white font-mono">{{ $booking->route->arrival_icao }}</span>), and callsign (<span class="text-white font-mono">{{ strtoupper($callsign) }}</span>) strictly match!
+                    🔒 <strong class="text-gray-200">Strict Match Verification:</strong> V-Air Ops ensures older SimBrief OFPs won't be matched unless origin (<span class="text-white font-mono">{{ $booking->route->departure_icao }}</span>), destination (<span class="text-white font-mono">{{ $booking->route->arrival_icao }}</span>), and callsign (<span class="text-white font-mono">{{ strtoupper($callsign) }}</span>) strictly match!
                 </p>
             </div>
 
