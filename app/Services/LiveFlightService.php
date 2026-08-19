@@ -146,7 +146,9 @@ class LiveFlightService
                 ?? ($user->pilotProfiles()->where('tenant_id', $tenantId)->first()?->preferred_network ?? 'Offline'));
 
             // ── TELEMETRY & LIVE POSITION FROM acars_positions TABLE ──
-            $userFlightIds = AcarsActiveFlight::where('user_id', $userId)->pluck('id');
+            $userFlightIds = AcarsActiveFlight::where('user_id', $userId)
+                ->where('status', 'active')
+                ->pluck('id');
             if ($booking?->id) {
                 $userFlightIds->push($booking->id);
             }
@@ -155,27 +157,23 @@ class LiveFlightService
 
             if ($userFlightIds->isNotEmpty()) {
                 $latestPos = AcarsPosition::whereIn('flight_id', $userFlightIds)
+                    ->where('created_at', '>=', \Carbon\Carbon::now()->subHours(6))
                     ->latest('id')
                     ->first();
             }
 
-            if ($latestPos) {
-                // Live telemetry from Pegasus / ACARS client
-                $lat = (float) $latestPos->latitude;
-                $lon = (float) $latestPos->longitude;
-                $alt = (int) $latestPos->altitude_ft;
-                $speed = (int) $latestPos->ground_speed_kt;
-                $heading = (int) $latestPos->heading_deg;
-                $status = $this->formatFlightPhase($latestPos->flight_phase);
-            } else {
-                // Dispatched / Preflight / Boarding on ground at departure airport
-                $lat = (float) $depLat;
-                $lon = (float) $depLon;
-                $alt = (int) ($depAirport?->elevation ?? 0);
-                $speed = 0;
-                $heading = (int) $this->calculateHeading($depLat, $depLon, $arrLat, $arrLon);
-                $status = 'Preflight';
+            // Strictly hide flight from the live map until pilot has started logging with ACARS
+            if (!$latestPos) {
+                continue;
             }
+
+            // Live telemetry from Pegasus / ACARS client
+            $lat = (float) $latestPos->latitude;
+            $lon = (float) $latestPos->longitude;
+            $alt = (int) $latestPos->altitude_ft;
+            $speed = (int) $latestPos->ground_speed_kt;
+            $heading = (int) $latestPos->heading_deg;
+            $status = $this->formatFlightPhase($latestPos->flight_phase);
 
             // ── FLIGHT LEVEL ─────────────────────────────────────
             if ($status === 'Preflight' || $status === 'Pushback' || $status === 'Taxiing') {
