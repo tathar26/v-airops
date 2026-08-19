@@ -1,6 +1,119 @@
 <div class="space-y-6 max-w-[1600px] mx-auto w-full" x-data="liveFlightMap({{ json_encode($liveFlights) }})">
 
-    <!-- ── 1. LIVE FLIGHT MAP ──────────────────────────────────────── -->
+    <!-- ── 1. AIRLINE & PILOT STATS ROW 1 ─────────────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- PIREPs -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>PIREPs</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Total / Accept / Pend / Reject</span>
+            </div>
+            <div class="va-card-body flex justify-between items-center">
+                <div>
+                    <div class="text-2xl font-bold text-tenant-accent">{{ $userTotalPireps }}</div>
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Filed</div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-center">
+                        <div class="text-base font-bold text-emerald-400">{{ $userAcceptedPireps }}</div>
+                        <div class="text-[9px] text-slate-500 uppercase">OK</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-base font-bold text-amber-400">{{ $userPendingPireps }}</div>
+                        <div class="text-[9px] text-slate-500 uppercase">Pend</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-base font-bold text-red-400">{{ $userRejectedPireps }}</div>
+                        <div class="text-[9px] text-slate-500 uppercase">Rej</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Points -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>Points</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Career Score</span>
+            </div>
+            <div class="va-card-body">
+                <div class="text-2xl font-bold text-tenant-accent">{{ number_format($profile->points) }}</div>
+                <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Points earned</div>
+            </div>
+        </div>
+
+        <!-- Time Flown -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>Time Flown</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Active Airline</span>
+            </div>
+            <div class="va-card-body">
+                <div class="text-2xl font-bold text-tenant-accent font-mono">
+                    {{ $flightTimeHours }}<span class="text-base text-slate-400 font-sans">h</span>
+                    {{ str_pad($flightTimeMins, 2, '0', STR_PAD_LEFT) }}<span class="text-base text-slate-400 font-sans">m</span>
+                </div>
+                <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Block hours</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 2. AIRLINE NETWORK & PILOT INFO ROW 2 ──────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Airline Network -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>Airline Network</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Fleet &amp; Routes</span>
+            </div>
+            <div class="va-card-body flex justify-between items-center">
+                <div>
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Active Fleet</div>
+                    <div class="text-xl font-bold text-tenant-accent">{{ $fleetCount }}<span class="text-sm text-slate-400 ml-1 font-normal">airframes</span></div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Total Routes</div>
+                    <div class="text-xl font-bold text-tenant-accent">{{ $routeCount }}<span class="text-sm text-slate-400 ml-1 font-normal">routes</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Rank -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>Current Rank</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Pilot Classification</span>
+            </div>
+            <div class="va-card-body flex justify-between items-center">
+                <div class="text-xl font-bold text-tenant-accent">{{ $rankName }}</div>
+                <div class="text-sm font-mono text-sky-400 bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20">{{ $callsign }}</div>
+            </div>
+        </div>
+
+        <!-- Pilot Card -->
+        <div class="va-card">
+            <div class="va-card-header flex justify-between items-center">
+                <span>Pilot</span>
+                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Identity &amp; Location</span>
+            </div>
+            <div class="va-card-body flex justify-between items-center gap-4">
+                <div class="min-w-0">
+                    <div class="text-base font-bold text-slate-100 truncate">{{ $user->full_name }}</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="text-xs font-mono text-tenant-accent bg-tenant-accent/10 px-1.5 py-0.5 rounded border border-tenant-accent/20">{{ $callsign }}</span>
+                        <span class="text-slate-600 text-xs">&bull;</span>
+                        <span class="text-xs text-slate-400">{{ $rankName }}</span>
+                    </div>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Location</div>
+                    <div class="text-2xl font-bold text-sky-400 font-mono tracking-wider">{{ $currentLocation }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 3. LIVE FLIGHT MAP (Placed at Bottom) ──────────────────── -->
     <div class="va-card overflow-hidden shadow-2xl relative">
         <div class="va-card-header flex justify-between items-center bg-[#0d111a] border-b border-white/10 px-4 py-3">
             <div class="flex items-center gap-2.5">
@@ -20,7 +133,7 @@
         <div class="relative w-full h-[460px] bg-[#080c14]" id="live-flight-map" wire:ignore></div>
     </div>
 
-    <!-- ── 2. LIVE FLIGHTS TABLE (vAMSYS benchmark design) ────────── -->
+    <!-- ── 4. LIVE FLIGHTS TABLE (Placed at Bottom) ───────────────── -->
     <div class="va-card overflow-hidden shadow-2xl">
         <!-- Table Header Bar -->
         <div class="va-card-header flex justify-between items-center bg-[#0d131f] border-b border-white/10 px-6 py-3.5">
@@ -93,11 +206,11 @@
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider inline-block"
                                       :class="{
-                                          'bg-sky-500/15 text-sky-300 border border-sky-500/30': flight.status === 'Cruising',
-                                          'bg-purple-500/15 text-purple-300 border border-purple-500/30': flight.status === 'Climbing',
-                                          'bg-orange-500/15 text-orange-300 border border-orange-500/30': flight.status === 'Descending',
-                                          'bg-amber-500/15 text-amber-300 border border-amber-500/30': flight.status === 'Preflight',
-                                          'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30': flight.status === 'Landed'
+                                          'bg-sky-500/15 text-sky-300 border border-sky-500/30': ['Cruising', 'Enroute'].includes(flight.status),
+                                          'bg-purple-500/15 text-purple-300 border border-purple-500/30': ['Climbing', 'Takeoff'].includes(flight.status),
+                                          'bg-orange-500/15 text-orange-300 border border-orange-500/30': ['Descending', 'Approach', 'Final Approach'].includes(flight.status),
+                                          'bg-amber-500/15 text-amber-300 border border-amber-500/30': ['Preflight', 'Boarding', 'Pushback', 'Taxiing'].includes(flight.status),
+                                          'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30': ['Landed', 'Parked'].includes(flight.status)
                                       }"
                                       x-text="flight.status">
                                 </span>
@@ -137,119 +250,6 @@
                     </template>
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- ── 3. AIRLINE & PILOT STATS ROW 1 ─────────────────────────── -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- PIREPs -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>PIREPs</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Total / Accept / Pend / Reject</span>
-            </div>
-            <div class="va-card-body flex justify-between items-center">
-                <div>
-                    <div class="text-2xl font-bold text-tenant-accent">{{ $userTotalPireps }}</div>
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Filed</div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="text-center">
-                        <div class="text-base font-bold text-emerald-400">{{ $userAcceptedPireps }}</div>
-                        <div class="text-[9px] text-slate-500 uppercase">OK</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-base font-bold text-amber-400">{{ $userPendingPireps }}</div>
-                        <div class="text-[9px] text-slate-500 uppercase">Pend</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-base font-bold text-red-400">{{ $userRejectedPireps }}</div>
-                        <div class="text-[9px] text-slate-500 uppercase">Rej</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Points -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>Points</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Career Score</span>
-            </div>
-            <div class="va-card-body">
-                <div class="text-2xl font-bold text-tenant-accent">{{ number_format($profile->points) }}</div>
-                <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Points earned</div>
-            </div>
-        </div>
-
-        <!-- Time Flown -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>Time Flown</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Active Airline</span>
-            </div>
-            <div class="va-card-body">
-                <div class="text-2xl font-bold text-tenant-accent font-mono">
-                    {{ $flightTimeHours }}<span class="text-base text-slate-400 font-sans">h</span>
-                    {{ str_pad($flightTimeMins, 2, '0', STR_PAD_LEFT) }}<span class="text-base text-slate-400 font-sans">m</span>
-                </div>
-                <div class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Block hours</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── 4. AIRLINE NETWORK & PILOT INFO ROW 2 ──────────────────── -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <!-- Airline Network -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>Airline Network</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Fleet &amp; Routes</span>
-            </div>
-            <div class="va-card-body flex justify-between items-center">
-                <div>
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Active Fleet</div>
-                    <div class="text-xl font-bold text-tenant-accent">{{ $fleetCount }}<span class="text-sm text-slate-400 ml-1 font-normal">airframes</span></div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Total Routes</div>
-                    <div class="text-xl font-bold text-tenant-accent">{{ $routeCount }}<span class="text-sm text-slate-400 ml-1 font-normal">routes</span></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Current Rank -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>Current Rank</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Pilot Classification</span>
-            </div>
-            <div class="va-card-body flex justify-between items-center">
-                <div class="text-xl font-bold text-tenant-accent">{{ $rankName }}</div>
-                <div class="text-sm font-mono text-sky-400 bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20">{{ $callsign }}</div>
-            </div>
-        </div>
-
-        <!-- Pilot Card -->
-        <div class="va-card">
-            <div class="va-card-header flex justify-between items-center">
-                <span>Pilot</span>
-                <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Identity &amp; Location</span>
-            </div>
-            <div class="va-card-body flex justify-between items-center gap-4">
-                <div class="min-w-0">
-                    <div class="text-base font-bold text-slate-100 truncate">{{ $user->full_name }}</div>
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-xs font-mono text-tenant-accent bg-tenant-accent/10 px-1.5 py-0.5 rounded border border-tenant-accent/20">{{ $callsign }}</span>
-                        <span class="text-slate-600 text-xs">&bull;</span>
-                        <span class="text-xs text-slate-400">{{ $rankName }}</span>
-                    </div>
-                </div>
-                <div class="text-right flex-shrink-0">
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider">Location</div>
-                    <div class="text-2xl font-bold text-sky-400 font-mono tracking-wider">{{ $currentLocation }}</div>
-                </div>
-            </div>
         </div>
     </div>
 

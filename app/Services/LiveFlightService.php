@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AcarsActiveFlight;
+use App\Models\AcarsPosition;
 use App\Models\Booking;
 use App\Models\Airport;
 use App\Models\Tenant;
@@ -42,9 +43,7 @@ class LiveFlightService
                       $ua->where('tenant_id', $tenantId);
                   });
             })
-            ->with(['user', 'positions' => function ($q) {
-                $q->latest('id')->limit(1);
-            }])
+            ->with('user')
             ->latest('updated_at')
             ->get()
             ->keyBy('user_id');
@@ -85,7 +84,6 @@ class LiveFlightService
             $airframe = $booking?->airframe;
 
             // ── CALLSIGN & FLIGHT NUMBER ─────────────────────────
-            // Priority: SimBrief CallSign (e.g. EZS508HZ) -> ATC Callsign -> SimBrief Flight No -> Route Callsign -> ACARS Flight No -> Route Flight No
             $callsign = $sb['params']['callsign'] 
                 ?? ($sb['atc']['callsign'] 
                 ?? ($sb['general']['callsign'] 
@@ -138,8 +136,15 @@ class LiveFlightService
                 ?? ($sb['network'] 
                 ?? ($user->pilotProfiles()->where('tenant_id', $tenantId)->first()?->preferred_network ?? 'Offline'));
 
-            // ── TELEMETRY & LIVE POSITION ────────────────────────
-            $latestPos = $acars?->positions?->first();
+            // ── TELEMETRY & LIVE POSITION FROM acars_positions TABLE ──
+            $userFlightIds = AcarsActiveFlight::where('user_id', $userId)->pluck('id');
+            $latestPos = null;
+
+            if ($userFlightIds->isNotEmpty()) {
+                $latestPos = AcarsPosition::whereIn('flight_id', $userFlightIds)
+                    ->latest('id')
+                    ->first();
+            }
 
             if ($latestPos) {
                 // Live telemetry from Pegasus / ACARS client
@@ -148,7 +153,7 @@ class LiveFlightService
                 $alt = (int) $latestPos->altitude_ft;
                 $speed = (int) $latestPos->ground_speed_kt;
                 $heading = (int) $latestPos->heading_deg;
-                $status = ucfirst(strtolower($latestPos->flight_phase ?: 'Cruising'));
+                $status = $this->formatFlightPhase($latestPos->flight_phase);
             } else {
                 // Dispatched / Preflight / Boarding on ground at departure airport
                 $lat = (float) $depLat;
@@ -160,7 +165,7 @@ class LiveFlightService
             }
 
             // ── FLIGHT LEVEL ─────────────────────────────────────
-            if ($status === 'Preflight') {
+            if ($status === 'Preflight' || $status === 'Pushback' || $status === 'Taxiing') {
                 $plannedFl = (int) ($sb['general']['initial_altitude'] ?? ($sb['params']['fl'] ?? ($acars?->planned_altitude ?? 34000)));
                 $flightLevel = 'FL' . str_pad((string) floor($plannedFl / 100), 3, '0', STR_PAD_LEFT);
             } else {
@@ -216,6 +221,32 @@ class LiveFlightService
         }
 
         return $liveFlights->values()->toArray();
+    }
+
+    /**
+     * Format raw flight phase from acars_positions table into human-readable standard phase.
+     */
+    public function formatFlightPhase(?string $phase): string
+    {
+        if (!$phase) {
+            return 'Preflight';
+        }
+
+        $upper = strtoupper(trim($phase));
+
+        return match ($upper) {
+            'PREFLIGHT', 'BOARDING', 'PLANNING' => 'Preflight',
+            'PUSHBACK', 'PUSH_BACK', 'ENGINE_START', 'STARTING' => 'Pushback',
+            'TAXI', 'TAXI_OUT', 'TAXIING', 'TAXI_IN', 'TAXI_TO_GATE' => 'Taxiing',
+            'TAKEOFF', 'TAKEOFF_RUN', 'ROTATION' => 'Takeoff',
+            'CLIMB', 'CLIMBING', 'INITIAL_CLIMB' => 'Climbing',
+            'CRUISE', 'CRUISING', 'ENROUTE', 'LEVEL' => 'Cruising',
+            'DESCENT', 'DESCENDING' => 'Descending',
+            'APPROACH', 'APPROACHING', 'FINAL', 'FINAL_APPROACH' => 'Approach',
+            'LANDING', 'TOUCHDOWN', 'LANDED' => 'Landed',
+            'PARKED', 'GATE_ARRIVAL', 'COMPLETED', 'SHUTDOWN' => 'Parked',
+            default => ucwords(str_replace('_', ' ', strtolower($phase))),
+        };
     }
 
     /**
