@@ -136,119 +136,129 @@
     <div x-show="showCreateModal" x-transition.opacity class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <!-- Backdrop -->
-            <div @click="showCreateModal = false" class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"></div>
+            <div @click="showCreateModal = false" class="fixed inset-0 transition-opacity" style="background-color: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(8px);"></div>
 
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-            <!-- Modal Body -->
-            <div class="inline-block align-bottom rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full bg-slate-900 border border-slate-700/80">
+            <!-- Modal Body (100% Solid Opaque Dark Background) -->
+            <div class="inline-block align-bottom rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+                 style="background-color: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;">
                 <form action="{{ route('onboarding.create-va') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    <div class="px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
+                    <div class="px-6 py-5 flex items-center justify-between" style="background-color: #020617 !important; border-bottom: 1px solid #1e293b !important;">
                         <div class="flex items-center gap-3">
-                            <div class="p-2 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            <div class="p-2 rounded-2xl" style="background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-white">Create New Virtual Airline</h3>
-                                <p class="text-xs text-slate-400">Configure your airline settings, base hub, and branding.</p>
+                                <h3 class="text-lg font-bold" style="color: #ffffff !important;">Create New Virtual Airline</h3>
+                                <p class="text-xs" style="color: #94a3b8 !important;">Configure your airline settings, base hub, and branding.</p>
                             </div>
                         </div>
-                        <button type="button" @click="showCreateModal = false" class="text-slate-400 hover:text-white transition-colors">
+                        <button type="button" @click="showCreateModal = false" class="transition-colors" style="color: #94a3b8;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#94a3b8'">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
 
-                    <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                    <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto" style="background-color: #0f172a !important;">
                         <!-- Airline Name & ICAO -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Airline Name <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Airline Name <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" name="name" value="{{ old('name') }}" required placeholder="e.g. Delta Virtual Airlines"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                @error('name') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
+                                @error('name') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Airline ICAO <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Airline ICAO <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" name="icao" value="{{ old('icao') }}" required placeholder="e.g. DAL" maxlength="4"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono uppercase text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                @error('icao') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 font-mono uppercase text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #38bdf8 !important; font-weight: 700; border: 1px solid #334155 !important;">
+                                @error('icao') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Base Hub ICAO & SimBrief Format -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Base Hub Airport (ICAO) <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Base Hub Airport (ICAO) <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" name="base_hub_icao" value="{{ old('base_hub_icao') }}" required placeholder="e.g. KATL, EGLL, EHAM" maxlength="4"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono uppercase text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                <p class="text-[11px] text-slate-500 mt-1">Airport will be automatically imported as primary hub.</p>
-                                @error('base_hub_icao') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 font-mono uppercase text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #c084fc !important; font-weight: 700; border: 1px solid #334155 !important;">
+                                <p class="text-[11px] mt-1" style="color: #94a3b8 !important;">Airport will be automatically imported as primary hub.</p>
+                                @error('base_hub_icao') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    SimBrief OFP Format <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    SimBrief OFP Format <span style="color: #f87171;">*</span>
                                 </label>
                                 <select name="default_simbrief_ofp_format" required
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
+                                    class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                     @foreach($simbriefFormats as $key => $label)
-                                        <option value="{{ $key }}" {{ old('default_simbrief_ofp_format') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        <option value="{{ $key }}" {{ old('default_simbrief_ofp_format') == $key ? 'selected' : '' }} style="background-color: #1e293b; color: #ffffff;">{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                @error('default_simbrief_ofp_format') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('default_simbrief_ofp_format') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Theme Colors -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl" style="background-color: #020617 !important; border: 1px solid #1e293b !important;">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Accent Color <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Accent Color <span style="color: #f87171;">*</span>
                                 </label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" x-model="accentColor" name="accent_color" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer border border-slate-800 p-1">
-                                    <input type="text" x-model="accentColor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs uppercase" readonly>
+                                    <input type="color" x-model="accentColor" name="accent_color" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer p-1" style="border: 1px solid #334155 !important;">
+                                    <input type="text" x-model="accentColor" class="w-full rounded-xl px-3 py-2 font-mono text-xs uppercase" readonly
+                                        style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                 </div>
-                                @error('accent_color') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('accent_color') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Background Color <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Background Color <span style="color: #f87171;">*</span>
                                 </label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" x-model="bgColor" name="bg_color" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer border border-slate-800 p-1">
-                                    <input type="text" x-model="bgColor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs uppercase" readonly>
+                                    <input type="color" x-model="bgColor" name="bg_color" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer p-1" style="border: 1px solid #334155 !important;">
+                                    <input type="text" x-model="bgColor" class="w-full rounded-xl px-3 py-2 font-mono text-xs uppercase" readonly
+                                        style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                 </div>
-                                @error('bg_color') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('bg_color') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Logo Upload -->
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
                                 Airline Logo (Optional)
                             </label>
                             <input type="file" name="logo" accept="image/*"
-                                class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-500/20 file:text-purple-300 hover:file:bg-purple-500/30 file:cursor-pointer">
-                            @error('logo') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:cursor-pointer"
+                                style="color: #94a3b8; background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 0.5rem;">
+                            @error('logo') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-end gap-3">
-                        <button type="button" @click="showCreateModal = false" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                    <div class="px-6 py-4 flex items-center justify-end gap-3" style="background-color: #020617 !important; border-top: 1px solid #1e293b !important;">
+                        <button type="button" @click="showCreateModal = false" class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            style="background-color: #1e293b; color: #94a3b8; border: 1px solid #334155;">
                             Cancel
                         </button>
-                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 transition-all flex items-center gap-2">
+                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center gap-2"
+                            style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important; color: #ffffff !important; border: none;">
                             <span>Create & Launch Airline →</span>
                         </button>
                     </div>

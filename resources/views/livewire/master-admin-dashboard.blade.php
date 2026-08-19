@@ -269,31 +269,32 @@
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background Overlay -->
-            <div wire:click="closeCreateVaModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+            <div wire:click="closeCreateVaModal" class="fixed inset-0 transition-opacity" style="background-color: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(8px);" aria-hidden="true"></div>
 
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <!-- Modal Panel -->
-            <div class="inline-block align-bottom rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full bg-slate-900 border border-white/10">
+            <!-- Modal Panel (100% Solid Opaque Dark Background) -->
+            <div class="inline-block align-bottom rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+                 style="background-color: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;">
                 <form wire:submit.prevent="createVirtualAirline">
-                    <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-slate-950/60">
+                    <div class="px-6 py-5 flex items-center justify-between" style="background-color: #020617 !important; border-bottom: 1px solid #1e293b !important;">
                         <div class="flex items-center gap-3">
-                            <div class="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            <div class="p-2 rounded-xl" style="background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-white">Create Virtual Airline</h3>
-                                <p class="text-xs text-gray-400">Specify all required airline settings, branding, and base hub.</p>
+                                <h3 class="text-lg font-bold" style="color: #ffffff !important;">Create Virtual Airline</h3>
+                                <p class="text-xs" style="color: #94a3b8 !important;">Specify all required airline settings, branding, and base hub.</p>
                             </div>
                         </div>
-                        <button type="button" wire:click="closeCreateVaModal" class="text-gray-400 hover:text-white transition-colors">
+                        <button type="button" wire:click="closeCreateVaModal" class="transition-colors" style="color: #94a3b8;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#94a3b8'">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
 
-                    <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                    <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto" style="background-color: #0f172a !important;">
                         @error('general')
-                            <div class="p-3 rounded-lg bg-red-500/20 border border-red-500 text-red-300 text-xs">
+                            <div class="p-3 rounded-lg text-xs" style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5;">
                                 {{ $message }}
                             </div>
                         @enderror
@@ -301,97 +302,106 @@
                         <!-- Airline Name & ICAO -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    Airline Name <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Airline Name <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" wire:model="vaName" placeholder="e.g. British Airways Virtual"
-                                    class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                @error('vaName') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
+                                @error('vaName') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    Airline ICAO <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Airline ICAO <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" wire:model="vaIcao" placeholder="e.g. BAW" maxlength="4"
-                                    class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono uppercase text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                @error('vaIcao') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 font-mono uppercase text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #38bdf8 !important; font-weight: 700; border: 1px solid #334155 !important;">
+                                @error('vaIcao') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Base Hub ICAO & SimBrief Format -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    Base Hub Airport (ICAO) <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Base Hub Airport (ICAO) <span style="color: #f87171;">*</span>
                                 </label>
                                 <input type="text" wire:model="vaBaseHubIcao" placeholder="e.g. EGLL or KJFK" maxlength="4"
-                                    class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white font-mono uppercase text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
-                                <p class="text-[11px] text-gray-500 mt-1">Airport will be automatically imported as primary hub.</p>
-                                @error('vaBaseHubIcao') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    class="w-full rounded-xl px-3.5 py-2.5 font-mono uppercase text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #c084fc !important; font-weight: 700; border: 1px solid #334155 !important;">
+                                <p class="text-[11px] mt-1" style="color: #94a3b8 !important;">Airport will be automatically imported as primary hub.</p>
+                                @error('vaBaseHubIcao') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    SimBrief OFP Format <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    SimBrief OFP Format <span style="color: #f87171;">*</span>
                                 </label>
                                 <select wire:model="vaSimbriefFormat"
-                                    class="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none">
+                                    class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all"
+                                    style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                     @foreach($simbriefFormats as $key => $label)
-                                        <option value="{{ $key }}">{{ $label }}</option>
+                                        <option value="{{ $key }}" style="background-color: #1e293b; color: #ffffff;">{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                @error('vaSimbriefFormat') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('vaSimbriefFormat') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Theme Colors -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-950/40 border border-white/5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl" style="background-color: #020617 !important; border: 1px solid #1e293b !important;">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    Accent Color <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Accent Color <span style="color: #f87171;">*</span>
                                 </label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" wire:model.live="vaAccentColor" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer border border-white/10 p-1">
-                                    <input type="text" wire:model="vaAccentColor" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-xs uppercase">
+                                    <input type="color" wire:model.live="vaAccentColor" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer p-1" style="border: 1px solid #334155 !important;">
+                                    <input type="text" wire:model="vaAccentColor" class="w-full rounded-xl px-3 py-2 font-mono text-xs uppercase"
+                                        style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                 </div>
-                                @error('vaAccentColor') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('vaAccentColor') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
-                                    Background Color <span class="text-red-400">*</span>
+                                <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
+                                    Background Color <span style="color: #f87171;">*</span>
                                 </label>
                                 <div class="flex items-center gap-3">
-                                    <input type="color" wire:model.live="vaBgColor" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer border border-white/10 p-1">
-                                    <input type="text" wire:model="vaBgColor" class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-xs uppercase">
+                                    <input type="color" wire:model.live="vaBgColor" class="h-10 w-14 rounded-lg bg-transparent cursor-pointer p-1" style="border: 1px solid #334155 !important;">
+                                    <input type="text" wire:model="vaBgColor" class="w-full rounded-xl px-3 py-2 font-mono text-xs uppercase"
+                                        style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;">
                                 </div>
-                                @error('vaBgColor') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                @error('vaBgColor') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
                         <!-- Logo Upload -->
                         <div>
-                            <label class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1.5">
+                            <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color: #cbd5e1 !important;">
                                 Airline Logo (Optional)
                             </label>
                             <input type="file" wire:model="vaLogo" accept="image/*"
-                                class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-500/20 file:text-purple-300 hover:file:bg-purple-500/30 file:cursor-pointer">
+                                class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:cursor-pointer"
+                                style="color: #94a3b8; background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 0.5rem;">
                             @if ($vaLogo)
                                 <div class="mt-2 flex items-center gap-2">
-                                    <span class="text-xs text-green-400">Preview:</span>
-                                    <img src="{{ $vaLogo->temporaryUrl() }}" class="h-8 max-w-[120px] object-contain rounded bg-slate-950 p-1 border border-white/10">
+                                    <span class="text-xs" style="color: #34d399;">Preview:</span>
+                                    <img src="{{ $vaLogo->temporaryUrl() }}" class="h-8 max-w-[120px] object-contain rounded p-1" style="background-color: #020617; border: 1px solid #334155;">
                                 </div>
                             @endif
-                            @error('vaLogo') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                            @error('vaLogo') <span class="text-xs mt-1 block" style="color: #f87171 !important;">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 bg-slate-950/80 border-t border-white/10 flex items-center justify-end gap-3">
-                        <button type="button" wire:click="closeCreateVaModal" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                    <div class="px-6 py-4 flex items-center justify-end gap-3" style="background-color: #020617 !important; border-top: 1px solid #1e293b !important;">
+                        <button type="button" wire:click="closeCreateVaModal" class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            style="background-color: #1e293b; color: #94a3b8; border: 1px solid #334155;">
                             Cancel
                         </button>
-                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 transition-all flex items-center gap-2">
+                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center gap-2"
+                            style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important; color: #ffffff !important; border: none;">
                             <span wire:loading.remove wire:target="createVirtualAirline">Create Virtual Airline</span>
                             <span wire:loading wire:target="createVirtualAirline">Creating VA...</span>
                         </button>

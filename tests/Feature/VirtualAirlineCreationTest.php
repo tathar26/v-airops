@@ -153,7 +153,7 @@ class VirtualAirlineCreationTest extends TestCase
         Livewire::actingAs($admin)
             ->test(MasterAdminDashboard::class)
             ->call('approveVirtualAirline', $tenant->id)
-            ->assertSessionHas('message');
+            ->assertSee('approved successfully');
 
         $tenantFresh = $tenant->fresh();
         $this->assertEquals('active', $tenantFresh->status);

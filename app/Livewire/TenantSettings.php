@@ -83,16 +83,27 @@ class TenantSettings extends Component
         
         $this->validate([
             'name' => 'required|string|max:255',
-            'icao' => 'nullable|string|max:4',
-            // base_airport_icao removed
+            'icao' => 'required|string|min:2|max:4|alpha',
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
             'logo' => 'nullable|image|max:1024',
             'default_simbrief_ofp_format' => 'required|string|max:20',
         ]);
 
+        $icaoUpper = strtoupper(trim($this->icao));
+
+        // Duplicate ICAO check
+        $existing = Tenant::whereRaw('UPPER(icao) = ?', [$icaoUpper])
+            ->where('id', '!=', $tenant->id)
+            ->first();
+
+        if ($existing) {
+            $this->addError('icao', "The ICAO code '{$this->icao}' is already registered by '{$existing->name}'. Duplicate airlines are not permitted.");
+            return;
+        }
+
         $tenant->name = $this->name;
-        $tenant->icao = strtoupper($this->icao);
+        $tenant->icao = $icaoUpper;
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
