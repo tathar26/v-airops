@@ -18,6 +18,22 @@ class AcarsController extends Controller
     {
         $payload = $request->validated();
         $payload['timestamp'] = $payload['timestamp'] ?? Carbon::now();
+        $user = $request->user();
+
+        // Ensure telemetry position strictly belongs to the authenticated pilot's active flight
+        if ($user) {
+            $flight = AcarsActiveFlight::find($payload['flight_id']);
+            if (!$flight || $flight->user_id !== $user->id) {
+                $userFlight = AcarsActiveFlight::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->latest('id')
+                    ->first();
+
+                if ($userFlight) {
+                    $payload['flight_id'] = $userFlight->id;
+                }
+            }
+        }
 
         // Always create position record synchronously so live radar and flight parameters update in real-time
         $ping = AcarsPosition::create($payload);
@@ -41,6 +57,22 @@ class AcarsController extends Controller
     {
         $payload = $request->validated();
         $payload['timestamp'] = Carbon::now();
+        $user = $request->user();
+
+        // Ensure event strictly belongs to authenticated pilot's active flight
+        if ($user) {
+            $flight = AcarsActiveFlight::find($payload['flight_id']);
+            if (!$flight || $flight->user_id !== $user->id) {
+                $userFlight = AcarsActiveFlight::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->latest('id')
+                    ->first();
+
+                if ($userFlight) {
+                    $payload['flight_id'] = $userFlight->id;
+                }
+            }
+        }
 
         $event = AcarsEvent::create($payload);
 

@@ -18,14 +18,19 @@ class AuthController extends Controller
 
         if (empty($identifier)) {
             return response()->json([
-                'detail' => 'Email or callsign is required'
+                'detail' => 'Email, username, or callsign is required'
             ], 400);
         }
 
-        // Query user by email OR callsign (case-insensitive)
+        // Query user by email, name/username, users.callsign, OR user_airlines.callsign (case-insensitive)
         $user = User::where(function ($query) use ($identifier) {
-            $query->whereRaw('LOWER(email) = ?', [strtolower($identifier)])
-                  ->orWhereRaw('LOWER(callsign) = ?', [strtolower($identifier)]);
+            $lower = strtolower($identifier);
+            $query->whereRaw('LOWER(email) = ?', [$lower])
+                  ->orWhereRaw('LOWER(name) = ?', [$lower])
+                  ->orWhereRaw('LOWER(callsign) = ?', [$lower])
+                  ->orWhereHas('userAirlines', function ($ua) use ($lower) {
+                      $ua->whereRaw('LOWER(callsign) = ?', [$lower]);
+                  });
         })->first();
 
         // Auto-seed demo pilot if database is newly initialized and demo account is used
@@ -57,9 +62,9 @@ class AuthController extends Controller
             'pilot' => [
                 'id' => $user->id,
                 'email' => $user->email,
-                'callsign' => $user->callsign ?? 'PILOT',
-                'name' => $user->name,
-                'rank' => $pilotProfile?->rank?->name ?? 'Senior Captain',
+                'callsign' => $user->activeCallsign() ?: ($user->callsign ?? 'PILOT'),
+                'name' => $user->full_name ?: $user->name,
+                'rank' => $user->active_rank_name ?: ($pilotProfile?->rank?->name ?? 'Captain'),
                 'total_flights' => $user->pireps()->count(),
                 'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
             ]
@@ -74,9 +79,9 @@ class AuthController extends Controller
         return response()->json([
             'id' => $user->id,
             'email' => $user->email,
-            'callsign' => $user->callsign ?? 'PILOT',
-            'name' => $user->name,
-            'rank' => $pilotProfile?->rank?->name ?? 'Senior Captain',
+            'callsign' => $user->activeCallsign() ?: ($user->callsign ?? 'PILOT'),
+            'name' => $user->full_name ?: $user->name,
+            'rank' => $user->active_rank_name ?: ($pilotProfile?->rank?->name ?? 'Captain'),
             'total_flights' => $user->pireps()->count(),
             'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
         ]);
