@@ -367,6 +367,13 @@ class Dispatch extends Component
 
     public function cancelBooking()
     {
+        $userId = $this->booking->user_id;
+
+        // Clean up and cancel active ACARS flights for this user
+        \App\Models\AcarsActiveFlight::where('user_id', $userId)
+            ->where('status', 'active')
+            ->update(['status' => 'cancelled']);
+
         $this->booking->delete();
         session()->flash('message', 'Booking cancelled successfully.');
         return redirect()->route('flight-centre.index');

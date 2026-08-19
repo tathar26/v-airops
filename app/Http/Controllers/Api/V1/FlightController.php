@@ -15,9 +15,11 @@ class FlightController extends Controller
     {
         $user = $request->user();
 
-        // 1. Check if user has an active booking in the VA system
-        $booking = Booking::where('user_id', $user->id)
+        // 1. Check if user has an active booking in the VA system within the last 24h
+        $booking = Booking::withoutGlobalScopes()
+            ->where('user_id', $user->id)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+            ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
             ->with(['route', 'airframe.aircraftType'])
             ->latest('id')
             ->first();
@@ -149,8 +151,10 @@ class FlightController extends Controller
 
     public function bookingActive(Request $request): JsonResponse
     {
-        $booking = Booking::where('user_id', $request->user()->id)
-            ->whereIn('status', ['pending', 'dispatched'])
+        $booking = Booking::withoutGlobalScopes()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+            ->where('updated_at', '>=', \Carbon\Carbon::now()->subHours(24))
             ->with(['route', 'airframe.aircraftType'])
             ->latest('id')
             ->first();

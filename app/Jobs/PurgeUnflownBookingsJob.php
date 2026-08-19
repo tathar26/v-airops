@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AcarsActiveFlight;
 use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -47,6 +48,15 @@ class PurgeUnflownBookingsJob implements ShouldQueue
             Log::info("PurgeUnflownBookingsJob: Successfully removed {$count} unflown booking(s) older than {$this->hours} hours (created before {$cutoff->toIso8601String()}).");
         } else {
             Log::info("PurgeUnflownBookingsJob: No unflown bookings older than {$this->hours} hours found.");
+        }
+
+        // Auto-archive active ACARS flights older than 24h
+        $staleFlightCount = AcarsActiveFlight::where('status', 'active')
+            ->where('updated_at', '<=', $cutoff)
+            ->update(['status' => 'archived']);
+
+        if ($staleFlightCount > 0) {
+            Log::info("PurgeUnflownBookingsJob: Successfully archived {$staleFlightCount} stale active ACARS flight(s) older than {$this->hours} hours.");
         }
     }
 }

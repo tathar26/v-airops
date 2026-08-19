@@ -26,17 +26,26 @@ class LiveFlightService
         $tenant = Tenant::find($tenantId);
         $liveFlights = collect();
 
-        // 1. Query active bookings for this tenant (status: pending, dispatched, in_flight)
+        $cutoff = \Carbon\Carbon::now()->subHours(24);
+
+        // Auto-archive stale active flights older than 24h
+        AcarsActiveFlight::where('status', 'active')
+            ->where('updated_at', '<', $cutoff)
+            ->update(['status' => 'archived']);
+
+        // 1. Query active bookings for this tenant within the last 24h (status: pending, dispatched, in_flight)
         $activeBookings = Booking::withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+            ->where('updated_at', '>=', $cutoff)
             ->with(['user', 'route', 'airframe.aircraftType'])
             ->latest('updated_at')
             ->get()
             ->keyBy('user_id');
 
-        // 2. Query active ACARS flights for users belonging to this tenant
+        // 2. Query active ACARS flights for users belonging to this tenant within the last 24h
         $activeAcarsFlights = AcarsActiveFlight::where('status', 'active')
+            ->where('updated_at', '>=', $cutoff)
             ->whereHas('user', function ($q) use ($tenantId) {
                 $q->where('tenant_id', $tenantId)
                   ->orWhereHas('userAirlines', function ($ua) use ($tenantId) {

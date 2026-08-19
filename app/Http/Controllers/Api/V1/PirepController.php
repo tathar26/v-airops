@@ -7,6 +7,8 @@ use App\Http\Requests\Api\V1\PirepSubmitRequest;
 use App\Models\AcarsActiveFlight;
 use App\Models\AcarsEvent;
 use App\Models\AcarsPirep;
+use App\Models\Booking;
+use App\Models\Pirep;
 use App\Services\Acars\ScoringService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -62,7 +64,8 @@ class PirepController extends Controller
 
         $totalScore = max(0, 100 - $totalPenaltyPoints);
 
-        // 3. Atomically persist PIREP, update flight status, and calculate pilot stats
+        // 3. Atomically persist PIREP, update flight status, clean up booking, and update pilot stats
+        // Note: AcarsPosition telemetry records for $flight->id are preserved for the PIREP report overview.
         $pirep = DB::transaction(function () use ($request, $flight, $user, $landingGradeResult, $totalScore, $penaltiesApplied, $dbEvents) {
             $newPirep = AcarsPirep::create([
                 'flight_id' => $flight->id,
@@ -80,14 +83,54 @@ class PirepController extends Controller
                 'penalties_json' => $penaltiesApplied,
             ]);
 
-            // Update flight status
+            // Mark active flight as completed so it is removed from active radar
             $flight->update(['status' => 'completed']);
 
-            // Update pilot profile hours
-            $profile = $user->pilotProfiles()->first();
+            // Find and clean up active booking for this user
+            $booking = Booking::withoutGlobalScopes()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+                ->latest('id')
+                ->first();
+
+            $tenantId = $booking?->tenant_id ?? ($user->getActiveTenantId() ?? $user->tenant_id);
+
+            // Also create main VA Pirep record for tenant statistics
+            if ($tenantId) {
+                Pirep::create([
+                    'tenant_id' => $tenantId,
+                    'user_id' => $user->id,
+                    'route_id' => $booking?->route_id,
+                    'airframe_id' => $booking?->airframe_id,
+                    'status' => 'accepted',
+                    'flight_time' => (int) $request->input('block_time_minutes'),
+                    'fuel_used' => (float) $request->input('fuel_used_kg', 0.0),
+                    'touchdown_rate_fpm' => (int) round($request->input('touchdown_fpm')),
+                    'points_awarded' => max(10, (int) round($totalScore)),
+                    'flight_log' => [
+                        'flight_id' => $flight->id,
+                        'callsign' => $flight->flight_number,
+                        'origin' => $flight->origin_icao,
+                        'destination' => $flight->destination_icao,
+                        'landing_grade' => $landingGradeResult['grade'],
+                        'penalties' => $penaltiesApplied,
+                    ],
+                    'created_at' => Carbon::now(),
+                ]);
+            }
+
+            if ($booking) {
+                $booking->delete();
+            }
+
+            // Update pilot profile flight hours and score points
+            $profile = ($tenantId ? $user->pilotProfiles()->where('tenant_id', $tenantId)->first() : null)
+                ?? $user->pilotProfiles()->first();
+
             if ($profile) {
                 $additionalHours = round($request->input('block_time_minutes') / 60.0, 2);
                 $profile->flight_time = ($profile->flight_time ?? 0.0) + $additionalHours;
+                $profile->points = ($profile->points ?? 0) + max(10, (int) round($totalScore));
                 $profile->save();
             }
 
