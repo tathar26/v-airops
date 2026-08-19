@@ -42,6 +42,8 @@ class RecalculatePilotStatistics implements ShouldQueue
                 ->with(['route', 'airframe.aircraftType'])
                 ->get();
 
+            $pireps = $validPireps;
+
             if ($validPireps->isEmpty()) {
                 $profile->flight_time = 0;
                 $profile->points = 0;
