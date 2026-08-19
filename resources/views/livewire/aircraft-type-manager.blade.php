@@ -5,9 +5,12 @@
         </div>
     @endif
 
-    <div class="glass-panel overflow-hidden mt-6">
-        <div class="px-6 py-5 border-b border-white/10 flex justify-between items-center flex-wrap gap-4">
-            <h3 class="text-lg font-bold text-white">Aircraft Types</h3>
+    <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl mt-6">
+        <div class="px-6 py-4 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h3 class="text-base font-bold text-white tracking-wide">AIRCRAFT TYPES &amp; FLEET DEFINITIONS</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Manage ICAO aircraft types, SimBrief profiles, and payload specs</p>
+            </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <button wire:click="openGlobalImportModal" class="bg-slate-800 hover:bg-slate-700 border border-tenant-accent/40 text-tenant-accent px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:opacity-90 transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>

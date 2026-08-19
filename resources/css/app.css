@@ -15,24 +15,25 @@
        VA Card System (replaces hardcoded hex blocks)
        ───────────────────────────────────────────── */
     .va-card {
-        background-color: var(--card-bg);
-        border: 1px solid var(--card-border);
-        border-radius: 0.375rem; /* rounded-md */
+        background-color: #12161F;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem; /* rounded-xl */
         overflow: hidden;
-        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.3);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
     }
     .va-card-header {
-        background-color: var(--card-header-bg);
-        border-bottom: 1px solid var(--card-border);
-        padding: 0.5rem 1rem;
-        font-size: 0.6875rem;  /* ~11px */
-        font-weight: 600;
+        background-color: #181D29;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 2px solid var(--tenant-accent, #38bdf8);
+        padding: 0.875rem 1.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
         letter-spacing: 0.075em;
         text-transform: uppercase;
-        color: #64748b; /* slate-500 */
+        color: #94a3b8;
     }
     .va-card-body {
-        background-color: var(--card-body-bg);
+        background-color: #12161F;
         padding: 1.25rem 1.5rem;
     }
 
@@ -182,7 +183,7 @@
        Glass Panel (legacy — kept for compat)
        ───────────────────────────────────────────── */
     .glass-panel {
-        @apply bg-vops-card/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl;
+        @apply bg-[#12161F] border border-white/10 rounded-xl shadow-xl overflow-hidden;
     }
     .glass-input {
         @apply bg-vops-dark/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-vops-primary focus:border-transparent text-gray-200;

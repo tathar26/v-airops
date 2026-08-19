@@ -10,10 +10,14 @@
     </div>
 
     <!-- Airports List -->
-    <div class="glass-panel rounded-xl overflow-hidden shadow-lg border border-white/10">
+    <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 flex justify-between items-center">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">AIRPORT DIRECTORY &amp; COORDINATES</span>
+            <span class="text-xs font-mono text-gray-400 font-semibold">Total Airports: {{ $airports->count() }}</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-300">
-                <thead class="text-xs text-tenant-accent uppercase bg-black/40 border-b border-white/10">
+                <thead class="text-xs text-gray-400 uppercase bg-[#181D29] border-b border-white/10">
                     <tr>
                         <th scope="col" class="px-6 py-4 font-semibold">ICAO</th>
                         <th scope="col" class="px-6 py-4 font-semibold">Name</th>
