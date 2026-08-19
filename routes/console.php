@@ -15,3 +15,6 @@ Schedule::command('system:aggregate-airline-data')->daily();
 // Automatically process missing pilot callsigns hourly
 Schedule::job(new \App\Jobs\AssignMissingCallsignsJob)->hourly();
 
+// Automatically purge unflown bookings older than 24 hours
+Schedule::job(new \App\Jobs\PurgeUnflownBookingsJob)->hourly();
+

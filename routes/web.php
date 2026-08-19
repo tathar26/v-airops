@@ -14,7 +14,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/custom-login', [\App\Http\Controllers\Auth\CustomAuthController::class, 'login'])->name('custom-login');
 });
 
-Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice')->name('verification.notice');
+Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice');
+Route::get('/email/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('verification.notice');
 Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'verifyEmail'])->name('auth.verify');
 
 // Onboarding & Session Switcher Routes
