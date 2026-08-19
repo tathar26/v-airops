@@ -257,10 +257,11 @@ class Dispatch extends Component
                 'status' => 'dispatched'
             ]);
 
+            $this->activateFlightFromBooking();
             $this->booking->refresh();
             $this->is_loading_simbrief = false;
             $this->showOfpView = true;
-            session()->flash('message', 'Real SimBrief OFP imported automatically!');
+            session()->flash('message', 'Real SimBrief OFP imported automatically! Flight is now active in ACARS.');
         }
     }
 
@@ -291,10 +292,11 @@ class Dispatch extends Component
                 'status' => 'dispatched'
             ]);
 
+            $this->activateFlightFromBooking();
             $this->booking->refresh();
             $this->is_loading_simbrief = false;
             $this->showOfpView = true;
-            session()->flash('message', 'Successfully imported live OFP from SimBrief!');
+            session()->flash('message', 'Successfully imported live OFP from SimBrief! Flight is now active in ACARS.');
         } else {
             if ($liveOfp && !$this->isOfpMatchingBooking($liveOfp)) {
                 $ofpOrig = $liveOfp['general']['origin'] ?? ($liveOfp['origin']['icao_code'] ?? '');
@@ -305,6 +307,56 @@ class Dispatch extends Component
                 session()->flash('error', "Could not fetch live OFP for SimBrief user '{$this->simbrief_username}'. Make sure you generated an OFP on SimBrief first.");
             }
         }
+    }
+
+    /**
+     * Automatically create and activate ACARS active flight for the user and tenant
+     */
+    private function activateFlightFromBooking()
+    {
+        $this->booking->refresh();
+        $this->booking->load(['route', 'airframe.aircraftType', 'tenant']);
+
+        $sb = $this->booking->simbrief_data ?? [];
+        $targetFlightNum = $sb['params']['callsign'] 
+            ?? ($sb['atc']['callsign'] 
+            ?? ($sb['general']['flight_number'] 
+            ?? ($this->booking->route?->callsign 
+            ?? ($this->booking->route?->flight_number 
+            ?? ($this->booking->tenant?->icao ? $this->booking->tenant->icao . '101' : 'SVK101')))));
+
+        $targetDep = $sb['origin']['icao_code'] ?? ($sb['general']['origin'] ?? ($this->booking->route?->departure_icao ?? 'EGLL'));
+        $targetArr = $sb['destination']['icao_code'] ?? ($sb['general']['destination'] ?? ($this->booking->route?->arrival_icao ?? 'LFPG'));
+        $targetAircraft = $this->booking->airframe?->aircraftType?->code ?? ($sb['aircraft']['icao_code'] ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+        $targetOfpId = (string) ($sb['params']['ofp_id'] ?? ($sb['general']['ofp_id'] ?? $this->booking->id));
+
+        $rawAlt = (int) ($sb['general']['initial_altitude'] ?? ($sb['general']['cruise_altitude'] ?? ($sb['params']['fl'] ?? ($this->booking->route?->flight_level ?? 36000))));
+        $plannedAltitude = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt * 100 : $rawAlt;
+
+        $plannedFuel = (float) ($sb['fuel']['plan_ramp'] ?? ($sb['fuel']['ramp'] ?? ($sb['fuel']['plan_takeoff'] ?? 6500.0)));
+        $plannedZfw = (float) ($sb['weights']['est_zfw'] ?? ($sb['weights']['zfw'] ?? 58000.0));
+        $routeString = $this->booking->route?->route_string ?? ($sb['general']['route'] ?? 'DIRECT');
+
+        // Archive previous active flights for this pilot
+        \App\Models\AcarsActiveFlight::where('user_id', $this->booking->user_id)
+            ->where('status', 'active')
+            ->update(['status' => 'archived']);
+
+        // Create or activate the ACARS flight for this tenant
+        \App\Models\AcarsActiveFlight::create([
+            'user_id' => $this->booking->user_id,
+            'tenant_id' => $this->booking->tenant_id,
+            'flight_number' => strtoupper($targetFlightNum),
+            'origin_icao' => strtoupper($targetDep),
+            'destination_icao' => strtoupper($targetArr),
+            'route' => $routeString,
+            'aircraft_type' => strtoupper($targetAircraft),
+            'planned_altitude' => $plannedAltitude,
+            'planned_fuel_kg' => $plannedFuel,
+            'planned_zfw_kg' => $plannedZfw,
+            'simbrief_ofp_id' => $targetOfpId,
+            'status' => 'active',
+        ]);
     }
 
     public function generateOfpData()
@@ -346,6 +398,7 @@ class Dispatch extends Component
             'status' => 'dispatched'
         ]);
 
+        $this->activateFlightFromBooking();
         $this->booking->refresh();
     }
 
