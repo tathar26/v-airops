@@ -5,6 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>V-Ops &mdash; Next-Gen Virtual Airline Management SaaS Platform</title>
 
+    <!-- Primary SEO Meta Tags -->
+    <meta name="title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta name="description" content="The modern, high-performance SaaS platform for virtual aviation communities. Featuring smart SimBrief dispatching, sub-second telemetry ACARS, automated pilot rosters, and zero-maintenance cloud infrastructure. Perfect for MSFS 2024 and X-Plane 12.">
+    <meta name="keywords" content="Virtual Airline, ACARS, MSFS 2024, X-Plane 12, SimBrief, Flight Simulation, PMDG 737, Fenix A320, Virtual Aviation, Pilot Logbook, Flight Tracking, vAMSYS alternative, phpVMS alternative">
+    <meta name="author" content="V-Ops Platform Team">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://vops-dev.artmex-hosting.com/">
+
+    <!-- Open Graph / Facebook / Discord SEO -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="V-Ops Platform">
+    <meta property="og:url" content="https://vops-dev.artmex-hosting.com/">
+    <meta property="og:title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta property="og:description" content="Run your virtual airline like the real thing. Smart SimBrief LIDO dispatching, sub-second ACARS telemetry, and automated pilot management for MSFS 2024 & X-Plane 12.">
+    <meta property="og:image" content="https://vops-dev.artmex-hosting.com/og-preview.png">
+
+    <!-- Twitter Card SEO -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://vops-dev.artmex-hosting.com/">
+    <meta name="twitter:title" content="V-Ops — Next-Gen Virtual Airline Management SaaS Platform">
+    <meta name="twitter:description" content="Run your virtual airline like the real thing. Smart SimBrief LIDO dispatching, sub-second ACARS telemetry, and automated pilot management for MSFS 2024 & X-Plane 12.">
+    <meta name="twitter:image" content="https://vops-dev.artmex-hosting.com/og-preview.png">
+
+    <!-- Structured Data JSON-LD (AI Crawlers & Google Schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "V-Ops Virtual Airline Platform",
+      "operatingSystem": "Web, Windows, macOS",
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "USD",
+        "seller": {
+          "@type": "Organization",
+          "name": "V-Ops SaaS"
+        }
+      },
+      "description": "High-performance Virtual Airline SaaS platform & sub-second ACARS telemetry engine for modern flight simulation communities (MSFS 2024, X-Plane 12).",
+      "url": "https://vops-dev.artmex-hosting.com/",
+      "featureList": [
+        "One-click SimBrief LIDO OFP dispatching",
+        "Sub-second ACARS flight tracking & telemetry",
+        "Automated pilot rank progression & hour calculation",
+        "Discord bot integration with auto role syncing",
+        "Vertical flight profile and touchdown G-force scoring"
+      ]
+    }
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
