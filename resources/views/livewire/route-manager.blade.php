@@ -7,7 +7,10 @@
 
     <div class="glass-panel overflow-hidden mt-6">
         <div class="px-6 py-5 border-b border-white/10 flex justify-between items-center flex-wrap gap-4">
-            <h3 class="text-lg font-bold text-white">Route Network</h3>
+            <div>
+                <h3 class="text-lg font-bold text-white">Route Network</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Manage schedules, flight numbers, and airline ATC callsigns</p>
+            </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <button wire:click="downloadTemplate" class="text-tenant-accent hover:underline transition-colors text-sm font-semibold">
                     Download CSV Template
@@ -38,6 +41,7 @@
                 <thead class="bg-white/5">
                     <tr>
                         <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Flight Number</th>
+                        <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">ATC Callsign</th>
                         <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Departure</th>
                         <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Arrival</th>
                         <th class="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Block Time</th>
@@ -49,27 +53,45 @@
                 <tbody class="divide-y divide-white/5">
                     @forelse($routes as $route)
                     <tr class="hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">
+                        <!-- Flight Number (Commercial / IATA) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-white font-mono">
                             {{ $route->flight_number }}
                         </td>
+
+                        <!-- ATC Callsign (ICAO Telephony) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                            <span class="px-2 py-0.5 rounded bg-amber-400/15 border border-amber-400/30 text-amber-300 font-bold">
+                                {{ $route->callsign ?: $route->flight_number }}
+                            </span>
+                        </td>
+
+                        <!-- Departure -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg bg-tenant-accent/15 text-tenant-accent">
                                 {{ $route->departure_icao }}
                             </span>
                         </td>
+
+                        <!-- Arrival -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg bg-tenant-accent/15 text-tenant-accent">
                                 {{ $route->arrival_icao }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium">
+
+                        <!-- Block Time -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium text-slate-300">
                             {{ $route->block_time }}
                         </td>
+
+                        <!-- Route Type -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-lg {{ $route->route_type === 'Charter' ? 'bg-purple-900/50 text-purple-300' : ($route->route_type === 'Cargo' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-blue-900/50 text-blue-300') }}">
                                 {{ $route->route_type }}
                             </span>
                         </td>
+
+                        <!-- Aircraft Types -->
                         <td class="px-6 py-4 text-sm">
                             @forelse($route->aircraftTypes as $type)
                                 <span class="px-2 py-1 mr-1 mb-1 inline-block text-xs font-mono font-bold rounded-md bg-slate-800 text-slate-300 border border-slate-700">{{ $type->code }}</span>
@@ -77,6 +99,8 @@
                                 <span class="text-xs text-gray-500 italic">Any</span>
                             @endforelse
                         </td>
+
+                        <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button wire:click="editRoute({{ $route->id }})" class="text-tenant-accent hover:opacity-80 transition-colors mr-3 font-semibold">Edit</button>
                             <button wire:click="deleteRoute({{ $route->id }})" wire:confirm="Are you sure you want to delete this route?" class="text-red-400 hover:text-red-300 transition-colors font-semibold">Delete</button>
@@ -84,7 +108,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-400">
+                        <td colspan="8" class="px-6 py-8 text-center text-gray-400">
                             No routes in your network. Click <strong>Add Route</strong> or <strong>Global Network Import</strong> above!
                         </td>
                     </tr>
@@ -101,10 +125,12 @@
         </x-slot>
 
         <x-slot name="content">
+            <!-- Flight Number & Route Type -->
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="col-span-1">
-                    <x-label for="flight_number" value="{{ __('Flight Number') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
-                    <x-input id="flight_number" type="text" class="mt-1 block w-full uppercase" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="flight_number" placeholder="e.g. EZY123" />
+                    <x-label for="flight_number" value="{{ __('Flight Number (e.g. U28161 / FR2605 / 1181)') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
+                    <x-input id="flight_number" type="text" class="mt-1 block w-full uppercase font-mono font-bold" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="flight_number" placeholder="e.g. U28161 or 1181" />
+                    <p class="text-[11px] text-slate-400 mt-1">Commercial flight identifier (IATA/number).</p>
                     <x-input-error for="flight_number" class="mt-2 text-red-400 text-xs" />
                 </div>
                 <div class="col-span-1">
@@ -118,32 +144,68 @@
                 </div>
             </div>
 
+            <!-- ATC Callsign Selection (ICAO Prefix Dropdown + Callsign Suffix) -->
+            <div class="p-3.5 bg-[#0f172a] rounded-xl border border-slate-700/80 mb-4 space-y-2">
+                <div class="flex items-center justify-between">
+                    <x-label value="{{ __('ATC Callsign Configuration (ICAO Prefix + Suffix)') }}" class="text-amber-300 font-bold text-xs uppercase tracking-wider" />
+                    @if($callsign_icao && $callsign_suffix)
+                        <span class="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono text-xs font-bold border border-amber-400/30">
+                            Preview: {{ strtoupper($callsign_icao . $callsign_suffix) }}
+                        </span>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 pt-1">
+                    <!-- Callsign ICAO Prefix Dropdown -->
+                    <div class="col-span-1">
+                        <x-label for="callsign_icao" value="{{ __('Airline ICAO') }}" class="text-slate-300 text-xs mb-1" />
+                        <select id="callsign_icao" wire:model.live="callsign_icao" class="block w-full rounded-xl shadow-sm text-sm font-mono font-bold focus:border-tenant-accent" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important; padding: 0.625rem 0.875rem;">
+                            @foreach($availableIcaos as $icaoOption)
+                                <option value="{{ $icaoOption }}" style="background-color: #1e293b; color: #ffffff;">{{ $icaoOption }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error for="callsign_icao" class="mt-1 text-red-400 text-xs" />
+                    </div>
+
+                    <!-- Callsign Suffix (Numbers/Letters) -->
+                    <div class="col-span-2">
+                        <x-label for="callsign_suffix" value="{{ __('Callsign Number / Suffix') }}" class="text-slate-300 text-xs mb-1" />
+                        <x-input id="callsign_suffix" type="text" wire:model.live="callsign_suffix" maxlength="8" class="block w-full uppercase font-mono font-bold text-sm" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" placeholder="e.g. 508HZ or 8161" />
+                        <p class="text-[11px] text-slate-400 mt-1">e.g. <span class="font-mono text-slate-300">508HZ</span> creates <span class="font-mono text-amber-300 font-bold">{{ strtoupper($callsign_icao ?: 'EZY') }}508HZ</span></p>
+                        <x-input-error for="callsign_suffix" class="mt-1 text-red-400 text-xs" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departure & Arrival ICAOs -->
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="col-span-1">
                     <x-label for="departure_icao" value="{{ __('Departure ICAO') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
-                    <x-input id="departure_icao" type="text" class="mt-1 block w-full uppercase" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="departure_icao" placeholder="e.g. EGLL" maxlength="4" />
+                    <x-input id="departure_icao" type="text" class="mt-1 block w-full uppercase font-mono font-bold" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="departure_icao" placeholder="e.g. EGLL" maxlength="4" />
                     <x-input-error for="departure_icao" class="mt-2 text-red-400 text-xs" />
                 </div>
                 <div class="col-span-1">
                     <x-label for="arrival_icao" value="{{ __('Arrival ICAO') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
-                    <x-input id="arrival_icao" type="text" class="mt-1 block w-full uppercase" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="arrival_icao" placeholder="e.g. LFPG" maxlength="4" />
+                    <x-input id="arrival_icao" type="text" class="mt-1 block w-full uppercase font-mono font-bold" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="arrival_icao" placeholder="e.g. LFPG" maxlength="4" />
                     <x-input-error for="arrival_icao" class="mt-2 text-red-400 text-xs" />
                 </div>
             </div>
 
+            <!-- Block Time & Distance -->
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="col-span-1">
                     <x-label for="block_time" value="{{ __('Block Time (HH:MM)') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
-                    <x-input id="block_time" type="text" class="mt-1 block w-full" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="block_time" placeholder="e.g. 02:30 (Auto if blank)" />
+                    <x-input id="block_time" type="text" class="mt-1 block w-full font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="block_time" placeholder="e.g. 02:30 (Auto if blank)" />
                     <x-input-error for="block_time" class="mt-2 text-red-400 text-xs" />
                 </div>
                 <div class="col-span-1">
                     <x-label for="distance" value="{{ __('Distance (NM)') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
-                    <x-input id="distance" type="number" class="mt-1 block w-full" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="distance" placeholder="Auto if blank" />
+                    <x-input id="distance" type="number" class="mt-1 block w-full font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="distance" placeholder="Auto if blank" />
                     <x-input-error for="distance" class="mt-2 text-red-400 text-xs" />
                 </div>
             </div>
 
+            <!-- Route String -->
             <div class="col-span-6 sm:col-span-4 mb-4">
                 <x-label for="route_string" value="{{ __('Route String (Optional)') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
                 <x-input id="route_string" type="text" class="mt-1 block w-full font-mono uppercase text-sm" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" wire:model="route_string" placeholder="e.g. DCT BOVIS L608..." />
@@ -151,11 +213,12 @@
                 <x-input-error for="route_string" class="mt-2 text-red-400 text-xs" />
             </div>
 
+            <!-- Allowed Aircraft Types -->
             <div class="col-span-6 sm:col-span-4">
                 <x-label value="{{ __('Allowed Aircraft Types') }}" class="text-slate-300 font-semibold text-xs uppercase tracking-wider mb-1.5" />
                 <div class="mt-2 grid grid-cols-2 gap-2 max-h-32 overflow-y-auto rounded-xl p-3 border border-slate-700" style="background-color: #020617 !important;">
                     @foreach($aircraftTypes as $type)
-                        <label class="inline-flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" wire:model="selectedAircraftTypes" value="{{ $type->id }}" class="rounded bg-slate-900 border-slate-700 text-tenant-accent shadow-sm focus:ring-tenant-accent">
                             <span class="ml-2 text-sm text-slate-300 font-mono font-medium">{{ $type->code }}</span>
                         </label>

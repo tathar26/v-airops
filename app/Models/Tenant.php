@@ -10,6 +10,7 @@ class Tenant extends Model
         'name',
         'domain',
         'icao',
+        'secondary_icaos',
         'accent_color',
         'bg_color',
         'logo_path',
@@ -22,9 +23,34 @@ class Tenant extends Model
     ];
 
     protected $casts = [
+        'secondary_icaos' => 'array',
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
     ];
+
+    /**
+     * Get all airline ICAOs (primary default ICAO + all configured secondary ICAOs).
+     *
+     * @return array<int, string>
+     */
+    public function getAllIcaos(): array
+    {
+        $list = [];
+        if (!empty($this->icao)) {
+            $list[] = strtoupper(trim($this->icao));
+        }
+
+        if (!empty($this->secondary_icaos) && is_array($this->secondary_icaos)) {
+            foreach ($this->secondary_icaos as $code) {
+                $code = strtoupper(trim((string)$code));
+                if (!empty($code) && !in_array($code, $list)) {
+                    $list[] = $code;
+                }
+            }
+        }
+
+        return empty($list) ? ['VOPS'] : array_values($list);
+    }
 
     public function creator()
     {

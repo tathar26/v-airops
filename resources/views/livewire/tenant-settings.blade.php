@@ -30,16 +30,53 @@
                     <form wire:submit.prevent="saveSettings" class="space-y-6">
                         <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 md:col-span-3">
-                                <x-label for="name" value="{{ __('Virtual Airline Name') }}" />
+                                <x-label for="name" value="{{ __('Virtual Airline Name') }}" class="text-white" />
                                 <x-input id="name" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="name" />
-                                <x-input-error for="name" class="mt-2" />
+                                <x-input-error for="name" class="mt-2 text-red-400 text-xs" />
                             </div>
 
                             <div class="col-span-6 md:col-span-3">
-                                <x-label for="icao" value="{{ __('Airline ICAO (e.g. EZY)') }}" />
-                                <x-input id="icao" type="text" maxlength="4" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase" wire:model="icao" />
-                                <x-input-error for="icao" class="mt-2" />
+                                <x-label for="icao" value="{{ __('Primary Airline ICAO (Default Callsign Prefix)') }}" class="text-white" />
+                                <x-input id="icao" type="text" maxlength="4" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white uppercase font-mono font-bold" wire:model="icao" placeholder="e.g. EZY" />
+                                <x-input-error for="icao" class="mt-2 text-red-400 text-xs" />
+                                <p class="text-xs text-gray-400 mt-1">Default 3-letter ICAO prefix for the airline (e.g. EZY for easyJet UK).</p>
                             </div>
+                        </div>
+
+                        <!-- Secondary ICAOs Management -->
+                        <div class="p-4 bg-[#141a24] rounded-xl border border-white/10 space-y-3">
+                            <div>
+                                <h4 class="text-white font-bold text-sm">Secondary Airline ICAOs (Subsidiaries / Call-signs)</h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Add secondary ICAO codes (e.g. <strong class="text-slate-200 font-mono">EZS</strong> for easyJet Switzerland, <strong class="text-slate-200 font-mono">EJU</strong> for easyJet Europe). These will be available in the Route Manager when creating routes.</p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                <!-- Primary ICAO Badge -->
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-tenant-accent/20 border border-tenant-accent/40 text-tenant-accent text-xs font-mono font-bold shadow-sm">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-tenant-accent"></span>
+                                    <span>{{ strtoupper($icao ?: 'N/A') }}</span>
+                                    <span class="text-[10px] text-slate-300 font-normal ml-0.5">(Primary)</span>
+                                </div>
+
+                                <!-- Secondary ICAO Badges -->
+                                @foreach($secondary_icaos as $index => $code)
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-xs font-mono font-bold shadow-sm hover:border-slate-600 transition">
+                                        <span>{{ $code }}</span>
+                                        <button type="button" wire:click="removeSecondaryIcao({{ $index }})" class="text-red-400 hover:text-red-300 transition ml-1 p-0.5" title="Remove Secondary ICAO">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Add Secondary ICAO Input -->
+                            <div class="flex items-center gap-2 pt-2 max-w-md">
+                                <x-input type="text" wire:model="newSecondaryIcao" maxlength="4" class="bg-[#1e2532] border-gray-700 text-white uppercase text-xs font-mono font-bold" placeholder="e.g. EZS or EJU" />
+                                <button type="button" wire:click="addSecondaryIcao" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-tenant-accent border border-tenant-accent/30 rounded-xl text-xs font-bold transition whitespace-nowrap">
+                                    + Add Secondary ICAO
+                                </button>
+                            </div>
+                            <x-input-error for="newSecondaryIcao" class="text-red-400 text-xs" />
                         </div>
 
                         <!-- Base Theme Settings -->

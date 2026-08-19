@@ -20,6 +20,8 @@ class TenantSettings extends Component
     // General Settings
     public $name = '';
     public $icao = '';
+    public $secondary_icaos = [];
+    public $newSecondaryIcao = '';
     public $newHubIcao = '';
     public $accent_color = '';
     public $bg_color = '';
@@ -41,7 +43,7 @@ class TenantSettings extends Component
         $tenant = auth()->user()->tenant;
         $this->name = $tenant->name;
         $this->icao = $tenant->icao;
-        // Hubs are now fetched directly in render() or via property if needed.
+        $this->secondary_icaos = $tenant->secondary_icaos ?? [];
         $this->accent_color = $tenant->accent_color;
         $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
@@ -77,6 +79,38 @@ class TenantSettings extends Component
         });
     }
 
+    public function addSecondaryIcao()
+    {
+        $this->validate([
+            'newSecondaryIcao' => 'required|string|min:2|max:4|alpha',
+        ]);
+
+        $code = strtoupper(trim($this->newSecondaryIcao));
+        $primary = strtoupper(trim($this->icao));
+
+        if ($code === $primary) {
+            $this->addError('newSecondaryIcao', "'{$code}' is already set as the primary airline ICAO.");
+            return;
+        }
+
+        if (in_array($code, $this->secondary_icaos)) {
+            $this->addError('newSecondaryIcao', "'{$code}' is already added as a secondary ICAO.");
+            return;
+        }
+
+        $this->secondary_icaos[] = $code;
+        $this->newSecondaryIcao = '';
+        $this->resetErrorBag('newSecondaryIcao');
+    }
+
+    public function removeSecondaryIcao($index)
+    {
+        if (isset($this->secondary_icaos[$index])) {
+            unset($this->secondary_icaos[$index]);
+            $this->secondary_icaos = array_values($this->secondary_icaos);
+        }
+    }
+
     public function saveSettings()
     {
         $tenant = auth()->user()->tenant;
@@ -92,7 +126,7 @@ class TenantSettings extends Component
 
         $icaoUpper = strtoupper(trim($this->icao));
 
-        // Duplicate ICAO check
+        // Duplicate primary ICAO check
         $existing = Tenant::whereRaw('UPPER(icao) = ?', [$icaoUpper])
             ->where('id', '!=', $tenant->id)
             ->first();
@@ -104,11 +138,10 @@ class TenantSettings extends Component
 
         $tenant->name = $this->name;
         $tenant->icao = $icaoUpper;
+        $tenant->secondary_icaos = array_values(array_unique(array_filter($this->secondary_icaos)));
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
-
-        // Hub logic moved to separate methods
 
         if ($this->logo) {
             if ($tenant->logo_path) {

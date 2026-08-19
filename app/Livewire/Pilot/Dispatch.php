@@ -83,9 +83,18 @@ class Dispatch extends Component
             $this->airframe_id = $firstAirframe ? $firstAirframe->id : null;
         }
 
-        $operatorCode = $booking->route->operator ?? 'EZS';
-        $this->callsign = $simData['general']['callsign'] ?? ($simData['callsign'] ?? ($booking->route->callsign ?? ($operatorCode . rand(100, 999) . 'HZ')));
-        $this->flight_number = $simData['general']['flight_number'] ?? ($simData['flight_number'] ?? ($booking->route->flight_number ?? ('DS' . rand(1000, 9999))));
+        $route = $booking->route;
+        $tenant = $booking->tenant ?? auth()->user()->tenant;
+        $defaultIcao = $tenant->icao ?? 'EZY';
+
+        $this->callsign = $simData['general']['callsign'] 
+            ?? ($simData['callsign'] 
+            ?? ($route?->callsign 
+            ?? ($route?->operator ? $route->operator . ($route->flight_number ?: rand(100, 999)) : ($defaultIcao . rand(100, 999) . 'HZ'))));
+
+        $this->flight_number = $simData['general']['flight_number'] 
+            ?? ($simData['flight_number'] 
+            ?? ($route?->flight_number ?? $this->callsign));
         $this->dispatch_via_simbrief = $simData['dispatch_via_simbrief'] ?? true;
 
         // Schedule & Route Defaults
@@ -394,10 +403,28 @@ class Dispatch extends Component
             ->where('id', '!=', auth()->id())
             ->get();
 
-        $typeCode = $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N');
-        $callsignCode = strtoupper($this->callsign);
-        $fltNumCode = preg_replace('/[^0-9]/', '', $this->flight_number) ?: '1181';
-        $airlineCode = substr($callsignCode, 0, 3) ?: 'EZS';
+        $callsignCode = strtoupper(trim($this->callsign));
+        $flightNumInput = strtoupper(trim($this->flight_number));
+
+        // Extract numeric digits for SimBrief fltnum
+        $fltNumDigits = preg_replace('/[^0-9]/', '', $flightNumInput);
+        if (empty($fltNumDigits)) {
+            $fltNumDigits = preg_replace('/[^0-9]/', '', $callsignCode) ?: '101';
+        }
+
+        // Extract airline code (2-letter IATA if present in flight number like U2, FR, DS, or 3-letter ICAO from operator/callsign)
+        $airlineCode = '';
+        if (preg_match('/^([A-Z0-9]{2})[0-9]+$/i', $flightNumInput, $matches)) {
+            // e.g. U28161 -> U2, FR2605 -> FR, DS1181 -> DS
+            $airlineCode = strtoupper($matches[1]);
+        } elseif ($this->booking->route?->operator) {
+            $airlineCode = strtoupper($this->booking->route->operator);
+        } elseif (strlen($callsignCode) >= 3 && ctype_alpha(substr($callsignCode, 0, 3))) {
+            $airlineCode = substr($callsignCode, 0, 3);
+        } else {
+            $airlineCode = $this->booking->tenant->icao ?? 'VOPS';
+        }
+
         $regCode = $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE';
         $dateCode = date('dMY', strtotime($this->departure_date));
         $depH = (int)date('H', strtotime($this->departure_time));
@@ -406,7 +433,7 @@ class Dispatch extends Component
         // Navigraph SimBrief Dispatch Redirect Parameters
         $simbriefParams = [
             'airline' => $airlineCode,
-            'fltnum' => $fltNumCode,
+            'fltnum' => $fltNumDigits,
             'callsign' => $callsignCode,
             'type' => $typeCode,
             'orig' => $this->booking->route->departure_icao,
