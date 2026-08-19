@@ -31,16 +31,19 @@ All notable changes to the Virtual Airline Operations (**V-Ops**) platform are d
   - Displays live active flight count badge, Zulu timestamp (`Updated: HH:MMz`), and manual refresh button.
   - Complete columns: `PILOT`, `CALLSIGN`, `DEPARTURE`, `ARRIVAL`, `AIRCRAFT`, `ETE/ETD`, `DISTANCE`, `STATUS`, `NETWORK`, and `ACTION`.
 
-- **ACARS Telemetry & Flight Alignment:**
-  - **Instant Synchronous Telemetry Ingestion:** Position pings to `/api/v1/acars/position` immediately persist to `acars_positions` for real-time tracking.
-  - **Comprehensive Parameter Normalization:** Automatically resolves payload aliases from ACARS clients (`speed`/`ground_speed_kt`, `lat`/`latitude`, `lon`/`longitude`, `alt`/`altitude_ft`, `hdg`/`heading_deg`, `ias`/`indicated_airspeed_kt`, `vs`/`vertical_speed_fpm`, `phase`/`flight_phase`).
-  - **Strict Pilot Flight Ownership:** Enforced authenticated user verification on position pings to guarantee telemetry is strictly attached to the correct pilot and active flight.
-  - **Multi-Airline Callsign Authentication:** ACARS login now supports email, username, pilot account callsigns, and airline-specific callsigns (`user_airlines.callsign`).
-  - **Accurate SimBrief OFP Extraction:** Real dispatched flight parameters (`callsign`, `departure_icao`, `arrival_icao`, `airframe`, `network`, `distance`, `ete`) are accurately loaded without global scope filtering in stateless API endpoints.
+- **Multi-Airline ICAO Configuration (VA Settings):**
+  - Enabled virtual airline owners to define both a **Primary Airline ICAO** (e.g. `EZY`) and multiple **Secondary Airline ICAOs** (e.g. `EZS` easyJet Switzerland, `EJU` easyJet Europe).
+  - Dynamic UI for adding and removing secondary ICAO tags with duplicate detection and uppercase normalization.
 
-- **Frontend Standardizations & Theme Synchronization:**
-  - Navigation sidebar and top header dynamically inherit the Virtual Airline's chosen accent color (`var(--tenant-accent)`).
-  - High-contrast typography and theme adaptation across dark and light airline color themes.
-  - Relocated KPI statistic cards to the top of the dashboard and live operations radar to the bottom.
+- **Route Manager Callsign & Flight Number System:**
+  - Added dedicated **Flight Number** textfield (supporting commercial/IATA identifiers like `U28161`, `FR2605`, `1181`).
+  - Added **Callsign ICAO Prefix Dropdown** (populated with all primary + secondary airline ICAOs) and **Callsign Suffix Textfield** (e.g. `508HZ` or `8161`).
+  - Real-time callsign preview pill badge (`EZS` + `508HZ` => `EZS508HZ`).
+  - Route table updated to display both commercial Flight Number and ATC Callsign clearly.
+
+- **SimBrief Dispatch Alignment:**
+  - Automated parsing of commercial IATA airline codes (e.g. `U2` from `U28161`, `FR` from `FR2605`) and numeric flight number digits (`fltnum`) for SimBrief flight planning.
+  - Passes the exact ICAO ATC telephony callsign (e.g. `EZS508HZ`) to SimBrief.
+  - Auto-cleans active bookings on PIREP submission and cancellation while **preserving all position reports** for flight review.
 
 ---
