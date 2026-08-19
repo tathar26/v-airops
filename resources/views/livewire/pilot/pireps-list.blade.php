@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
+<div class="space-y-6">
     <div class="flex justify-between items-center mb-2">
         <h2 class="text-2xl font-bold text-white tracking-tight">Your PIREPs</h2>
     </div>

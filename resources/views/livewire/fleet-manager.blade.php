@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
+<div class="space-y-6">
     @if (session()->has('message'))
         <div class="mb-4 bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded relative" role="alert">
             <span class="block sm:inline">{{ session('message') }}</span>

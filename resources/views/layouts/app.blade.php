@@ -390,7 +390,9 @@
 
                 <!-- Page Content -->
                 <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8">
-                    {{ $slot }}
+                    <div class="max-w-[1600px] mx-auto w-full bg-[#181D29]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[calc(100vh-8rem)] space-y-6">
+                        {{ $slot }}
+                    </div>
                 </main>
             </div>
         </div>
