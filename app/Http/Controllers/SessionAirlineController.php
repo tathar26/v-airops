@@ -49,6 +49,8 @@ class SessionAirlineController extends Controller
 
         // Set session active context
         session(['active_airline_id' => $tenantId]);
+        $user->tenant_id = $tenantId;
+        $user->save();
 
         // If JSON / AJAX request (from vAMSYS top right dropdown)
         if ($request->wantsJson()) {

@@ -9,8 +9,8 @@ class FlightCentreApiController extends Controller
 {
     public function destinations(Request $request)
     {
-        $tenantId = $request->user()->tenant_id;
-        $profile = $request->user()->pilotProfiles()->first();
+        $tenantId = $request->user()->getActiveTenantId() ?? $request->user()->tenant_id;
+        $profile = $request->user()->pilotProfiles()->where('tenant_id', $tenantId)->first();
         if (!$profile) {
             $profile = \App\Models\PilotProfile::create([
                 'user_id' => $request->user()->id,
@@ -91,7 +91,14 @@ class FlightCentreApiController extends Controller
     public function updateLocation(Request $request)
     {
         $request->validate(['airport_id' => 'required|exists:airports,id']);
-        $profile = $request->user()->pilotProfiles()->first();
+        $tenantId = $request->user()->getActiveTenantId() ?? $request->user()->tenant_id;
+        $profile = $request->user()->pilotProfiles()->where('tenant_id', $tenantId)->first();
+        if (!$profile) {
+            $profile = \App\Models\PilotProfile::firstOrCreate([
+                'user_id' => $request->user()->id,
+                'tenant_id' => $tenantId,
+            ]);
+        }
         $profile->current_airport_id = $request->airport_id;
         $profile->save();
 

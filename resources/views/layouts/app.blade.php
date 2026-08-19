@@ -149,8 +149,12 @@
                         </div>
 
                         <div class="text-right hidden sm:block border-l border-white/10 pl-6">
-                            <div class="text-sm font-semibold text-tenant-accent">{{ Auth::user()->name }}</div>
-                            <div class="text-xs text-gray-400">{{ auth()->check() && auth()->user()->tenant ? 'VA Member' : 'Master Admin' }}</div>
+                            <div class="text-sm font-semibold text-tenant-accent">{{ Auth::user()->full_name }}</div>
+                            <div class="text-xs text-gray-400 flex items-center justify-end gap-1.5 font-mono">
+                                <span class="text-sky-400 font-bold">{{ Auth::user()->activeCallsign() }}</span>
+                                <span>&bull;</span>
+                                <span class="text-gray-300">{{ Auth::user()->active_rank_name }}</span>
+                            </div>
                         </div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

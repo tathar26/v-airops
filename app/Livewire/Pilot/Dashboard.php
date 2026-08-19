@@ -13,8 +13,12 @@ class Dashboard extends Component
     public function render()
     {
         $user = Auth::user();
-        $tenantId = $user->tenant_id;
+        $tenantId = $user->tenant_id ?? session('active_airline_id') ?? $user->userAirlines()->first()?->tenant_id;
         
+        if (!$tenantId) {
+            return redirect()->route('onboarding.select-airline');
+        }
+
         $profile = PilotProfile::firstOrCreate(
             ['user_id' => $user->id, 'tenant_id' => $tenantId],
             ['flight_time' => 0, 'points' => 0]

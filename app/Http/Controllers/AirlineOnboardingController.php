@@ -57,7 +57,15 @@ class AirlineOnboardingController extends Controller
 
         // Auto set active session context to the first joined airline
         if (count($newlyJoined) > 0) {
-            session(['active_airline_id' => $newlyJoined[0]->tenant_id]);
+            $activeTenantId = (int) $newlyJoined[0]->tenant_id;
+            session(['active_airline_id' => $activeTenantId]);
+            $user->tenant_id = $activeTenantId;
+            $user->save();
+        }
+
+        if ($user->roles->isEmpty()) {
+            $pilotRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Pilot']);
+            $user->assignRole($pilotRole);
         }
 
         return redirect()->intended('/dashboard')->with('success', 'Welcome aboard! Your unique pilot callsigns have been assigned.');

@@ -37,8 +37,13 @@ class EnsureActiveAirlineSelected
             }
         } elseif ($count === 1) {
             // Auto-set session if only 1 airline exists
-            if (!session()->has('active_airline_id')) {
-                session(['active_airline_id' => $userAirlines->first()->tenant_id]);
+            $activeTenantId = (int) $userAirlines->first()->tenant_id;
+            if (!session()->has('active_airline_id') || session('active_airline_id') !== $activeTenantId) {
+                session(['active_airline_id' => $activeTenantId]);
+            }
+            if ($user->getRawOriginal('tenant_id') !== $activeTenantId) {
+                $user->tenant_id = $activeTenantId;
+                $user->saveQuietly();
             }
         } else {
             // >1 Airlines: Check if active_airline_id session is valid
@@ -49,7 +54,18 @@ class EnsureActiveAirlineSelected
                 if (!$request->routeIs('session.select-airline', 'session.switch-airline', 'onboarding.*', 'logout', 'auth.*')) {
                     return redirect()->route('session.select-airline');
                 }
+            } else {
+                if ($user->getRawOriginal('tenant_id') !== (int) $activeId) {
+                    $user->tenant_id = (int) $activeId;
+                    $user->saveQuietly();
+                }
             }
+        }
+
+        // 3. Ensure User Role is initialized
+        if ($user->roles->isEmpty()) {
+            $pilotRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Pilot']);
+            $user->assignRole($pilotRole);
         }
 
         return $next($request);

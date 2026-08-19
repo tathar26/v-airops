@@ -43,11 +43,11 @@
         <div class="p-6 bg-[#212631]">
             <div class="flex items-center space-x-6 mb-8">
                 <div class="w-16 h-16 bg-[#2c323f] rounded-full flex items-center justify-center text-gray-300 font-bold text-xl border border-tenant-accent">
-                    {{ $profile->rank ? substr($profile->rank->name, 0, 2) : 'NA' }}
+                    {{ substr($user->active_rank_name, 0, 2) }}
                 </div>
                 <div>
                     <div class="text-gray-400 text-sm">Current Rank</div>
-                    <div class="text-2xl font-bold text-tenant-accent">{{ $profile->rank ? $profile->rank->name : 'No Rank' }}</div>
+                    <div class="text-2xl font-bold text-tenant-accent">{{ $user->active_rank_name }}</div>
                 </div>
             </div>
 

@@ -46,6 +46,10 @@ class CustomAuthController extends Controller
             'verification_token_expires_at' => now()->addHours(24),
         ]);
 
+        // Auto-assign default Pilot role
+        $pilotRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Pilot']);
+        $user->assignRole($pilotRole);
+
         // Build verification link
         $verificationUrl = route('auth.verify', ['token' => $verificationToken]);
 

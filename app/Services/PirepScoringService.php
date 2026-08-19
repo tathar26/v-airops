@@ -75,6 +75,14 @@ class PirepScoringService
             $profile->rank_id = $newRank->id;
         }
 
+        // Update Pilot Location to flight arrival airport
+        if ($pirep->route && $pirep->route->arrival_icao) {
+            $arrivalAirport = \App\Models\Airport::where('icao', $pirep->route->arrival_icao)->first();
+            if ($arrivalAirport) {
+                $profile->current_airport_id = $arrivalAirport->id;
+            }
+        }
+
         $profile->save();
     }
 

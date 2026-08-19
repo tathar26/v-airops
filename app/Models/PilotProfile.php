@@ -56,4 +56,53 @@ class PilotProfile extends Model
     {
         return $this->belongsTo(Rank::class);
     }
+
+    /**
+     * Resolve the pilot's current airport location ICAO code.
+     */
+    public function getCurrentLocationIcaoAttribute(): string
+    {
+        // 1. If current_airport_id is assigned
+        if ($this->current_airport_id && $this->currentAirport) {
+            return $this->currentAirport->icao;
+        }
+
+        // 2. Try to find the latest completed/accepted PIREP arrival airport
+        $lastPirep = Pirep::where('user_id', $this->user_id)
+            ->where('tenant_id', $this->tenant_id)
+            ->whereIn('status', ['Accepted', 'Complete', 'filed'])
+            ->latest('created_at')
+            ->first();
+
+        if ($lastPirep && $lastPirep->route && $lastPirep->route->arrival_icao) {
+            return $lastPirep->route->arrival_icao;
+        }
+
+        // 3. Fallback to Tenant Base Hub
+        $baseHub = TenantHub::with('airport')
+            ->where('tenant_id', $this->tenant_id)
+            ->where('is_base', true)
+            ->first();
+
+        if ($baseHub && $baseHub->airport) {
+            return $baseHub->airport->icao;
+        }
+
+        // 4. Any hub for this tenant
+        $anyHub = TenantHub::with('airport')
+            ->where('tenant_id', $this->tenant_id)
+            ->first();
+
+        if ($anyHub && $anyHub->airport) {
+            return $anyHub->airport->icao;
+        }
+
+        // 5. Fallback to first route departure airport for this tenant
+        $firstRoute = Route::where('tenant_id', $this->tenant_id)->first();
+        if ($firstRoute && $firstRoute->departure_icao) {
+            return $firstRoute->departure_icao;
+        }
+
+        return 'EGLL';
+    }
 }
