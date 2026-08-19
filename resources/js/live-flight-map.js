@@ -7,6 +7,7 @@ document.addEventListener('alpine:init', () => {
         lastUpdated: new Date().toISOString().substring(11, 16) + 'z',
         isLoading: false,
         autoRefreshInterval: null,
+        hasInitialFitted: false,
 
         map: null,
         airplaneMarkersLayer: null,
@@ -24,10 +25,10 @@ document.addEventListener('alpine:init', () => {
                 }
             }, 100);
 
-            // Auto-refresh every 30 seconds
+            // Auto-refresh every 15 seconds for smooth real-time telemetry
             this.autoRefreshInterval = setInterval(() => {
                 this.fetchLiveFlights(true);
-            }, 30000);
+            }, 15000);
         },
 
         destroy() {
@@ -68,6 +69,26 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        resetView() {
+            if (!this.map) return;
+            const bounds = L.latLngBounds();
+            this.flights.forEach(f => {
+                if (f.latitude && f.longitude) {
+                    bounds.extend([f.latitude, f.longitude]);
+                    if (f.dep_lat && f.arr_lat) {
+                        bounds.extend([f.dep_lat, f.dep_lon]);
+                        bounds.extend([f.arr_lat, f.arr_lon]);
+                    }
+                }
+            });
+
+            if (bounds.isValid() && this.flights.length > 0) {
+                this.map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 6, duration: 1.2 });
+            } else {
+                this.map.flyTo([48.5, 4.0], 4, { duration: 1.2 });
+            }
+        },
+
         async fetchLiveFlights(isBackground = false) {
             if (!isBackground) this.isLoading = true;
             try {
@@ -79,6 +100,12 @@ document.addEventListener('alpine:init', () => {
                     this.flights = data.flights || [];
                     this.flightsCount = data.count ?? this.flights.length;
                     this.lastUpdated = data.timestamp || (new Date().toISOString().substring(11, 16) + 'z');
+                    
+                    // Maintain selected flight state
+                    if (this.selectedFlightId) {
+                        this.selectedFlight = this.flights.find(f => f.id === this.selectedFlightId) || null;
+                    }
+
                     this.renderMap();
                 }
             } catch (err) {
@@ -127,7 +154,7 @@ document.addEventListener('alpine:init', () => {
 
                 const marker = L.marker(latLng, { icon: airplaneIcon });
 
-                // Construct rich hover tooltip card matching user's reference design
+                // Construct rich hover tooltip card
                 const tooltipHtml = `
                     <div class="va-tooltip-card">
                         <div class="va-tt-header">
@@ -183,13 +210,19 @@ document.addEventListener('alpine:init', () => {
 
                 marker.addTo(this.airplaneMarkersLayer);
                 this.markersMap[flight.id] = marker;
+
+                // Re-open tooltip if this flight was already selected
+                if (this.selectedFlightId === flight.id) {
+                    marker.openTooltip();
+                }
             });
 
             this.renderRoutes();
 
-            // Fit map to flights bounds if available
-            if (bounds.isValid() && this.flights.length > 0) {
+            // ONLY fit map bounds ONCE during initial load so refreshes do NOT reset user position and zoom
+            if (!this.hasInitialFitted && bounds.isValid() && this.flights.length > 0) {
                 this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 6 });
+                this.hasInitialFitted = true;
             }
         },
 
@@ -252,7 +285,7 @@ document.addEventListener('alpine:init', () => {
             this.renderRoutes();
 
             if (this.map && flight.latitude && flight.longitude) {
-                this.map.flyTo([flight.latitude, flight.longitude], 6, {
+                this.map.flyTo([flight.latitude, flight.longitude], Math.max(this.map.getZoom(), 6), {
                     duration: 1.2
                 });
 
