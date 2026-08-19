@@ -44,6 +44,7 @@ class CustomAuthController extends Controller
             'password' => Hash::make($validated['password']),
             'verification_token' => $verificationToken,
             'verification_token_expires_at' => now()->addHours(24),
+            'verification_email_sent_at' => now(),
         ]);
 
         // Auto-assign default Pilot role
@@ -56,26 +57,101 @@ class CustomAuthController extends Controller
         // Dispatch queued email job
         \App\Jobs\SendVerificationEmailJob::dispatch($user, $verificationUrl);
 
-        return redirect()->route('auth.verify-notice')->with('email_sent', $user->email);
+        return redirect()->route('auth.verify-notice')
+            ->with('email_sent', $user->email)
+            ->with('cooldown_seconds', 300)
+            ->with('success', 'A verification email has been dispatched to your address.');
     }
 
     /**
      * Show verification pending notice page.
      */
-    public function showVerifyNotice()
+    public function showVerifyNotice(Request $request)
     {
+        $email = session('email_sent') ?? $request->query('email') ?? Auth::user()?->email;
+
+        $user = null;
+        if ($email) {
+            $user = User::where('email', strtolower($email))->first();
+        } elseif (app()->environment('local') || config('app.debug')) {
+            $user = User::whereNull('email_verified_at')->whereNotNull('verification_token')->latest('id')->first();
+        }
+
+        $canResend = true;
+        $cooldownSeconds = 0;
+
+        if ($user) {
+            $canResend = $user->canResendVerificationEmail();
+            $cooldownSeconds = $user->verificationResendCooldownSeconds();
+        }
+
         $devVerificationUrl = null;
-        if (app()->environment('local') || config('app.debug')) {
-            $email = session('email_sent');
-            $user = $email ? User::where('email', $email)->first() : User::whereNull('email_verified_at')->whereNotNull('verification_token')->latest('id')->first();
-            if ($user && $user->verification_token) {
-                $devVerificationUrl = route('auth.verify', ['token' => $user->verification_token]);
-            }
+        if ((app()->environment('local') || config('app.debug')) && $user && $user->verification_token) {
+            $devVerificationUrl = route('auth.verify', ['token' => $user->verification_token]);
         }
 
         return view('auth.verify-notice', [
+            'email' => $email ?? $user?->email,
+            'user' => $user,
+            'canResend' => $canResend,
+            'cooldownSeconds' => $cooldownSeconds,
             'devVerificationUrl' => $devVerificationUrl,
         ]);
+    }
+
+    /**
+     * Resend verification email with a 5-minute cooldown check.
+     */
+    public function resendVerificationEmail(Request $request)
+    {
+        $email = $request->input('email') ?? session('email_sent') ?? Auth::user()?->email;
+
+        if (!$email) {
+            $request->validate([
+                'email' => ['required', 'email', 'exists:users,email'],
+            ]);
+            $email = $request->input('email');
+        }
+
+        $user = User::where('email', strtolower($email))->first();
+
+        if (!$user) {
+            return redirect()->route('auth.verify-notice')
+                ->withErrors(['email' => 'No account found with this email address.']);
+        }
+
+        if ($user->email_verified_at) {
+            return redirect()->route('login')
+                ->with('status', 'Your account is already verified! You may log in.');
+        }
+
+        // 5-minute cooldown enforcement
+        if (!$user->canResendVerificationEmail()) {
+            $remainingSeconds = $user->verificationResendCooldownSeconds();
+            $remainingMinutes = ceil($remainingSeconds / 60);
+
+            return redirect()->route('auth.verify-notice')
+                ->with('email_sent', $user->email)
+                ->with('cooldown_seconds', $remainingSeconds)
+                ->with('error', "Please wait {$remainingMinutes} minute(s) before requesting another verification email.");
+        }
+
+        // Generate fresh single-use token & stamp new sent time
+        $verificationToken = Str::random(64);
+        $user->update([
+            'verification_token' => $verificationToken,
+            'verification_token_expires_at' => now()->addHours(24),
+            'verification_email_sent_at' => now(),
+        ]);
+
+        $verificationUrl = route('auth.verify', ['token' => $verificationToken]);
+
+        \App\Jobs\SendVerificationEmailJob::dispatch($user, $verificationUrl);
+
+        return redirect()->route('auth.verify-notice')
+            ->with('email_sent', $user->email)
+            ->with('cooldown_seconds', 300)
+            ->with('success', 'A new verification email has been dispatched to your email address!');
     }
 
     /**

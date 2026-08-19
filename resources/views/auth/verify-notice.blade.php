@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verification Required | Virtual Airline Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
 <body class="h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
@@ -18,21 +21,84 @@
             </svg>
         </div>
 
-        <h1 class="text-3xl font-extrabold text-white">Check Your Email</h1>
+        <h1 class="text-3xl font-extrabold text-white tracking-tight">Check Your Email</h1>
         <p class="text-slate-400 text-sm leading-relaxed">
-            We sent a verification link to your registered email address. Please click the link in the message to activate your pilot account and proceed to airline onboarding.
+            We sent a verification link to your registered email address. Please click the link in the message to activate your pilot account.
         </p>
 
-        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-            @if (session('email_sent'))
-                <p class="text-xs text-sky-400 font-mono bg-sky-500/10 p-2.5 rounded-xl border border-sky-500/20">
-                    Sent to: {{ session('email_sent') }}
-                </p>
+        <!-- Flash Status Messages -->
+        @if (session('success'))
+            <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center space-x-2 animate-fade-in">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error') || $errors->any())
+            <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center space-x-2 animate-fade-in">
+                <svg class="w-4 h-4 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>{{ session('error') ?? $errors->first() }}</span>
+            </div>
+        @endif
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+            @if (!empty($email) || session('email_sent'))
+                <div class="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-left">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recipient Email</div>
+                    <div class="text-xs font-mono text-sky-400 truncate mt-0.5">{{ $email ?? session('email_sent') }}</div>
+                </div>
             @endif
 
-            <p class="text-xs text-slate-500">
-                Didn't receive the email? Check your spam folder or verify your email address.
+            <p class="text-xs text-slate-400">
+                Didn't receive the email? Check your spam folder or request a new link below (available once every 5 minutes).
             </p>
+
+            <!-- Resend Button with 5-Min Realtime Countdown -->
+            <div x-data="{
+                timeLeft: {{ (int) ($cooldownSeconds ?? session('cooldown_seconds', 0)) }},
+                timer: null,
+                init() {
+                    if (this.timeLeft > 0) {
+                        this.timer = setInterval(() => {
+                            if (this.timeLeft > 0) {
+                                this.timeLeft--;
+                            } else {
+                                clearInterval(this.timer);
+                            }
+                        }, 1000);
+                    }
+                },
+                get formattedTime() {
+                    const m = Math.floor(this.timeLeft / 60);
+                    const s = this.timeLeft % 60;
+                    return `${m}:${s < 10 ? '0' : ''}${s}`;
+                }
+            }" class="w-full">
+                <form method="POST" action="{{ route('auth.verify.resend') }}" class="space-y-3">
+                    @csrf
+                    @if (empty($email) && !session('email_sent'))
+                        <div class="text-left">
+                            <input type="email" name="email" required placeholder="Enter your registered email" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                        </div>
+                    @else
+                        <input type="hidden" name="email" value="{{ $email ?? session('email_sent') }}">
+                    @endif
+
+                    <button type="submit" 
+                        :disabled="timeLeft > 0"
+                        :class="timeLeft > 0 ? 'opacity-60 cursor-not-allowed bg-slate-800/80 text-slate-400 border border-slate-700' : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transform hover:scale-[1.01] active:scale-[0.99]'"
+                        class="w-full py-3.5 px-4 rounded-2xl font-bold text-xs tracking-wide transition-all flex items-center justify-center space-x-2">
+                        <svg class="w-4 h-4" :class="{ 'animate-spin': timeLeft > 0 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span x-text="timeLeft > 0 ? 'Resend Available in ' + formattedTime : 'Resend Verification Email'"></span>
+                    </button>
+                </form>
+            </div>
 
             @if (isset($devVerificationUrl) && $devVerificationUrl)
                 <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-left space-y-2">
@@ -52,7 +118,7 @@
                 </div>
             @endif
 
-            <a href="{{ route('login') }}" class="inline-block w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition-all">
+            <a href="{{ route('login') }}" class="inline-block w-full py-3 px-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-all border border-slate-800">
                 Return to Login
             </a>
         </div>

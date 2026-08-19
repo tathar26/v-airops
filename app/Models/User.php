@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'youtube_username',
         'verification_token',
         'verification_token_expires_at',
+        'verification_email_sent_at',
     ];
 
     /**
@@ -79,8 +80,38 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'verification_token_expires_at' => 'datetime',
+            'verification_email_sent_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if user can resend a verification email (5-minute cooldown).
+     */
+    public function canResendVerificationEmail(): bool
+    {
+        if (!$this->verification_email_sent_at) {
+            return true;
+        }
+
+        return $this->verification_email_sent_at->copy()->addMinutes(5)->isPast();
+    }
+
+    /**
+     * Get remaining cooldown seconds before next verification email can be sent.
+     */
+    public function verificationResendCooldownSeconds(): int
+    {
+        if (!$this->verification_email_sent_at) {
+            return 0;
+        }
+
+        $availableAt = $this->verification_email_sent_at->copy()->addMinutes(5);
+        if ($availableAt->isPast()) {
+            return 0;
+        }
+
+        return max(0, (int) now()->diffInSeconds($availableAt, false));
     }
 
     public function tenant()

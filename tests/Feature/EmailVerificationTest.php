@@ -116,4 +116,51 @@ class EmailVerificationTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Link Expired');
     }
+
+    public function test_verification_email_cannot_be_resent_before_5_minutes_cooldown(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $user = User::factory()->unverified()->create([
+            'verification_email_sent_at' => now()->subMinutes(2), // Sent 2 mins ago
+        ]);
+
+        $response = $this->post(route('auth.verify.resend'), [
+            'email' => $user->email,
+        ]);
+
+        $response->assertRedirect(route('auth.verify-notice'));
+        $response->assertSessionHas('error');
+        $this->assertFalse($user->fresh()->canResendVerificationEmail());
+        $this->assertGreaterThan(0, $user->fresh()->verificationResendCooldownSeconds());
+
+        \Illuminate\Support\Facades\Queue::assertNotPushed(\App\Jobs\SendVerificationEmailJob::class);
+    }
+
+    public function test_verification_email_can_be_resent_after_5_minutes_cooldown(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $oldToken = 'old-token-xyz';
+        $user = User::factory()->unverified()->create([
+            'verification_token' => $oldToken,
+            'verification_email_sent_at' => now()->subMinutes(6), // Sent 6 mins ago
+        ]);
+
+        $this->assertTrue($user->canResendVerificationEmail());
+
+        $response = $this->post(route('auth.verify.resend'), [
+            'email' => $user->email,
+        ]);
+
+        $response->assertRedirect(route('auth.verify-notice'));
+        $response->assertSessionHas('success');
+
+        $userFresh = $user->fresh();
+        $this->assertNotEquals($oldToken, $userFresh->verification_token);
+        $this->assertFalse($userFresh->canResendVerificationEmail()); // Now on cooldown
+        $this->assertGreaterThan(0, $userFresh->verificationResendCooldownSeconds());
+
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\SendVerificationEmailJob::class);
+    }
 }

@@ -16,6 +16,8 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice');
 Route::get('/email/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('verification.notice');
+Route::post('/verify-email/resend', [\App\Http\Controllers\Auth\CustomAuthController::class, 'resendVerificationEmail'])->name('auth.verify.resend');
+Route::post('/email/verification-notification', [\App\Http\Controllers\Auth\CustomAuthController::class, 'resendVerificationEmail'])->name('verification.send');
 Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyPrompt'])->name('auth.verify');
 Route::post('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'confirmVerifyEmail'])->name('auth.verify.confirm');
 Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyPrompt'])->name('verification.verify');
@@ -86,7 +88,7 @@ Route::middleware([
     \App\Http\Middleware\EnsureActiveAirlineSelected::class,
 ])->group(function () {
     Route::get('/dashboard', function () {
-        if (auth()->user()->hasRole('Master Admin')) {
+        if (auth()->user()->hasRole('Master Admin') && !auth()->user()->tenant_id) {
             return redirect()->route('admin.dashboard');
         }
         return view('dashboard');
@@ -101,35 +103,35 @@ Route::middleware([
         ->name('admin.email-queue');
 
     Route::get('/fleet', \App\Livewire\FleetManager::class)
-        ->middleware('role:VA Owner|Pilot')
+        ->middleware('role:Master Admin|VA Owner|Pilot')
         ->name('fleet');
 
     Route::get('/routes', \App\Livewire\RouteManager::class)
-        ->middleware('role:VA Owner|Pilot')
+        ->middleware('role:Master Admin|VA Owner|Pilot')
         ->name('routes');
 
     Route::get('/airports', \App\Livewire\AirportManager::class)
-        ->middleware('role:VA Owner|Pilot')
+        ->middleware('role:Master Admin|VA Owner|Pilot')
         ->name('airports');
 
     Route::get('/global-network', \App\Livewire\GlobalNetworkImport::class)
-        ->middleware('role:VA Owner')
+        ->middleware('role:Master Admin|VA Owner')
         ->name('global-network');
 
     Route::get('/aircraft-types', \App\Livewire\AircraftTypeManager::class)
-        ->middleware('role:VA Owner|Pilot')
+        ->middleware('role:Master Admin|VA Owner|Pilot')
         ->name('aircraft-types');
 
     Route::get('/settings', \App\Livewire\TenantSettings::class)
-        ->middleware('role:VA Owner')
+        ->middleware('role:Master Admin|VA Owner')
         ->name('settings');
 
     Route::get('/pireps', \App\Livewire\Admin\PirepsList::class)
-        ->middleware('role:VA Owner')
+        ->middleware('role:Master Admin|VA Owner')
         ->name('pireps');
 
     Route::get('/pireps/{pirep}', \App\Livewire\Admin\PirepDetail::class)
-        ->middleware('role:VA Owner')
+        ->middleware('role:Master Admin|VA Owner')
         ->name('pireps.show');
 
     Route::prefix('profile')->name('profile.')->group(function () {

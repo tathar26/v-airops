@@ -149,7 +149,14 @@
                         </div>
 
                         <div class="text-right hidden sm:block border-l border-white/10 pl-6">
-                            <div class="text-sm font-semibold text-tenant-accent">{{ Auth::user()->full_name }}</div>
+                            <div class="text-sm font-semibold text-tenant-accent flex items-center justify-end gap-2">
+                                <span>{{ Auth::user()->full_name }}</span>
+                                @if(Auth::user()->hasRole('Master Admin'))
+                                    <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">System Admin</span>
+                                @elseif(Auth::user()->hasRole('VA Owner'))
+                                    <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">VA Owner</span>
+                                @endif
+                            </div>
                             <div class="text-xs text-gray-400 flex items-center justify-end gap-1.5 font-mono">
                                 <span class="text-sky-400 font-bold">{{ Auth::user()->activeCallsign() }}</span>
                                 <span>&bull;</span>
