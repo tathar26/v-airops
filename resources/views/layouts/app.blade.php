@@ -190,7 +190,8 @@
             }
 
             /* ── Master Back Card & Inner Cards (Controlled by VA Settings) ─ */
-            .va-main-panel {
+            .va-main-panel,
+            .bg-\[\#181D29\]\/80 {
                 background-color: var(--tenant-panel-bg) !important;
                 color: var(--tenant-panel-text) !important;
                 border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -445,7 +446,7 @@
 
                 <!-- Page Content -->
                 <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8">
-                    <div class="va-main-panel max-w-[1600px] mx-auto w-full backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[calc(100vh-8rem)] space-y-6">
+                    <div class="va-main-panel max-w-[1600px] mx-auto w-full backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[calc(100vh-8rem)] space-y-6" style="background-color: var(--tenant-panel-bg) !important; color: var(--tenant-panel-text) !important;">
                         {{ $slot }}
                     </div>
                 </main>
