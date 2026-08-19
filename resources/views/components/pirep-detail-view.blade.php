@@ -272,10 +272,10 @@
                     <span>PIREP COMMENTS</span>
                 </div>
                 <div class="p-6 bg-[#212631] space-y-4">
-                    @forelse($pirep->comments as $comment)
+                    @forelse($pirep->comments ?? [] as $comment)
                         <div class="bg-[#2c323f] p-3 rounded border border-white/5">
                             <div class="flex justify-between items-center mb-2 text-xs">
-                                <span class="font-semibold text-white">{{ $comment->user->name }}</span>
+                                <span class="font-semibold text-white">{{ $comment->user->name ?? 'Pilot' }}</span>
                                 <span class="text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
                             </div>
                             <div class="text-sm text-gray-300">{{ $comment->comment }}</div>
