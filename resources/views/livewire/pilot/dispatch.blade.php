@@ -86,7 +86,7 @@
 
             <!-- Action Controls -->
             <div class="flex flex-wrap items-center justify-center gap-4 text-xs pt-2">
-                <button wire:click="fetchLiveSimbriefOfp" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl shadow-lg transition flex items-center gap-2">
+                <button wire:click="fetchLiveSimbriefOfp" class="px-6 py-3 bg-tenant-accent hover:opacity-90 text-white font-extrabold rounded-xl shadow-lg transition flex items-center gap-2">
                     📥 Force Fetch OFP Now
                 </button>
 
@@ -359,7 +359,7 @@
                                 <div class="flex-1">
                                     <x-input type="text" wire:model="simbrief_username" class="w-full bg-[#1C212E] border-blue-500/40 text-white text-sm" placeholder="Enter your SimBrief Username or Pilot ID (e.g. 123456)" />
                                 </div>
-                                <button wire:click="fetchLiveSimbriefOfp" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2">
+                                <button wire:click="fetchLiveSimbriefOfp" class="px-4 py-2 bg-tenant-accent hover:opacity-90 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2">
                                     📥 Fetch Live OFP from SimBrief
                                 </button>
                             </div>

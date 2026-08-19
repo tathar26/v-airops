@@ -42,6 +42,9 @@ class TenantDashboard extends Component
         $flightTimeHours = floor($profile->flight_time / 60);
         $flightTimeMins = $profile->flight_time % 60;
 
+        $liveFlightService = app(\App\Services\LiveFlightService::class);
+        $liveFlights = $liveFlightService->getLiveFlights($tenantId);
+
         return view('livewire.tenant-dashboard', [
             'user' => $user,
             'profile' => $profile,
@@ -58,6 +61,8 @@ class TenantDashboard extends Component
             'callsign' => $user->activeCallsign(),
             'rankName' => $user->active_rank_name,
             'currentLocation' => $profile->current_location_icao,
+            'liveFlights' => $liveFlights,
+            'liveFlightsCount' => count($liveFlights),
         ]);
     }
 }

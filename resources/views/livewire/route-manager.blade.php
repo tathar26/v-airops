@@ -18,7 +18,7 @@
                         Select CSV
                     </label>
                     @if($csvFile)
-                        <button wire:click="importCsv" class="bg-vops-secondary text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:opacity-90 transition">
+                        <button wire:click="importCsv" class="bg-tenant-accent text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:opacity-90 transition">
                             Import
                         </button>
                     @endif

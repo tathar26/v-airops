@@ -5,14 +5,182 @@
 @layer base {
     body {
         @apply bg-vops-dark text-gray-200 antialiased font-sans;
-        /* Dynamic radial gradient for premium background effect */
-        background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-                          radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
-        background-attachment: fixed;
+        /* No gradient — tenant bg color is injected via CSS var in app.blade.php */
     }
 }
 
 @layer components {
+
+    /* ─────────────────────────────────────────────
+       VA Card System (replaces hardcoded hex blocks)
+       ───────────────────────────────────────────── */
+    .va-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 0.375rem; /* rounded-md */
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.3);
+    }
+    .va-card-header {
+        background-color: var(--card-header-bg);
+        border-bottom: 1px solid var(--card-border);
+        padding: 0.5rem 1rem;
+        font-size: 0.6875rem;  /* ~11px */
+        font-weight: 600;
+        letter-spacing: 0.075em;
+        text-transform: uppercase;
+        color: #64748b; /* slate-500 */
+    }
+    .va-card-body {
+        background-color: var(--card-body-bg);
+        padding: 1.25rem 1.5rem;
+    }
+
+    /* ─────────────────────────────────────────────
+       Tables
+       ───────────────────────────────────────────── */
+    .va-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem; /* 13px */
+    }
+    .va-table thead tr {
+        background-color: var(--card-header-bg);
+        border-bottom: 1px solid var(--card-border);
+    }
+    .va-table thead th {
+        padding: 0.625rem 1rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.075em;
+        text-transform: uppercase;
+        color: #64748b;
+        text-align: left;
+    }
+    .va-table tbody tr {
+        background-color: var(--card-body-bg);
+        border-bottom: 1px solid var(--card-border);
+        transition: background-color 150ms ease;
+    }
+    .va-table tbody tr:hover {
+        background-color: var(--card-row-hover);
+    }
+    .va-table tbody td {
+        padding: 0.75rem 1rem;
+        color: #cbd5e1; /* slate-300 */
+    }
+
+    /* ─────────────────────────────────────────────
+       Primary / Secondary Buttons
+       ───────────────────────────────────────────── */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.4375rem 0.875rem;
+        background-color: var(--tenant-accent);
+        color: var(--tenant-accent-text, #ffffff);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        border-radius: 0.375rem;
+        border: none;
+        cursor: pointer;
+        transition: opacity 150ms ease, transform 100ms ease;
+        white-space: nowrap;
+    }
+    .btn-primary:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+    }
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.4375rem 0.875rem;
+        background-color: transparent;
+        color: #94a3b8; /* slate-400 */
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+        border: 1px solid #2a3250;
+        cursor: pointer;
+        transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+    }
+    .btn-secondary:hover {
+        background-color: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+        border-color: #3f4f6a;
+    }
+
+    .btn-danger {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.4375rem 0.875rem;
+        background-color: transparent;
+        color: #f87171; /* red-400 */
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border-radius: 0.375rem;
+        border: 1px solid rgba(248,113,113,0.3);
+        cursor: pointer;
+        transition: background-color 150ms ease;
+    }
+    .btn-danger:hover {
+        background-color: rgba(248,113,113,0.1);
+    }
+
+    /* ─────────────────────────────────────────────
+       Sidebar Shell — always dark, VA-accent active
+       ───────────────────────────────────────────── */
+    .sidebar-shell {
+        background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--sidebar-border);
+    }
+    .topbar-shell {
+        background-color: var(--sidebar-bg);
+        border-bottom: 1px solid var(--sidebar-border);
+    }
+
+    /* Nav links */
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--sidebar-text);
+        transition: background-color 150ms ease, color 150ms ease;
+        border-left: 3px solid transparent;
+    }
+    .nav-link:hover {
+        background-color: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+    }
+    .nav-link.active {
+        background-color: rgba(var(--tenant-accent-rgb, 249,115,22), 0.12);
+        color: #ffffff;
+        border-left-color: var(--tenant-accent);
+        font-weight: 600;
+    }
+    .nav-section-label {
+        padding: 1rem 1rem 0.25rem;
+        font-size: 0.625rem; /* 10px */
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #475569; /* slate-600 */
+    }
+
+    /* ─────────────────────────────────────────────
+       Glass Panel (legacy — kept for compat)
+       ───────────────────────────────────────────── */
     .glass-panel {
         @apply bg-vops-card/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl;
     }
@@ -25,8 +193,152 @@
     .glass-button-secondary {
         @apply bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-semibold rounded-xl px-4 py-2 transition-all duration-300 transform hover:scale-105;
     }
+    /* ─────────────────────────────────────────────
+       Live Flight Map & Tooltip Styling
+       ───────────────────────────────────────────── */
+    .custom-aircraft-marker {
+        background: transparent !important;
+        border: none !important;
+    }
+    .aircraft-marker-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        transition: transform 0.3s ease;
+        filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+        cursor: pointer;
+    }
+    .aircraft-marker-wrap:hover {
+        filter: drop-shadow(0 0 8px #facc15);
+    }
+    .aircraft-svg-icon {
+        width: 24px;
+        height: 24px;
+        display: block;
+    }
+
+    /* Leaflet Tooltip Override */
+    .leaflet-tooltip.va-aircraft-tooltip {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    .leaflet-tooltip.va-aircraft-tooltip::before {
+        display: none !important;
+    }
+
+    /* Rich Tooltip Card */
+    .va-tooltip-card {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+        min-width: 230px;
+        font-family: inherit;
+        pointer-events: none;
+    }
+    .va-tt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.125rem;
+    }
+    .va-tt-callsign {
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.025em;
+        color: #ffffff;
+    }
+    .va-tt-flightnum {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: #facc15;
+        font-family: monospace;
+        background: rgba(250, 204, 21, 0.15);
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        border: 1px solid rgba(250, 204, 21, 0.3);
+    }
+    .va-tt-pilot {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .va-tt-route {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.375rem;
+        padding: 0.375rem 0.5rem;
+        margin-bottom: 0.625rem;
+    }
+    .va-tt-icao {
+        font-size: 0.9375rem;
+        font-weight: 800;
+        font-family: monospace;
+        color: #38bdf8;
+    }
+    .va-tt-arrow {
+        font-size: 0.6875rem;
+        color: #facc15;
+        font-weight: bold;
+    }
+    .va-tt-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.375rem 0.75rem;
+        font-size: 0.6875rem;
+    }
+    .va-tt-col {
+        display: flex;
+        flex-direction: column;
+    }
+    .va-tt-lbl {
+        color: #64748b;
+        font-size: 0.625rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+    }
+    .va-tt-val {
+        color: #f1f5f9;
+        font-weight: 600;
+    }
+    .va-status-cruising { color: #38bdf8 !important; }
+    .va-status-climbing { color: #a855f7 !important; }
+    .va-status-descending { color: #f97316 !important; }
+    .va-status-preflight { color: #eab308 !important; }
+    .va-status-landed { color: #22c55e !important; }
+
+    .va-network-vatsim { color: #38bdf8 !important; }
+    .va-network-ivao { color: #3b82f6 !important; }
+    .va-network-offline { color: #94a3b8 !important; }
+    .va-network-poscon { color: #ec4899 !important; }
+    .va-network-pilotedge { color: #10b981 !important; }
+
+    .va-airport-tooltip {
+        background: rgba(15, 23, 42, 0.9) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0.375rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        padding: 0.25rem 0.5rem !important;
+    }
 }
 
 [x-cloak] {
     display: none;
 }
+

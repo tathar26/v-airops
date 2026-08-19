@@ -83,7 +83,7 @@
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">ICAO Code</label>
                             <input type="text" wire:model.defer="icao" class="w-full rounded-xl py-2.5 px-3 uppercase text-sm font-mono" style="background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important;" maxlength="4" placeholder="e.g., EGLL">
                         </div>
-                        <button type="button" wire:click="fetchAirportData" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl transition h-[44px] flex items-center shadow">
+                        <button type="button" wire:click="fetchAirportData" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2.5 px-5 rounded-xl transition h-[44px] flex items-center shadow">
                             Auto-Fetch
                         </button>
                     </div>

@@ -156,6 +156,7 @@ Route::middleware([
     Route::prefix('api/flight-centre')->group(function () {
         Route::get('/destinations', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'destinations']);
         Route::get('/network', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'network']);
+        Route::get('/live-flights', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'liveFlights']);
         Route::post('/current-location', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'updateLocation']);
         Route::post('/book', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'book']);
     });

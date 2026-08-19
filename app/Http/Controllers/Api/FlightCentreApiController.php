@@ -140,4 +140,16 @@ class FlightCentreApiController extends Controller
 
         return response()->json(['success' => true, 'booking_id' => $booking->id]);
     }
+
+    public function liveFlights(Request $request, \App\Services\LiveFlightService $service)
+    {
+        $tenantId = $request->user()?->getActiveTenantId() ?? $request->user()?->tenant_id;
+        $flights = $service->getLiveFlights($tenantId);
+
+        return response()->json([
+            'count' => count($flights),
+            'timestamp' => gmdate('H:i\z'),
+            'flights' => $flights,
+        ]);
+    }
 }
