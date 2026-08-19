@@ -34,15 +34,15 @@ class RecalculatePilotStatistics implements ShouldQueue
         foreach ($profiles as $profile) {
             $tenantId = $profile->tenant_id;
             
-            $pireps = Pirep::where('user_id', $this->userId)
+            // Accepted, Complete, and Rejected PIREPs award flight time hours.
+            // Invalidated PIREPs award no hours and no points.
+            $validPireps = Pirep::where('user_id', $this->userId)
                 ->where('tenant_id', $tenantId)
-                ->where(function ($query) {
-                    $query->whereIn('status', ['Accepted', 'accepted', 'Complete', 'complete', 'Approved', 'approved']);
-                })
+                ->whereIn('status', ['Accepted', 'accepted', 'Complete', 'complete', 'Approved', 'approved', 'Rejected', 'rejected'])
                 ->with(['route', 'airframe.aircraftType'])
                 ->get();
 
-            if ($pireps->isEmpty()) {
+            if ($validPireps->isEmpty()) {
                 $profile->flight_time = 0;
                 $profile->points = 0;
                 $profile->save();
@@ -61,12 +61,18 @@ class RecalculatePilotStatistics implements ShouldQueue
                 continue;
             }
 
-            $total_flights = $pireps->count();
-            $total_flight_time = (int) $pireps->sum('flight_time');
-            $total_points = (int) $pireps->sum('points_awarded');
-            $total_passengers = $pireps->sum('passengers');
-            $total_freight = $pireps->sum('freight');
-            $total_block_fuel = $pireps->sum('fuel_used') ?: $pireps->sum('block_fuel');
+            $total_flights = $validPireps->count();
+            $total_flight_time = (int) $validPireps->sum('flight_time');
+
+            // Only Accepted/Complete/Approved PIREPs award points (Rejected awards hours but 0 points)
+            $acceptedPireps = $validPireps->filter(function($p) {
+                return in_array(strtolower($p->status), ['accepted', 'complete', 'approved']);
+            });
+            $total_points = (int) $acceptedPireps->sum('points_awarded');
+            
+            $total_passengers = $validPireps->sum('passengers');
+            $total_freight = $validPireps->sum('freight');
+            $total_block_fuel = $validPireps->sum('fuel_used') ?: $validPireps->sum('block_fuel');
             
             // Update PilotProfile hours and points
             $profile->flight_time = $total_flight_time;

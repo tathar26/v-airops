@@ -346,14 +346,39 @@
         </div>
     @endif
 
-    @if($isAdmin && strtolower($pirep->status) === 'submitted')
-        <div class="bg-[#181D29] border border-white/10 rounded-xl p-4 flex justify-end gap-3 shadow-lg">
-            <button wire:click="accept" class="bg-green-600 hover:bg-green-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-md transition">
-                ✓ Accept PIREP
-            </button>
-            <button wire:click="invalidate" wire:confirm="Are you sure you want to invalidate this PIREP?" class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-md transition">
-                ✕ Invalidate PIREP
-            </button>
+    @if (session()->has('message'))
+        <div class="bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded-xl relative text-xs font-bold" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
+
+    @if($isAdmin)
+        <div class="bg-[#181D29] border border-white/10 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-lg" x-data="{ showReplyInput: false }">
+            <div class="text-xs font-mono font-bold text-gray-300">
+                <span>STAFF PIREP AUDIT ACTIONS:</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button wire:click="accept" wire:confirm="Approve and Accept this PIREP?" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition">
+                    ✓ Accept PIREP
+                </button>
+                <button wire:click="reject" wire:confirm="Reject this PIREP? (Flight hours awarded, 0 points awarded)" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition">
+                    ⚠ Reject (0 Pts)
+                </button>
+                <button wire:click="invalidate" wire:confirm="Invalidate this PIREP? (0 hours and 0 points awarded)" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition">
+                    ✕ Invalidate PIREP
+                </button>
+                <button @click="showReplyInput = !showReplyInput" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md transition">
+                    ✉ Request Reply
+                </button>
+            </div>
+
+            <!-- Inline Reply Needed Reason Box -->
+            <div x-show="showReplyInput" x-cloak class="w-full mt-3 border-t border-white/10 pt-3 flex gap-2">
+                <input type="text" wire:model="requestReplyReason" placeholder="Specify reason why pilot input is urgently required..." class="flex-grow bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                <button wire:click="requestReply" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+                    Send 'Reply Needed'
+                </button>
+            </div>
         </div>
     @endif
 
@@ -365,19 +390,30 @@
             <!-- PIREP STATUS Card -->
             <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
                 <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between items-center">
-                    <span>PIREP STATUS</span>
+                    <span>PIREP STATUS &amp; DISPATCH</span>
                     <span class="text-xs font-mono text-gray-400">ID: #{{ $pirep->id }}</span>
                 </div>
                 <div class="p-6 bg-[#12161F] flex justify-between items-center flex-wrap gap-4">
                     <div class="flex items-center gap-6">
                         <div class="text-sm">
                             <span class="text-gray-400 block mb-1 text-xs">Status</span>
-                            @if(in_array(strtolower($pirep->status), ['accepted', 'complete', 'approved']))
-                                <span class="px-3 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/30 font-bold text-xs">Accepted</span>
-                            @elseif(in_array(strtolower($pirep->status), ['rejected', 'invalidated']))
-                                <span class="px-3 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs">Invalidated</span>
+                            @php $st = strtolower($pirep->status); @endphp
+                            @if(in_array($st, ['accepted', 'complete', 'approved']))
+                                <span class="px-3 py-1 rounded bg-green-500/20 text-green-400 border border-green-500/30 font-bold text-xs">ACCEPTED / COMPLETE</span>
+                            @elseif($st === 'rejected')
+                                <span class="px-3 py-1 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold text-xs">REJECTED (0 PTS)</span>
+                            @elseif($st === 'invalidated')
+                                <span class="px-3 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs">INVALIDATED (0 HRS)</span>
+                            @elseif($st === 'awaiting_review' || $st === 'awaiting review')
+                                <span class="px-3 py-1 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold text-xs">AWAITING REVIEW</span>
+                            @elseif($st === 'reply_needed' || $st === 'reply needed')
+                                <span class="px-3 py-1 rounded bg-red-500/30 text-amber-300 border border-red-500/40 font-bold text-xs animate-pulse">REPLY NEEDED (ACTION REQUIRED)</span>
+                            @elseif($st === 'processing')
+                                <span class="px-3 py-1 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold text-xs">PROCESSING</span>
+                            @elseif($st === 'scoring')
+                                <span class="px-3 py-1 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-bold text-xs">SCORING</span>
                             @else
-                                <span class="px-3 py-1 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold text-xs">{{ strtoupper($pirep->status) }}</span>
+                                <span class="px-3 py-1 rounded bg-slate-500/20 text-slate-300 border border-slate-500/30 font-bold text-xs">{{ strtoupper($pirep->status) }}</span>
                             @endif
                         </div>
                         <div class="text-sm pl-6 border-l border-white/10">
@@ -496,9 +532,21 @@
                         <span class="text-white font-bold">{{ $landingGrade }}</span>
                     </div>
 
+                    @if(!empty($fLog['failure_reasons'] ?? []))
+                        <div class="border-t border-white/10 pt-3 space-y-2">
+                            <span class="text-[10px] text-amber-400 uppercase font-bold tracking-wider block">Triggered Failure Rules:</span>
+                            @foreach($fLog['failure_reasons'] as $reason)
+                                <div class="flex items-center gap-2 text-amber-300 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20 font-sans text-xs">
+                                    <span class="text-amber-400 font-bold">⚠</span>
+                                    <span>{{ $reason }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
                     @if(!empty($penalties))
                         <div class="border-t border-white/5 pt-3 space-y-2">
-                            <span class="text-[10px] text-red-400 uppercase font-bold tracking-wider block">Safety Deductions:</span>
+                            <span class="text-[10px] text-red-400 uppercase font-bold tracking-wider block">Deductions:</span>
                             @foreach($penalties as $pen)
                                 <div class="flex justify-between text-red-300 bg-red-500/10 p-2 rounded border border-red-500/20">
                                     <span>{{ $pen['description'] ?? ($pen['category'] ?? 'Rule Violation') }}</span>
@@ -506,9 +554,17 @@
                                 </div>
                             @endforeach
                         </div>
-                    @else
-                        <div class="border-t border-white/5 pt-2 text-green-400 flex items-center gap-1.5">
-                            <span>✓</span> Perfect Flight (No safety violations logged)
+                    @endif
+
+                    @if(!empty($fLog['bonuses'] ?? []))
+                        <div class="border-t border-white/5 pt-3 space-y-2">
+                            <span class="text-[10px] text-green-400 uppercase font-bold tracking-wider block">Score Bonuses:</span>
+                            @foreach($fLog['bonuses'] as $bon)
+                                <div class="flex justify-between text-green-300 bg-green-500/10 p-2 rounded border border-green-500/20">
+                                    <span>{{ $bon['description'] }}</span>
+                                    <span class="font-bold">+{{ $bon['points'] }} pts</span>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
 

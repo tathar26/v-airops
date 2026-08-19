@@ -36,8 +36,11 @@ class PirepDetail extends Component
             'comment' => $this->newComment
         ]);
 
+        // Leaving a PIREP Comment automatically sends PIREP for staff review
+        $this->pirep->update(['status' => 'awaiting_review']);
+
         $this->newComment = '';
         $this->pirep->load('comments.user');
-        session()->flash('message', 'Comment added successfully.');
+        session()->flash('message', 'Comment submitted. Your PIREP has been sent to VA staff for review.');
     }
 }

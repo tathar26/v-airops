@@ -35,38 +35,40 @@ class PirepController extends Controller
             return response()->json(['detail' => 'PIREP already submitted for this flight'], 400);
         }
 
-        // 1. Evaluate touchdown performance
-        $touchdownFpm = (float) $request->input('touchdown_fpm');
-        $landingGradeResult = $this->scoringService->evaluateLandingGrade($touchdownFpm);
-
-        $penaltiesApplied = [];
-        $totalPenaltyPoints = $landingGradeResult['penalty'];
-
-        if ($landingGradeResult['penalty'] > 0) {
-            $penaltiesApplied[] = [
-                'category' => 'Landing Rate',
-                'description' => sprintf('Touchdown rate of %.1f FPM (%s)', $touchdownFpm, $landingGradeResult['grade']),
-                'points_deducted' => $landingGradeResult['penalty'],
-            ];
-        }
-
-        // 2. Aggregate logged events and deduct points
+        // 1. Evaluate flight performance through comprehensive Scoring Engine & Failure Rules
         $dbEvents = AcarsEvent::where('flight_id', $flightId)->get();
-        foreach ($dbEvents as $ev) {
-            $pts = $ev->penalty_points > 0 ? $ev->penalty_points : 10;
-            $totalPenaltyPoints += $pts;
-            $penaltiesApplied[] = [
-                'category' => $ev->event_type,
-                'description' => $ev->description,
-                'points_deducted' => $pts,
-            ];
-        }
 
-        $totalScore = max(0, 100 - $totalPenaltyPoints);
+        $evalData = [
+            'touchdown_fpm' => (float) $request->input('touchdown_fpm'),
+            'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
+            'gear_up_landing' => (bool) $request->input('gear_up_landing', false),
+            'midair_refuel_detected' => (bool) $request->input('midair_refuel_detected', false),
+            'sim_rate_max' => (float) $request->input('sim_rate_max', 1.0),
+            'bounce_count' => (int) $request->input('bounce_count', 0),
+            'block_time_minutes' => (int) $request->input('block_time_minutes'),
+            'prep_time_minutes' => (int) $request->input('prep_time_minutes', 25),
+            'fuel_used_kg' => (float) $request->input('fuel_used_kg', 0.0),
+            'landing_fuel_kg' => (float) $request->input('landing_fuel_kg', 3000.0),
+            'origin_icao' => $flight->origin_icao,
+            'destination_icao' => $flight->destination_icao,
+            'actual_destination_icao' => $request->input('actual_destination_icao', $flight->destination_icao),
+            'network_connected' => $request->input('network_connected', 'OFFLINE'),
+            'shared_cockpit' => (bool) $request->input('shared_cockpit', false),
+            'engine_start_interval_seconds' => (int) $request->input('engine_start_interval_seconds', 60),
+            'engines_shutdown_clean' => (bool) $request->input('engines_shutdown_clean', true),
+            'engine_warmup_seconds' => (int) $request->input('engine_warmup_seconds', 180),
+            'engine_cooldown_seconds' => (int) $request->input('engine_cooldown_seconds', 180),
+            'flaps_retracted_before_parking' => (bool) $request->input('flaps_retracted_before_parking', true),
+            'flaps_retracted_too_early' => (bool) $request->input('flaps_retracted_too_early', false),
+            'takeoff_flaps_set' => (bool) $request->input('takeoff_flaps_set', true),
+            'scheduled_time_minutes' => (int) ($flight->scheduled_time_minutes ?? $request->input('block_time_minutes')),
+            'average_time_minutes' => (int) ($flight->average_time_minutes ?? $request->input('block_time_minutes')),
+        ];
 
-        // 3. Atomically persist PIREP, update flight status, clean up booking, and update pilot stats
-        // Note: AcarsPosition telemetry records for $flight->id are preserved for the PIREP report overview.
-        $pirep = DB::transaction(function () use ($request, $flight, $user, $landingGradeResult, $totalScore, $penaltiesApplied, $dbEvents) {
+        $evalResult = $this->scoringService->evaluatePirepData($evalData);
+
+        // 2. Atomically persist PIREP, update flight status, clean up booking, and update pilot stats
+        $pirep = DB::transaction(function () use ($request, $flight, $user, $evalResult, $dbEvents) {
             $newPirep = AcarsPirep::create([
                 'flight_id' => $flight->id,
                 'user_id' => $user->id,
@@ -77,10 +79,10 @@ class PirepController extends Controller
                 'fuel_used_kg' => (float) $request->input('fuel_used_kg', 0.0),
                 'touchdown_fpm' => (float) $request->input('touchdown_fpm'),
                 'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
-                'landing_grade' => $landingGradeResult['grade'],
-                'total_score' => $totalScore,
-                'flight_log_json' => ['events_count' => $dbEvents->count()],
-                'penalties_json' => $penaltiesApplied,
+                'landing_grade' => $evalResult['landing_grade'],
+                'total_score' => $evalResult['points_awarded'],
+                'flight_log_json' => ['events_count' => $dbEvents->count(), 'failure_reasons' => $evalResult['failure_reasons']],
+                'penalties_json' => $evalResult['penalties'],
             ]);
 
             // Mark active flight as completed so it is removed from active radar
@@ -119,11 +121,12 @@ class PirepController extends Controller
                     'user_id' => $user->id,
                     'route_id' => $booking?->route_id,
                     'airframe_id' => $booking?->airframe_id,
-                    'status' => 'accepted',
-                    'flight_time' => (int) $request->input('block_time_minutes'),
+                    'status' => $evalResult['status'],
+                    'flight_time' => $evalResult['hours_awarded'],
                     'fuel_used' => (float) $request->input('fuel_used_kg', 0.0),
                     'touchdown_rate_fpm' => (int) round($request->input('touchdown_fpm')),
-                    'points_awarded' => max(10, (int) round($totalScore)),
+                    'landing_g' => (float) $request->input('touchdown_gforce', 1.0),
+                    'points_awarded' => $evalResult['points_awarded'],
                     'flight_log' => [
                         'flight_id' => $flight->id,
                         'callsign' => strtoupper($callsignVal),
@@ -137,8 +140,11 @@ class PirepController extends Controller
                         'planned_zfw_kg' => $flight->planned_zfw_kg,
                         'touchdown_fpm' => (float) $request->input('touchdown_fpm'),
                         'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
-                        'landing_grade' => $landingGradeResult['grade'],
-                        'penalties' => $penaltiesApplied,
+                        'landing_grade' => $evalResult['landing_grade'],
+                        'eval_status' => $evalResult['status'],
+                        'failure_reasons' => $evalResult['failure_reasons'],
+                        'penalties' => $evalResult['penalties'],
+                        'bonuses' => $evalResult['bonuses'],
                         'block_off_time' => $request->input('block_off_time'),
                         'block_on_time' => $request->input('block_on_time'),
                         'block_time_minutes' => (int) $request->input('block_time_minutes'),

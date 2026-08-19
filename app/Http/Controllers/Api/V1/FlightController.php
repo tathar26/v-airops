@@ -15,6 +15,19 @@ class FlightController extends Controller
     {
         $user = $request->user();
 
+        // Check if user has a PIREP with status 'reply_needed'
+        $hasReplyNeeded = \App\Models\Pirep::where('user_id', $user->id)
+            ->whereIn('status', ['reply_needed', 'reply needed'])
+            ->exists();
+
+        if ($hasReplyNeeded) {
+            return response()->json([
+                'has_booking' => false,
+                'reply_needed' => true,
+                'message' => 'You have PIREPs requiring urgent reply before you can start or book new flights. Please respond to your pending PIREPs.'
+            ], 403);
+        }
+
         // 1. Check if user has an active booking in the VA system within the last 24h
         $booking = Booking::withoutGlobalScopes()
             ->where('user_id', $user->id)
