@@ -25,6 +25,8 @@ class TenantSettings extends Component
     public $newHubIcao = '';
     public $accent_color = '';
     public $bg_color = '';
+    public $panel_bg_color = '';
+    public $card_bg_color = '';
     public $logo;
     public $default_simbrief_ofp_format = 'lido';
 
@@ -44,8 +46,10 @@ class TenantSettings extends Component
         $this->name = $tenant->name;
         $this->icao = $tenant->icao;
         $this->secondary_icaos = $tenant->secondary_icaos ?? [];
-        $this->accent_color = $tenant->accent_color;
-        $this->bg_color = $tenant->bg_color ?? '#1e1e1e';
+        $this->accent_color = $tenant->accent_color ?? '#f97316';
+        $this->bg_color = $tenant->bg_color ?? '#0f1117';
+        $this->panel_bg_color = $tenant->panel_bg_color ?? $this->accent_color;
+        $this->card_bg_color = $tenant->card_bg_color ?? $this->bg_color;
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
 
         // Fetch simbrief formats and cache for 24 hours
@@ -120,6 +124,8 @@ class TenantSettings extends Component
             'icao' => 'required|string|min:2|max:4|alpha',
             'accent_color' => 'required|string|max:7',
             'bg_color' => 'required|string|max:7',
+            'panel_bg_color' => 'nullable|string|max:7',
+            'card_bg_color' => 'nullable|string|max:7',
             'logo' => 'nullable|image|max:1024',
             'default_simbrief_ofp_format' => 'required|string|max:20',
         ]);
@@ -141,6 +147,8 @@ class TenantSettings extends Component
         $tenant->secondary_icaos = array_values(array_unique(array_filter($this->secondary_icaos)));
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
+        $tenant->panel_bg_color = $this->panel_bg_color ?: $this->accent_color;
+        $tenant->card_bg_color = $this->card_bg_color ?: $this->bg_color;
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
 
         if ($this->logo) {

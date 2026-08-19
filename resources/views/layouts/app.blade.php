@@ -21,6 +21,10 @@
             $tenantAccent   = auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->accent_color  : '#f97316';
             $tenantBg       = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->bg_color
                                 ? auth()->user()->tenant->bg_color : '#0f1117';
+            $tenantPanelBg  = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->panel_bg_color
+                                ? auth()->user()->tenant->panel_bg_color : $tenantAccent;
+            $tenantCardBg   = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->card_bg_color
+                                ? auth()->user()->tenant->card_bg_color : $tenantBg;
 
             /* Luminance helper */
             $hexLuminance = function(string $hex): float {
@@ -36,10 +40,14 @@
 
             $bgLuminance     = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantBg)
                                  ? $hexLuminance($tenantBg) : 0;
+            $panelLuminance  = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantPanelBg)
+                                 ? $hexLuminance($tenantPanelBg) : 0;
             $accentLuminance = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantAccent)
                                  ? $hexLuminance($tenantAccent) : 0;
 
             $isLight              = $bgLuminance > 0.6;
+            $isPanelLight         = $panelLuminance > 0.55;
+            $panelTextColor       = $isPanelLight ? '#0f172a' : '#ffffff';
             $isAccentLight        = $accentLuminance > 0.55;
             $accentTextColor      = $isAccentLight ? '#0f172a' : '#ffffff';
             $accentMutedColor     = $isAccentLight ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.8)';
@@ -66,6 +74,9 @@
                 --tenant-accent-active-bg:   {{ $accentActiveBg }};
                 --tenant-accent-border:      {{ $accentBorderColor }};
                 --tenant-bg:                 {{ $tenantBg }};
+                --tenant-panel-bg:           {{ $tenantPanelBg }};
+                --tenant-panel-text:         {{ $panelTextColor }};
+                --tenant-card-bg:            {{ $tenantCardBg }};
 
                 /* Sidebar / Topbar shell — follows VA accent color */
                 --sidebar-bg:                var(--tenant-accent);
@@ -76,11 +87,11 @@
                 --sidebar-active-text:       var(--tenant-accent-text);
 
                 /* Content cards */
-                --card-bg:                   #161c2c;
-                --card-header-bg:            #111827;
-                --card-body-bg:              #161c2c;
-                --card-border:               #1e2d45;
-                --card-row-hover:            #1a2235;
+                --card-bg:                   var(--tenant-card-bg);
+                --card-header-bg:            var(--tenant-card-bg);
+                --card-body-bg:              var(--tenant-card-bg);
+                --card-border:               rgba(255, 255, 255, 0.12);
+                --card-row-hover:            rgba(255, 255, 255, 0.05);
             }
 
             /* ── Base body background ─────────────────────────────── */
@@ -152,38 +163,38 @@
                 filter: brightness(0.92);
             }
 
-            /* ── Back Card & Inner Cards (Tenant Accent vs Background) ───────── */
+            /* ── Master Back Card & Inner Cards (Controlled by VA Settings) ─ */
             .va-main-panel {
-                background-color: var(--tenant-accent) !important;
-                color: var(--tenant-accent-text) !important;
-                border: 1px solid var(--tenant-accent-border) !important;
+                background-color: var(--tenant-panel-bg) !important;
+                color: var(--tenant-panel-text) !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.35);
             }
             .va-main-panel h1,
             .va-main-panel h2,
             .va-main-panel h3,
             .va-main-panel h4 {
-                color: var(--tenant-accent-text) !important;
+                color: var(--tenant-panel-text) !important;
             }
 
             .va-main-panel .bg-\[\#12161F\],
             .va-card,
             .glass-panel {
-                background-color: var(--tenant-bg) !important;
+                background-color: var(--tenant-card-bg) !important;
                 border: 1px solid rgba(255, 255, 255, 0.12) !important;
                 box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
             }
 
             .va-main-panel .bg-\[\#181D29\],
             .va-card-header {
-                background-color: var(--tenant-bg) !important;
+                background-color: var(--tenant-card-bg) !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
                 border-top: 2px solid var(--tenant-accent) !important;
             }
 
             .va-main-panel .bg-\[\#0a0d14\],
             .va-main-panel .bg-\[\#111827\] {
-                background-color: var(--tenant-bg) !important;
+                background-color: var(--tenant-card-bg) !important;
                 border-color: rgba(255, 255, 255, 0.15) !important;
             }
 

@@ -13,6 +13,8 @@ class Tenant extends Model
         'secondary_icaos',
         'accent_color',
         'bg_color',
+        'panel_bg_color',
+        'card_bg_color',
         'logo_path',
         'default_simbrief_ofp_format',
         'is_approved',

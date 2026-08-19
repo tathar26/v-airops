@@ -82,22 +82,42 @@
                         <!-- Base Theme Settings -->
                         <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 md:col-span-3">
-                                <x-label for="accent_color" value="{{ __('Accent Color (Hex)') }}" class="text-white" />
+                                <x-label for="accent_color" value="{{ __('Primary Accent Color') }}" class="text-white" />
                                 <div class="flex items-center space-x-3 mt-1">
-                                    <input id="accent_color_picker" type="color" wire:model="accent_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                                    <x-input id="accent_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white" wire:model="accent_color" placeholder="#f97316" />
+                                    <input id="accent_color_picker" type="color" wire:model.live="accent_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="accent_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="accent_color" placeholder="#f97316" />
                                 </div>
                                 <x-input-error for="accent_color" class="mt-2" />
                             </div>
 
                             <div class="col-span-6 md:col-span-3">
-                                <x-label for="bg_color" value="{{ __('Background Color (Hex)') }}" class="text-white" />
+                                <x-label for="bg_color" value="{{ __('Main Page Background Color') }}" class="text-white" />
                                 <div class="flex items-center space-x-3 mt-1">
-                                    <input id="bg_color_picker" type="color" wire:model="bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                                    <x-input id="bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white" wire:model="bg_color" placeholder="#1e1e1e" />
+                                    <input id="bg_color_picker" type="color" wire:model.live="bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="bg_color" placeholder="#0f1117" />
                                 </div>
                                 <x-input-error for="bg_color" class="mt-2" />
-                                <p class="text-xs text-gray-400 mt-1">This will change the body background of the Virtual Airline.</p>
+                                <p class="text-xs text-gray-400 mt-1">Controls the base body background of the airline portal.</p>
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="panel_bg_color" value="{{ __('Master Outer Card / Panel Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="panel_bg_color_picker" type="color" wire:model.live="panel_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="panel_bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="panel_bg_color" placeholder="#f97316" />
+                                </div>
+                                <x-input-error for="panel_bg_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">Controls the outer master background card panel behind all page elements.</p>
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="card_bg_color" value="{{ __('Inner Cards & Table Background Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="card_bg_color_picker" type="color" wire:model.live="card_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="card_bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="card_bg_color" placeholder="#0f1117" />
+                                </div>
+                                <x-input-error for="card_bg_color" class="mt-2" />
+                                <p class="text-xs text-gray-400 mt-1">Controls the background of inner cards, table headers, and form panels.</p>
                             </div>
 
                             <!-- Dispatch Settings -->
