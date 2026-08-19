@@ -131,9 +131,17 @@ Route::middleware([
         ->middleware('role:Master Admin|VA Owner')
         ->name('pireps');
 
+    Route::get('/admin/pireps', \App\Livewire\Admin\PirepsList::class)
+        ->middleware('role:Master Admin|VA Owner')
+        ->name('admin.pireps');
+
     Route::get('/pireps/{pirep}', \App\Livewire\Admin\PirepDetail::class)
         ->middleware('role:Master Admin|VA Owner')
         ->name('pireps.show');
+
+    Route::get('/admin/pireps/{pirep}', \App\Livewire\Admin\PirepDetail::class)
+        ->middleware('role:Master Admin|VA Owner')
+        ->name('admin.pireps.show');
 
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Pilot\Dashboard::class)->name('dashboard');

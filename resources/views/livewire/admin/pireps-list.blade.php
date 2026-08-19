@@ -101,7 +101,7 @@
                             <span class="text-[10px] text-gray-500 mt-1 block font-mono">{{ $pirep->created_at->format('jS M y H:i') }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.pireps.show', $pirep->id) }}" class="text-tenant-accent hover:text-white transition-colors bg-white/5 hover:bg-tenant-accent px-3 py-1.5 rounded-lg text-xs font-bold border border-white/10 inline-flex items-center gap-1">
+                            <a href="{{ route('pireps.show', $pirep->id) }}" class="text-tenant-accent hover:text-white transition-colors bg-white/5 hover:bg-tenant-accent px-3 py-1.5 rounded-lg text-xs font-bold border border-white/10 inline-flex items-center gap-1">
                                 Audit
                             </a>
                         </td>
