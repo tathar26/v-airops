@@ -27,6 +27,10 @@ class TenantSettings extends Component
     public $bg_color = '';
     public $panel_bg_color = '';
     public $card_bg_color = '';
+    public $button_bg_color = '';
+    public $button_text_color = '';
+    public $button_secondary_bg_color = '';
+    public $button_secondary_text_color = '';
     public $logo;
     public $default_simbrief_ofp_format = 'lido';
 
@@ -50,6 +54,10 @@ class TenantSettings extends Component
         $this->bg_color = $tenant->bg_color ?? '#0f1117';
         $this->panel_bg_color = $tenant->panel_bg_color ?? $this->accent_color;
         $this->card_bg_color = $tenant->card_bg_color ?? $this->bg_color;
+        $this->button_bg_color = $tenant->button_bg_color ?? $this->accent_color;
+        $this->button_text_color = $tenant->button_text_color ?? '#ffffff';
+        $this->button_secondary_bg_color = $tenant->button_secondary_bg_color ?? '#1f2937';
+        $this->button_secondary_text_color = $tenant->button_secondary_text_color ?? '#f3f4f6';
         $this->default_simbrief_ofp_format = $tenant->default_simbrief_ofp_format ?? 'lido';
 
         // Fetch simbrief formats and cache for 24 hours
@@ -126,6 +134,10 @@ class TenantSettings extends Component
             'bg_color' => 'required|string|max:7',
             'panel_bg_color' => 'nullable|string|max:7',
             'card_bg_color' => 'nullable|string|max:7',
+            'button_bg_color' => 'nullable|string|max:7',
+            'button_text_color' => 'nullable|string|max:7',
+            'button_secondary_bg_color' => 'nullable|string|max:7',
+            'button_secondary_text_color' => 'nullable|string|max:7',
             'logo' => 'nullable|image|max:1024',
             'default_simbrief_ofp_format' => 'required|string|max:20',
         ]);
@@ -149,6 +161,10 @@ class TenantSettings extends Component
         $tenant->bg_color = $this->bg_color;
         $tenant->panel_bg_color = $this->panel_bg_color ?: $this->accent_color;
         $tenant->card_bg_color = $this->card_bg_color ?: $this->bg_color;
+        $tenant->button_bg_color = $this->button_bg_color ?: $this->accent_color;
+        $tenant->button_text_color = $this->button_text_color ?: '#ffffff';
+        $tenant->button_secondary_bg_color = $this->button_secondary_bg_color ?: '#1f2937';
+        $tenant->button_secondary_text_color = $this->button_secondary_text_color ?: '#f3f4f6';
         $tenant->default_simbrief_ofp_format = $this->default_simbrief_ofp_format;
 
         if ($this->logo) {

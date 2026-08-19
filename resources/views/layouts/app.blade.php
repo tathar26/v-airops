@@ -26,6 +26,15 @@
             $tenantCardBg   = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->card_bg_color
                                 ? auth()->user()->tenant->card_bg_color : $tenantBg;
 
+            $tenantBtnBg       = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_bg_color
+                                    ? auth()->user()->tenant->button_bg_color : $tenantAccent;
+            $tenantBtnText     = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_text_color
+                                    ? auth()->user()->tenant->button_text_color : null;
+            $tenantBtnSecBg    = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_secondary_bg_color
+                                    ? auth()->user()->tenant->button_secondary_bg_color : '#1f2937';
+            $tenantBtnSecText  = auth()->check() && auth()->user()->tenant && auth()->user()->tenant->button_secondary_text_color
+                                    ? auth()->user()->tenant->button_secondary_text_color : '#f3f4f6';
+
             /* Luminance helper */
             $hexLuminance = function(string $hex): float {
                 $hex = ltrim($hex, '#');
@@ -55,6 +64,11 @@
             $accentActiveBg       = $isAccentLight ? 'rgba(0, 0, 0, 0.18)' : 'rgba(0, 0, 0, 0.28)';
             $accentBorderColor    = $isAccentLight ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.25)';
 
+            if (!$tenantBtnText) {
+                $btnLuminance  = preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $tenantBtnBg) ? $hexLuminance($tenantBtnBg) : 0;
+                $tenantBtnText = $btnLuminance > 0.55 ? '#0f172a' : '#ffffff';
+            }
+
             /* Convert accent to RGB triplet for rgba() usage in CSS */
             $accentHex = ltrim($tenantAccent, '#');
             if (strlen($accentHex) === 3) {
@@ -77,6 +91,12 @@
                 --tenant-panel-bg:           {{ $tenantPanelBg }};
                 --tenant-panel-text:         {{ $panelTextColor }};
                 --tenant-card-bg:            {{ $tenantCardBg }};
+
+                /* Buttons */
+                --tenant-btn-bg:             {{ $tenantBtnBg }};
+                --tenant-btn-text:           {{ $tenantBtnText }};
+                --tenant-btn-sec-bg:         {{ $tenantBtnSecBg }};
+                --tenant-btn-sec-text:       {{ $tenantBtnSecText }};
 
                 /* Sidebar / Topbar shell — follows VA accent color */
                 --sidebar-bg:                var(--tenant-accent);
@@ -101,65 +121,32 @@
 
             /* ── Tenant utility classes ───────────────────────────── */
             .text-tenant-accent   { color: var(--tenant-accent) !important; }
-            .bg-tenant-accent     { background-color: var(--tenant-accent) !important; color: var(--tenant-accent-text) !important; }
+            .bg-tenant-accent     { background-color: var(--tenant-btn-bg) !important; color: var(--tenant-btn-text) !important; }
             .border-tenant-accent { border-color: var(--tenant-accent) !important; }
             .ring-tenant-accent   { --tw-ring-color: var(--tenant-accent) !important; }
 
-            /* ── Sidebar & Topbar follow Accent Color ─────────────── */
-            .sidebar-shell {
-                background-color: var(--sidebar-bg) !important;
-                border-right: 1px solid var(--sidebar-border) !important;
-                color: var(--tenant-accent-text) !important;
-            }
-            .topbar-shell {
-                background-color: var(--sidebar-bg) !important;
-                border-bottom: 1px solid var(--sidebar-border) !important;
-                color: var(--tenant-accent-text) !important;
-            }
-
-            /* Nav links */
-            .nav-link {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.625rem 0.875rem;
-                border-radius: 0.5rem;
-                font-size: 0.875rem;
-                font-weight: 500;
-                color: var(--sidebar-text) !important;
-                transition: background-color 150ms ease, color 150ms ease;
-                border-left: 3px solid transparent;
-            }
-            .nav-link:hover {
-                background-color: var(--tenant-accent-hover-bg) !important;
-                color: var(--sidebar-text-hover) !important;
-            }
-            .nav-link.active {
-                background-color: var(--sidebar-active-bg) !important;
-                color: var(--sidebar-active-text) !important;
-                border-left-color: var(--tenant-accent-text) !important;
-                font-weight: 700;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-            }
-            .nav-section-label {
-                padding: 1rem 0.875rem 0.25rem;
-                font-size: 0.625rem; /* 10px */
-                font-weight: 800;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--tenant-accent-muted) !important;
-            }
-
-            /* ── Primary Buttons follow Accent Color ──────────────── */
+            /* ── Primary & Secondary Buttons follow Button Color Settings ─ */
             .btn-primary,
             button.bg-tenant-accent,
             a.bg-tenant-accent {
-                background-color: var(--tenant-accent) !important;
-                color: var(--tenant-accent-text) !important;
+                background-color: var(--tenant-btn-bg) !important;
+                color: var(--tenant-btn-text) !important;
             }
             .btn-primary:hover,
             button.bg-tenant-accent:hover,
             a.bg-tenant-accent:hover {
+                filter: brightness(0.92);
+            }
+
+            .btn-secondary,
+            button.bg-slate-800,
+            a.bg-slate-800 {
+                background-color: var(--tenant-btn-sec-bg) !important;
+                color: var(--tenant-btn-sec-text) !important;
+            }
+            .btn-secondary:hover,
+            button.bg-slate-800:hover,
+            a.bg-slate-800:hover {
                 filter: brightness(0.92);
             }
 

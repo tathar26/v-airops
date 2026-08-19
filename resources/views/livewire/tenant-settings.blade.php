@@ -120,6 +120,42 @@
                                 <p class="text-xs text-gray-400 mt-1">Controls the background of inner cards, table headers, and form panels.</p>
                             </div>
 
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="button_bg_color" value="{{ __('Primary Button Background Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="button_bg_color_picker" type="color" wire:model.live="button_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="button_bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="button_bg_color" placeholder="#f97316" />
+                                </div>
+                                <x-input-error for="button_bg_color" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="button_text_color" value="{{ __('Primary Button Text Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="button_text_color_picker" type="color" wire:model.live="button_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="button_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="button_text_color" placeholder="#ffffff" />
+                                </div>
+                                <x-input-error for="button_text_color" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="button_secondary_bg_color" value="{{ __('Secondary Button Background Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="button_secondary_bg_color_picker" type="color" wire:model.live="button_secondary_bg_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="button_secondary_bg_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="button_secondary_bg_color" placeholder="#1f2937" />
+                                </div>
+                                <x-input-error for="button_secondary_bg_color" class="mt-2" />
+                            </div>
+
+                            <div class="col-span-6 md:col-span-3">
+                                <x-label for="button_secondary_text_color" value="{{ __('Secondary Button Text Color') }}" class="text-white" />
+                                <div class="flex items-center space-x-3 mt-1">
+                                    <input id="button_secondary_text_color_picker" type="color" wire:model.live="button_secondary_text_color" class="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
+                                    <x-input id="button_secondary_text_color" type="text" class="flex-1 block w-full bg-black/40 border border-white/10 text-white font-mono" wire:model.live="button_secondary_text_color" placeholder="#f3f4f6" />
+                                </div>
+                                <x-input-error for="button_secondary_text_color" class="mt-2" />
+                            </div>
+
                             <!-- Dispatch Settings -->
                             <div class="col-span-6">
                                 <hr class="border-white/10 my-2">
