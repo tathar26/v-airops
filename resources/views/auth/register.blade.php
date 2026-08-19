@@ -47,6 +47,19 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">First Name</label>
+                        <input type="text" name="first_name" value="{{ old('first_name') }}" required placeholder="John"
+                            class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Last Name</label>
+                        <input type="text" name="last_name" value="{{ old('last_name') }}" required placeholder="Doe"
+                            class="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
                     <input type="email" name="email" value="{{ old('email') }}" required placeholder="pilot@flight-sim.org"

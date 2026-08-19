@@ -100,8 +100,9 @@ class DemoDataSeeder extends Seeder
             ['flight_number' => 'DEMO105', 'departure_icao' => 'LEMD', 'arrival_icao' => 'LIRF', 'block_time' => '02:30:00'],
         ];
 
+        $createdRoutes = [];
         foreach ($routes as $routeData) {
-            \App\Models\Route::firstOrCreate([
+            $createdRoutes[] = Route::firstOrCreate([
                 'tenant_id' => $tenant->id,
                 'flight_number' => $routeData['flight_number'],
             ], [
@@ -129,29 +130,29 @@ class DemoDataSeeder extends Seeder
         $pilots[] = $pilot;
 
         // 9. Create PIREPs
-        $statuses = ['accepted', 'rejected', 'pending'];
+        $statuses = ['Accepted', 'Rejected', 'Submitted'];
         foreach ($pilots as $p) {
-            // Give each pilot 3 PIREPs
+            if ($p->pireps()->count() >= 3) {
+                continue;
+            }
+
             for ($j = 0; $j < 3; $j++) {
-                $route = $routes[array_rand($routes)];
+                /** @var Route $route */
+                $route = $createdRoutes[array_rand($createdRoutes)];
                 $airframe = rand(0, 1) ? $airframe1 : $airframe2;
                 
-                \App\Models\Pirep::firstOrCreate([
+                \App\Models\Pirep::create([
                     'tenant_id' => $tenant->id,
                     'user_id' => $p->id,
-                    'flight_number' => $route['flight_number'] . '-' . $j,
-                ], [
-                    'departure_icao' => $route['departure_icao'],
-                    'arrival_icao' => $route['arrival_icao'],
-                    'aircraft_type_id' => $airframe->aircraft_type_id,
+                    'route_id' => $route->id,
                     'airframe_id' => $airframe->id,
                     'status' => $statuses[array_rand($statuses)],
-                    'score' => rand(50, 100),
-                    'landing_rate' => rand(-50, -500),
+                    'points_awarded' => rand(50, 100),
+                    'touchdown_rate_fpm' => rand(-50, -500),
                     'flight_time' => rand(60, 180), // minutes
                     'fuel_used' => rand(2000, 8000),
-                    'distance' => rand(200, 1500),
-                    'submitted_at' => now()->subDays(rand(1, 30)),
+                    'distance_nm' => rand(200, 1500),
+                    'created_at' => now()->subDays(rand(1, 30))->subHours(rand(1, 12)),
                 ]);
             }
         }

@@ -28,6 +28,8 @@ class CustomAuthController extends Controller
     {
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,name'],
+            'first_name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', Password::defaults()],
         ]);
@@ -36,6 +38,8 @@ class CustomAuthController extends Controller
 
         $user = User::create([
             'name' => $validated['username'],
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
             'email' => strtolower($validated['email']),
             'password' => Hash::make($validated['password']),
             'verification_token' => $verificationToken,

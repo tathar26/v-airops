@@ -10,10 +10,11 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/register', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [\App\Http\Controllers\Auth\CustomAuthController::class, 'register']);
+    Route::post('/login', [\App\Http\Controllers\Auth\CustomAuthController::class, 'login']);
     Route::post('/custom-login', [\App\Http\Controllers\Auth\CustomAuthController::class, 'login'])->name('custom-login');
 });
 
-Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice');
+Route::get('/verify-notice', [\App\Http\Controllers\Auth\CustomAuthController::class, 'showVerifyNotice'])->name('auth.verify-notice')->name('verification.notice');
 Route::get('/verify-email', [\App\Http\Controllers\Auth\CustomAuthController::class, 'verifyEmail'])->name('auth.verify');
 
 // Onboarding & Session Switcher Routes
@@ -78,6 +79,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    \App\Http\Middleware\EnsureActiveAirlineSelected::class,
 ])->group(function () {
     Route::get('/dashboard', function () {
         if (auth()->user()->hasRole('Master Admin')) {
