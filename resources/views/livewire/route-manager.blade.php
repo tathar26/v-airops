@@ -95,41 +95,51 @@
                 @endif
             </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
-                <!-- Departure Airport Filter -->
-                <select wire:model.live="filterDepIcao" class="text-xs rounded-xl px-3 py-2">
-                    <option value="">Dep: All</option>
-                    @foreach($allDepIcaos as $dep)
-                        <option value="{{ $dep }}">{{ $dep }}</option>
-                    @endforeach
-                </select>
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <!-- Departure Airport Search Selection -->
+                <x-search-select 
+                    wireModel="filterDepIcao" 
+                    :selected="$filterDepIcao" 
+                    label="Dep" 
+                    allLabel="Dep: All" 
+                    placeholder="Search origin airport (e.g. EGLL, LFPG)..." 
+                    :options="$allDepIcaos->toArray()" 
+                    minWidth="min-w-[125px]" />
 
-                <!-- Arrival Airport Filter -->
-                <select wire:model.live="filterArrIcao" class="text-xs rounded-xl px-3 py-2">
-                    <option value="">Arr: All</option>
-                    @foreach($allArrIcaos as $arr)
-                        <option value="{{ $arr }}">{{ $arr }}</option>
-                    @endforeach
-                </select>
+                <!-- Arrival Airport Search Selection -->
+                <x-search-select 
+                    wireModel="filterArrIcao" 
+                    :selected="$filterArrIcao" 
+                    label="Arr" 
+                    allLabel="Arr: All" 
+                    placeholder="Search arrival airport (e.g. EHAM, EDDF)..." 
+                    :options="$allArrIcaos->toArray()" 
+                    minWidth="min-w-[125px]" />
 
-                <!-- Route Type Filter -->
-                <select wire:model.live="selectedRouteType" class="text-xs rounded-xl px-3 py-2">
-                    <option value="">Type: All</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Charter">Charter</option>
-                    <option value="Cargo">Cargo</option>
-                </select>
+                <!-- Route Type Search Selection -->
+                <x-search-select 
+                    wireModel="selectedRouteType" 
+                    :selected="$selectedRouteType" 
+                    label="Type" 
+                    allLabel="Type: All" 
+                    placeholder="Filter route type..." 
+                    :options="['Scheduled', 'Charter', 'Cargo']" 
+                    minWidth="min-w-[120px]" />
 
-                <!-- Aircraft Type Filter -->
-                <select wire:model.live="filterAircraftType" class="text-xs rounded-xl px-3 py-2">
-                    <option value="">Aircraft: All</option>
-                    @foreach($aircraftTypes as $type)
-                        <option value="{{ $type->id }}">{{ $type->code }}</option>
-                    @endforeach
-                </select>
+                <!-- Aircraft Type Search Selection -->
+                <x-search-select 
+                    wireModel="filterAircraftType" 
+                    :selected="$filterAircraftType" 
+                    label="Aircraft" 
+                    allLabel="Aircraft: All" 
+                    placeholder="Search aircraft code (e.g. A320)..." 
+                    :options="$aircraftTypes->map(fn($t) => ['id' => $t->id, 'code' => $t->code, 'name' => $t->name])->toArray()" 
+                    minWidth="min-w-[135px]" />
 
-                <!-- Per Page -->
-                <select wire:model.live="perPage" class="text-xs rounded-xl px-3 py-2">
+                <!-- Per Page Selector -->
+                <select wire:model.live="perPage" 
+                        class="text-xs font-semibold rounded-xl px-3.5 py-2 min-w-[115px] cursor-pointer shadow-sm border"
+                        style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-input-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                     <option value="25">25 / page</option>
                     <option value="50">50 / page</option>
                     <option value="100">100 / page</option>
@@ -168,9 +178,9 @@
                             {{ $route->flight_number }}
                         </td>
 
-                        <!-- ATC Callsign (Solid, High-Contrast Badge) -->
+                        <!-- ATC Callsign (Primary Accent Color & Solid Badge) -->
                         <td class="px-5 py-4 whitespace-nowrap text-sm font-mono">
-                            <span class="px-2.5 py-1 rounded-md bg-[#181D29] text-amber-300 border border-amber-500/40 font-mono font-bold text-xs tracking-wider shadow-sm inline-block">
+                            <span class="px-2.5 py-1 rounded-md bg-[#181D29] text-tenant-accent border border-tenant-accent/40 font-mono font-bold text-xs tracking-wider shadow-sm inline-block">
                                 {{ $route->callsign ?: $route->flight_number }}
                             </span>
                         </td>

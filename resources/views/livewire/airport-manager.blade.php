@@ -49,17 +49,19 @@
                 @endif
             </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-3 flex-wrap">
                 <!-- Region / Prefix Filter -->
-                <select wire:model.live="filterPrefix" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
-                    <option value="">Region: All</option>
-                    @foreach($allPrefixes as $pfx)
-                        <option value="{{ $pfx }}">{{ $pfx }}...</option>
-                    @endforeach
-                </select>
+                <x-search-select 
+                    wireModel="filterPrefix" 
+                    :selected="$filterPrefix" 
+                    label="Region" 
+                    allLabel="Region: All" 
+                    placeholder="Search region prefix (e.g. EG, LF)..." 
+                    :options="$allPrefixes->toArray()" 
+                    minWidth="min-w-[135px]" />
 
                 <!-- Per Page -->
-                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3.5 py-2 min-w-[120px] focus:border-tenant-accent shadow-sm">
                     <option value="25">25 / page</option>
                     <option value="50">50 / page</option>
                     <option value="100">100 / page</option>

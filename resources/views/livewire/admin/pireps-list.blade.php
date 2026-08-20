@@ -37,56 +37,68 @@
 
                 <!-- Departure Filter -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 font-medium">Departure</label>
-                    <select wire:model.live="filterDepIcao" class="w-full bg-[#0a0d14] border border-white/10 text-white rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
-                        <option value="">All Departures</option>
-                        @foreach($allDepIcaos as $dep)
-                            <option value="{{ $dep }}">{{ $dep }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs text-gray-400 mb-1.5 font-medium">Departure</label>
+                    <x-search-select 
+                        wireModel="filterDepIcao" 
+                        :selected="$filterDepIcao" 
+                        label="Dep" 
+                        allLabel="All Departures" 
+                        placeholder="Search departure..." 
+                        :options="$allDepIcaos->toArray()" 
+                        minWidth="w-full" />
                 </div>
 
                 <!-- Arrival Filter -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 font-medium">Arrival</label>
-                    <select wire:model.live="filterArrIcao" class="w-full bg-[#0a0d14] border border-white/10 text-white rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
-                        <option value="">All Arrivals</option>
-                        @foreach($allArrIcaos as $arr)
-                            <option value="{{ $arr }}">{{ $arr }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs text-gray-400 mb-1.5 font-medium">Arrival</label>
+                    <x-search-select 
+                        wireModel="filterArrIcao" 
+                        :selected="$filterArrIcao" 
+                        label="Arr" 
+                        allLabel="All Arrivals" 
+                        placeholder="Search arrival..." 
+                        :options="$allArrIcaos->toArray()" 
+                        minWidth="w-full" />
                 </div>
 
                 <!-- Status Filter -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 font-medium">PIREP Status</label>
-                    <select wire:model.live="filterStatus" class="w-full bg-[#0a0d14] border border-white/10 text-white rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="accepted">Accepted / Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="invalidated">Invalidated</option>
-                        <option value="reply_needed">Reply Needed</option>
-                    </select>
+                    <label class="block text-xs text-gray-400 mb-1.5 font-medium">PIREP Status</label>
+                    <x-search-select 
+                        wireModel="filterStatus" 
+                        :selected="$filterStatus" 
+                        label="Status" 
+                        allLabel="All Statuses" 
+                        placeholder="Filter status..." 
+                        :options="[
+                            ['value' => 'pending', 'label' => 'Pending'],
+                            ['value' => 'accepted', 'label' => 'Accepted / Approved'],
+                            ['value' => 'rejected', 'label' => 'Rejected'],
+                            ['value' => 'invalidated', 'label' => 'Invalidated'],
+                            ['value' => 'reply_needed', 'label' => 'Reply Needed']
+                        ]" 
+                        minWidth="w-full" />
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-white/5">
                 <!-- Fleet / Airframe Filter -->
                 <div class="md:col-span-2">
-                    <label class="block text-xs text-gray-400 mb-1 font-medium">Airframe / Aircraft</label>
-                    <select wire:model.live="filterFleet" class="w-full bg-[#0a0d14] border border-white/10 text-white rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
-                        <option value="">All Airframes</option>
-                        @foreach($airframes as $af)
-                            <option value="{{ $af->id }}">{{ $af->registration }} ({{ $af->aircraftType->code ?? '' }} - {{ $af->name }})</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs text-gray-400 mb-1.5 font-medium">Airframe / Aircraft</label>
+                    <x-search-select 
+                        wireModel="filterFleet" 
+                        :selected="$filterFleet" 
+                        label="Airframe" 
+                        allLabel="All Airframes" 
+                        placeholder="Search registration or type..." 
+                        :options="$airframes->map(fn($af) => ['id' => $af->id, 'name' => $af->registration . ' (' . ($af->aircraftType->code ?? '') . ' - ' . $af->name . ')'])->toArray()" 
+                        minWidth="w-full" />
                 </div>
 
                 <!-- Per Page Selector -->
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1 font-medium">Page Size</label>
-                    <select wire:model.live="perPage" class="w-full bg-[#0a0d14] border border-white/10 text-white rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
+                    <label class="block text-xs text-gray-400 mb-1.5 font-medium">Page Size</label>
+                    <select wire:model.live="perPage" class="w-full bg-[#0a0d14] border border-white/10 text-white font-semibold rounded-xl text-xs p-2.5 focus:outline-none focus:border-tenant-accent">
                         <option value="25">25 per page</option>
                         <option value="50">50 per page</option>
                         <option value="100">100 per page</option>

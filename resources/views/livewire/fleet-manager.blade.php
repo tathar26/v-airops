@@ -65,17 +65,19 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <select wire:model.live="filterAircraftType" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
-                    <option value="">All Aircraft Types</option>
-                    @foreach($aircraftTypes as $type)
-                        <option value="{{ $type->id }}">{{ $type->code }} - {{ $type->name }}</option>
-                    @endforeach
-                </select>
+                <x-search-select 
+                    wireModel="filterAircraftType" 
+                    :selected="$filterAircraftType" 
+                    label="Type" 
+                    allLabel="All Aircraft Types" 
+                    placeholder="Search aircraft types..." 
+                    :options="$aircraftTypes->map(fn($t) => ['id' => $t->id, 'code' => $t->code, 'name' => $t->name])->toArray()" 
+                    minWidth="min-w-[170px]" />
 
-                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
-                    <option value="25">25 per page</option>
-                    <option value="50">50 per page</option>
-                    <option value="100">100 per page</option>
+                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs font-semibold rounded-xl px-3.5 py-2 min-w-[120px] focus:border-tenant-accent shadow-sm">
+                    <option value="25">25 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
                 </select>
             </div>
         </div>
