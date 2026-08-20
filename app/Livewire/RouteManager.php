@@ -14,6 +14,9 @@ class RouteManager extends Component
 
     public $search = '';
     public $selectedRouteType = '';
+    public $filterDepIcao = '';
+    public $filterArrIcao = '';
+    public $filterAircraftType = '';
     public $perPage = 25;
 
     public $showAddModal = false;
@@ -36,6 +39,9 @@ class RouteManager extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'selectedRouteType' => ['except' => ''],
+        'filterDepIcao' => ['except' => ''],
+        'filterArrIcao' => ['except' => ''],
+        'filterAircraftType' => ['except' => ''],
         'page' => ['except' => 1],
     ];
 
@@ -46,6 +52,27 @@ class RouteManager extends Component
 
     public function updatingSelectedRouteType()
     {
+        $this->resetPage();
+    }
+
+    public function updatingFilterDepIcao()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterArrIcao()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterAircraftType()
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'selectedRouteType', 'filterDepIcao', 'filterArrIcao', 'filterAircraftType']);
         $this->resetPage();
     }
 
@@ -262,7 +289,8 @@ class RouteManager extends Component
                   ->orWhere('callsign', 'like', "%{$s}%")
                   ->orWhere('operator', 'like', "%{$s}%")
                   ->orWhere('departure_icao', 'like', "%{$s}%")
-                  ->orWhere('arrival_icao', 'like', "%{$s}%");
+                  ->orWhere('arrival_icao', 'like', "%{$s}%")
+                  ->orWhere('route_type', 'like', "%{$s}%");
             });
         }
 
@@ -270,16 +298,51 @@ class RouteManager extends Component
             $query->where('route_type', $this->selectedRouteType);
         }
 
+        if (!empty($this->filterDepIcao)) {
+            $query->where('departure_icao', strtoupper(trim($this->filterDepIcao)));
+        }
+
+        if (!empty($this->filterArrIcao)) {
+            $query->where('arrival_icao', strtoupper(trim($this->filterArrIcao)));
+        }
+
+        if (!empty($this->filterAircraftType)) {
+            $typeId = $this->filterAircraftType;
+            $query->whereHas('aircraftTypes', function($aq) use ($typeId) {
+                $aq->where('aircraft_types.id', $typeId);
+            });
+        }
+
         $routes = $query->orderBy('flight_number', 'asc')->paginate($this->perPage);
         $totalRoutesCount = Route::where('tenant_id', $tenantId)->count();
-        $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
+        $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->orderBy('code')->get();
         $availableIcaos = $tenant ? $tenant->getAllIcaos() : ['VOPS'];
+
+        // Distinct departures and arrivals for dropdown filters
+        $allDepIcaos = Route::where('tenant_id', $tenantId)->distinct()->orderBy('departure_icao')->pluck('departure_icao');
+        $allArrIcaos = Route::where('tenant_id', $tenantId)->distinct()->orderBy('arrival_icao')->pluck('arrival_icao');
+
+        // Autocomplete suggestions list
+        $autocompleteRoutes = Route::where('tenant_id', $tenantId)->select('flight_number', 'callsign', 'departure_icao', 'arrival_icao')->get();
+        $autocompleteList = $autocompleteRoutes->pluck('flight_number')
+            ->merge($autocompleteRoutes->pluck('callsign'))
+            ->merge($allDepIcaos)
+            ->merge($allArrIcaos)
+            ->merge($aircraftTypes->pluck('code'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->take(80)
+            ->toArray();
 
         return view('livewire.route-manager', [
             'routes' => $routes,
             'totalRoutesCount' => $totalRoutesCount,
             'aircraftTypes' => $aircraftTypes,
             'availableIcaos' => $availableIcaos,
+            'allDepIcaos' => $allDepIcaos,
+            'allArrIcaos' => $allArrIcaos,
+            'autocompleteList' => $autocompleteList,
         ])->layout('layouts.app');
     }
 }

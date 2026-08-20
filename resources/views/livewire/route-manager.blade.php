@@ -8,9 +8,9 @@
     <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl mt-6">
         <div class="px-6 py-4 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 flex justify-between items-center flex-wrap gap-4">
             <div>
-                <h3 class="text-base font-bold text-white tracking-wide">ROUTE NETWORK &amp; SCHEDULES</h3>
+                <h3 class="text-base font-bold text-white tracking-wide">ROUTE MANAGEMENT &amp; SCHEDULES</h3>
                 <p class="text-xs text-gray-400 mt-0.5">
-                    Manage schedules, flight numbers, and airline ATC callsigns &bull; 
+                    Manage schedules, flight numbers, aircraft assignments, and airline ATC callsigns &bull; 
                     <span class="text-tenant-accent font-semibold">{{ number_format($totalRoutesCount) }} Total Routes</span>
                 </p>
             </div>
@@ -40,33 +40,69 @@
             </div>
         </div>
 
-        <!-- Search & Filter Controls -->
-        <div class="px-6 py-3.5 bg-[#141923] border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3 flex-1 min-w-[280px] max-w-md">
+        <!-- Search & Filter Controls with Autocomplete -->
+        <div class="px-6 py-3.5 bg-[#141923] border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 flex-1 min-w-[260px] max-w-sm">
                 <div class="relative w-full">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search by flight #, callsign, DEP/ARR ICAO, operator..." class="pl-9 pr-4 py-2 rounded-xl text-xs w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-tenant-accent focus:ring-1 focus:ring-tenant-accent transition" />
+                    <input type="text" 
+                           list="route-autocomplete"
+                           wire:model.live.debounce.300ms="search" 
+                           placeholder="Search flight #, callsign, DEP, ARR, type..." 
+                           class="pl-9 pr-4 py-2 rounded-xl text-xs w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-tenant-accent focus:ring-1 focus:ring-tenant-accent transition" />
+                    
+                    <datalist id="route-autocomplete">
+                        @foreach($autocompleteList as $item)
+                            <option value="{{ $item }}"></option>
+                        @endforeach
+                    </datalist>
                 </div>
-                @if($search)
-                    <button wire:click="$set('search', '')" class="text-xs text-slate-400 hover:text-white px-2 py-1">Clear</button>
+                @if($search || $selectedRouteType || $filterDepIcao || $filterArrIcao || $filterAircraftType)
+                    <button wire:click="resetFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 flex-shrink-0">Clear</button>
                 @endif
             </div>
 
-            <div class="flex items-center gap-3">
-                <select wire:model.live="selectedRouteType" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
-                    <option value="">All Route Types</option>
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Departure Airport Filter -->
+                <select wire:model.live="filterDepIcao" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="">Dep: All</option>
+                    @foreach($allDepIcaos as $dep)
+                        <option value="{{ $dep }}">{{ $dep }}</option>
+                    @endforeach
+                </select>
+
+                <!-- Arrival Airport Filter -->
+                <select wire:model.live="filterArrIcao" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="">Arr: All</option>
+                    @foreach($allArrIcaos as $arr)
+                        <option value="{{ $arr }}">{{ $arr }}</option>
+                    @endforeach
+                </select>
+
+                <!-- Route Type Filter -->
+                <select wire:model.live="selectedRouteType" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="">Type: All</option>
                     <option value="Scheduled">Scheduled</option>
                     <option value="Charter">Charter</option>
                     <option value="Cargo">Cargo</option>
                 </select>
 
-                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
-                    <option value="25">25 per page</option>
-                    <option value="50">50 per page</option>
-                    <option value="100">100 per page</option>
-                    <option value="250">250 per page</option>
+                <!-- Aircraft Type Filter -->
+                <select wire:model.live="filterAircraftType" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="">Aircraft: All</option>
+                    @foreach($aircraftTypes as $type)
+                        <option value="{{ $type->id }}">{{ $type->code }}</option>
+                    @endforeach
+                </select>
+
+                <!-- Per Page -->
+                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="25">25 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
+                    <option value="250">250 / page</option>
                 </select>
             </div>
         </div>

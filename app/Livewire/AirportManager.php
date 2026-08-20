@@ -11,6 +11,10 @@ class AirportManager extends Component
 {
     use WithPagination;
 
+    public $search = '';
+    public $filterPrefix = '';
+    public $perPage = 25;
+
     public $showModal = false;
     public $editMode = false;
     public $editingId = null;
@@ -22,6 +26,28 @@ class AirportManager extends Component
     public $elevation = '';
     public $metadata_keys = [];
     public $metadata_values = [];
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filterPrefix' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterPrefix()
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterPrefix']);
+        $this->resetPage();
+    }
 
     protected $rules = [
         'icao' => 'required|string|size:4',
@@ -149,12 +175,53 @@ class AirportManager extends Component
     public function deleteAirport($id)
     {
         Airport::findOrFail($id)->delete();
+        session()->flash('message', 'Airport deleted successfully.');
     }
 
     public function render()
     {
+        $query = Airport::query();
+
+        if (!empty($this->search)) {
+            $s = trim($this->search);
+            $query->where(function($q) use ($s) {
+                $q->where('icao', 'like', "%{$s}%")
+                  ->orWhere('name', 'like', "%{$s}%")
+                  ->orWhere('elevation', 'like', "%{$s}%");
+            });
+        }
+
+        if (!empty($this->filterPrefix)) {
+            $prefix = strtoupper(trim($this->filterPrefix));
+            $query->where('icao', 'like', "{$prefix}%");
+        }
+
+        $airports = $query->orderBy('icao', 'asc')->paginate($this->perPage);
+        $totalAirportsCount = Airport::count();
+
+        // Autocomplete list (all ICAOs and names)
+        $allAirports = Airport::select('icao', 'name')->get();
+        $autocompleteList = $allAirports->pluck('icao')
+            ->merge($allAirports->pluck('name'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->take(80)
+            ->toArray();
+
+        // Unique 2-letter ICAO prefixes for quick geographic filtering
+        $allPrefixes = Airport::selectRaw('SUBSTRING(icao, 1, 2) as prefix')
+            ->distinct()
+            ->orderBy('prefix')
+            ->pluck('prefix')
+            ->filter()
+            ->values();
+
         return view('livewire.airport-manager', [
-            'airports' => Airport::orderBy('icao')->paginate(20)
+            'airports' => $airports,
+            'totalAirportsCount' => $totalAirportsCount,
+            'autocompleteList' => $autocompleteList,
+            'allPrefixes' => $allPrefixes,
         ])->layout('layouts.app');
     }
 }

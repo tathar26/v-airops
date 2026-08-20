@@ -125,7 +125,7 @@
                 class="nav-link w-full justify-between {{ request()->routeIs('fleet') || request()->routeIs('aircraft-types') ? 'active' : '' }}">
                 <div class="flex items-center gap-3">
                     <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    <span>Fleet</span>
+                    <span>Fleet Management</span>
                 </div>
                 <svg class="w-3.5 h-3.5 opacity-60 transition-transform duration-200 flex-shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
@@ -138,14 +138,14 @@
         <li>
             <a href="{{ route('routes') }}" class="nav-link {{ request()->routeIs('routes') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                <span>Route Manager</span>
+                <span>Route Management</span>
             </a>
         </li>
 
         <li>
             <a href="{{ route('airports') }}" class="nav-link {{ request()->routeIs('airports') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Airport Manager</span>
+                <span>Airport Management</span>
             </a>
         </li>
 

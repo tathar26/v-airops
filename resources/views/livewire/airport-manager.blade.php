@@ -1,10 +1,19 @@
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <h2 class="text-2xl font-bold text-white">Airport Manager</h2>
-            <p class="text-gray-400 text-sm mt-1">Manage airports and fetch their coordinates.</p>
+    @if (session()->has('message'))
+        <div class="bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded-xl relative" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
         </div>
-        <button wire:click="openModal" class="bg-tenant-accent hover:opacity-80 text-white font-bold py-2 px-4 rounded transition flex items-center">
+    @endif
+
+    <div class="flex justify-between items-center flex-wrap gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-white">Airport Management</h2>
+            <p class="text-gray-400 text-sm mt-1">
+                Manage airports and fetch coordinates from global aviation databases &bull;
+                <span class="text-tenant-accent font-semibold">{{ number_format($totalAirportsCount) }} Total Airports</span>
+            </p>
+        </div>
+        <button wire:click="openModal" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2.5 px-5 rounded-xl transition flex items-center shadow-lg">
             <span class="mr-2">+</span> Add Airport
         </button>
     </div>
@@ -13,8 +22,51 @@
     <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
         <div class="px-6 py-4 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 flex justify-between items-center">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">AIRPORT DIRECTORY &amp; COORDINATES</span>
-            <span class="text-xs font-mono text-gray-400 font-semibold">Total Airports: {{ $airports->count() }}</span>
+            <span class="text-xs font-mono text-tenant-accent font-semibold">{{ number_format($totalAirportsCount) }} Airports in DB</span>
         </div>
+
+        <!-- Search & Filter Controls with Autocomplete -->
+        <div class="px-6 py-3.5 bg-[#141923] border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 flex-1 min-w-[260px] max-w-sm">
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" 
+                           list="airport-autocomplete"
+                           wire:model.live.debounce.300ms="search" 
+                           placeholder="Search by ICAO, airport name, elevation..." 
+                           class="pl-9 pr-4 py-2 rounded-xl text-xs w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-tenant-accent focus:ring-1 focus:ring-tenant-accent transition" />
+                    
+                    <datalist id="airport-autocomplete">
+                        @foreach($autocompleteList as $item)
+                            <option value="{{ $item }}"></option>
+                        @endforeach
+                    </datalist>
+                </div>
+                @if($search || $filterPrefix)
+                    <button wire:click="resetFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 flex-shrink-0">Clear</button>
+                @endif
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Region / Prefix Filter -->
+                <select wire:model.live="filterPrefix" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="">Region: All</option>
+                    @foreach($allPrefixes as $pfx)
+                        <option value="{{ $pfx }}">{{ $pfx }}...</option>
+                    @endforeach
+                </select>
+
+                <!-- Per Page -->
+                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-2.5 py-2 focus:border-tenant-accent">
+                    <option value="25">25 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
+                </select>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-300">
                 <thead class="text-xs text-gray-400 uppercase bg-[#181D29] border-b border-white/10">
@@ -29,22 +81,26 @@
                 <tbody class="divide-y divide-white/5">
                     @forelse($airports as $airport)
                         <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-6 py-4 font-bold text-white">{{ $airport->icao }}</td>
-                            <td class="px-6 py-4">{{ $airport->name }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 font-bold font-mono text-tenant-accent">{{ $airport->icao }}</td>
+                            <td class="px-6 py-4 font-medium text-white">{{ $airport->name }}</td>
+                            <td class="px-6 py-4 font-mono">
                                 <div class="text-xs text-gray-400">Lat: {{ $airport->lat }}</div>
                                 <div class="text-xs text-gray-400">Lon: {{ $airport->lon }}</div>
                             </td>
-                            <td class="px-6 py-4">{{ $airport->elevation }} ft</td>
+                            <td class="px-6 py-4 font-mono">{{ $airport->elevation ? $airport->elevation . ' ft' : '-' }}</td>
                             <td class="px-6 py-4 text-right">
-                                <button wire:click="editAirport({{ $airport->id }})" class="text-tenant-accent hover:text-white transition px-2">Edit</button>
-                                <button wire:click="deleteAirport({{ $airport->id }})" wire:confirm="Are you sure you want to delete this airport?" class="text-red-400 hover:text-red-300 transition px-2">Delete</button>
+                                <button wire:click="editAirport({{ $airport->id }})" class="text-tenant-accent hover:opacity-80 transition px-2 font-semibold">Edit</button>
+                                <button wire:click="deleteAirport({{ $airport->id }})" wire:confirm="Are you sure you want to delete this airport?" class="text-red-400 hover:text-red-300 transition px-2 font-semibold">Delete</button>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                                No airports found. Click "Add Airport" to create one.
+                                @if($search || $filterPrefix)
+                                    No airports match your filter. <button wire:click="resetFilters" class="text-tenant-accent underline ml-1">Reset filter</button>
+                                @else
+                                    No airports found. Click "Add Airport" to create one.
+                                @endif
                             </td>
                         </tr>
                     @endforelse

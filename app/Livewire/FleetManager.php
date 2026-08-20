@@ -12,6 +12,10 @@ class FleetManager extends Component
 {
     use WithFileUploads, WithPagination;
 
+    public $search = '';
+    public $filterAircraftType = '';
+    public $perPage = 25;
+
     public $showAddModal = false;
     public $editMode = false;
     public $editingId = null;
@@ -21,6 +25,46 @@ class FleetManager extends Component
     public $name = '';
 
     public $csvFile;
+
+    // Global import modal state
+    public $showGlobalImportModal = false;
+    public $importMode = 'real_world';
+    public $filterAircraftCode = '';
+    public $searchRealWorld = '';
+    public $selectedRealWorldAirframes = [];
+    public $selectAllRealWorld = false;
+
+    public $globalAircraftCode = '';
+    public $quantityToGenerate = 1;
+    public $registrationPrefix = 'G-';
+    public $customRegistrationsText = '';
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filterAircraftType' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterAircraftType()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSearchRealWorld()
+    {
+        $this->resetPage('realWorldPage');
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterAircraftType']);
+        $this->resetPage();
+    }
 
     protected $rules = [
         'registration' => 'required|string|max:10',
@@ -252,9 +296,41 @@ class FleetManager extends Component
     public function render()
     {
         $tenantId = $this->getActiveTenantId();
-        $airframes = Airframe::with('aircraftType')->where('tenant_id', $tenantId)->get();
-        $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
+        
+        $query = Airframe::with('aircraftType')->where('tenant_id', $tenantId);
+
+        if (!empty($this->search)) {
+            $s = trim($this->search);
+            $query->where(function($q) use ($s) {
+                $q->where('registration', 'like', "%{$s}%")
+                  ->orWhere('name', 'like', "%{$s}%")
+                  ->orWhereHas('aircraftType', function($aq) use ($s) {
+                      $aq->where('code', 'like', "%{$s}%")
+                         ->orWhere('name', 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        if (!empty($this->filterAircraftType)) {
+            $query->where('aircraft_type_id', $this->filterAircraftType);
+        }
+
+        $airframes = $query->orderBy('registration', 'asc')->paginate($this->perPage);
+        $totalAirframesCount = Airframe::where('tenant_id', $tenantId)->count();
+        $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->orderBy('code')->get();
         $globalAircraftTypes = \App\Models\SystemGlobalAircraft::orderBy('code')->get();
+
+        // Autocomplete suggestions list (all unique registrations & names for current tenant)
+        $allTenantAirframes = Airframe::where('tenant_id', $tenantId)->select('registration', 'name')->get();
+        $autocompleteList = $allTenantAirframes->pluck('registration')
+            ->merge($allTenantAirframes->pluck('name'))
+            ->merge($aircraftTypes->pluck('code'))
+            ->merge($aircraftTypes->pluck('name'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->take(60)
+            ->toArray();
 
         $realWorldAirframes = null;
         if ($this->showGlobalImportModal && $this->importMode === 'real_world') {
@@ -269,12 +345,14 @@ class FleetManager extends Component
                       ->orWhere('name', 'like', '%' . $this->searchRealWorld . '%');
                 });
             }
-            $realWorldAirframes = $realQuery->orderBy('registration')->paginate(15);
+            $realWorldAirframes = $realQuery->orderBy('registration')->paginate(15, ['*'], 'realWorldPage');
         }
 
         return view('livewire.fleet-manager', [
             'airframes' => $airframes,
+            'totalAirframesCount' => $totalAirframesCount,
             'aircraftTypes' => $aircraftTypes,
+            'autocompleteList' => $autocompleteList,
             'globalAircraftTypes' => $globalAircraftTypes,
             'realWorldAirframes' => $realWorldAirframes,
         ])->layout('layouts.app');
