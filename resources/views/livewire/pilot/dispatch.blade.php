@@ -296,7 +296,7 @@
                 </div>
 
                 <!-- TAB 1: Flight Summary & Cards -->
-                <div x-show="currentTab === 'summary'" x-cloak class="space-y-6">
+                <div x-show="currentTab === 'summary'" class="space-y-6">
                     <!-- Weight & Fuel Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">

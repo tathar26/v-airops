@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class Dispatch extends Component
 {
-    public Booking $booking;
+    public int $bookingId;
 
     // SimBrief Integration
     public $simbrief_username = '';
@@ -58,13 +58,18 @@ class Dispatch extends Component
     public $showRouteDetails = false;
     public $showOfpView = false;
 
+    public function getBookingProperty(): ?Booking
+    {
+        return Booking::with(['route.aircraftTypes', 'airframe.aircraftType', 'tenant', 'user'])->find($this->bookingId);
+    }
+
     public function mount(Booking $booking)
     {
         if ($booking->user_id !== auth()->id()) {
             abort(403);
         }
 
-        $this->booking = $booking->load(['route.aircraftTypes', 'airframe.aircraftType', 'tenant', 'user']);
+        $this->bookingId = $booking->id;
         $simData = $booking->simbrief_data ?? [];
 
         // Pilot SimBrief Username
@@ -516,6 +521,7 @@ class Dispatch extends Component
         $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/custom?' . http_build_query($simbriefParams);
 
         return view('livewire.pilot.dispatch', [
+            'booking' => $this->booking,
             'fleet' => $fleet,
             'selectedAirframe' => $selectedAirframe,
             'copilots' => $copilots,
