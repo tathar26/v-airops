@@ -19,17 +19,47 @@
     @endif
 
     @php
+        $safeStr = function($val, $fallback = '') {
+            if (is_null($val)) return $fallback;
+            if (is_array($val)) {
+                if (empty($val)) return $fallback;
+                if (isset($val[0]) && is_string($val[0])) return implode("\n", $val);
+                if (isset($val['metar']) && is_string($val['metar'])) return $val['metar'];
+                if (isset($val['taf']) && is_string($val['taf'])) return $val['taf'];
+                $flat = [];
+                array_walk_recursive($val, function($a) use (&$flat) {
+                    if (is_scalar($a)) $flat[] = (string)$a;
+                });
+                return !empty($flat) ? implode(' ', $flat) : $fallback;
+            }
+            if (is_scalar($val)) {
+                $s = trim((string)$val);
+                return $s !== '' ? $s : $fallback;
+            }
+            return $fallback;
+        };
+
+        $safeNum = function($val, $fallback = 0) {
+            if (is_null($val)) return $fallback;
+            if (is_numeric($val)) return (float)$val;
+            if (is_array($val)) {
+                $first = reset($val);
+                return is_numeric($first) ? (float)$first : $fallback;
+            }
+            return $fallback;
+        };
+
         $sbData = $booking->simbrief_data ?? [];
         
         // Origin / Destination
-        $headerDep = $sbData['origin']['icao_code'] ?? ($sbData['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL'));
-        $headerArr = $sbData['destination']['icao_code'] ?? ($sbData['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG'));
+        $headerDep = $safeStr($sbData['origin']['icao_code'] ?? ($sbData['general']['origin'] ?? ($booking->route?->departure_icao ?? 'EGLL')));
+        $headerArr = $safeStr($sbData['destination']['icao_code'] ?? ($sbData['general']['destination'] ?? ($booking->route?->arrival_icao ?? 'LFPG')));
         
         // Distance
-        $headerDist = (int) ($sbData['general']['route_distance'] ?? ($sbData['general']['air_distance'] ?? ($booking->route?->distance ?? 374)));
+        $headerDist = (int) $safeNum($sbData['general']['route_distance'] ?? ($sbData['general']['air_distance'] ?? ($booking->route?->distance ?? 374)));
         
         // Callsign / Flight Number
-        $headerCallsign = strtoupper($sbData['params']['callsign'] ?? ($sbData['atc']['callsign'] ?? ($sbData['general']['callsign'] ?? ($callsign ?? 'FL101'))));
+        $headerCallsign = strtoupper($safeStr($sbData['params']['callsign'] ?? ($sbData['atc']['callsign'] ?? ($sbData['general']['callsign'] ?? ($callsign ?? 'FL101')))));
         
         // Times (ETD, ETA, ETE)
         $headerEtd = $departure_time;
@@ -41,10 +71,10 @@
         
         $headerEte = '01:30';
         if (!empty($sbData['times']['est_time_enroute'])) {
-            $eteSec = (int) $sbData['times']['est_time_enroute'];
+            $eteSec = (int) $safeNum($sbData['times']['est_time_enroute']);
             $headerEte = sprintf('%02d:%02d', floor($eteSec / 3600), floor(($eteSec % 3600) / 60));
         } elseif (!empty($sbData['general']['est_time_enroute'])) {
-            $headerEte = $sbData['general']['est_time_enroute'];
+            $headerEte = $safeStr($sbData['general']['est_time_enroute']);
         } elseif ($booking->route?->flight_time) {
             $headerEte = sprintf('%02d:%02d', floor($booking->route->flight_time / 60), $booking->route->flight_time % 60);
         }
@@ -55,20 +85,20 @@
         } elseif (!empty($sbData['times']['est_in'])) {
             $headerEta = is_numeric($sbData['times']['est_in']) ? date('H:i', (int)$sbData['times']['est_in']) : substr((string)$sbData['times']['est_in'], 0, 5);
         } elseif ($headerEtd && !empty($sbData['times']['est_time_enroute'])) {
-            $headerEta = date('H:i', strtotime($headerEtd . ' +' . round((int)$sbData['times']['est_time_enroute']/60) . ' minutes'));
+            $headerEta = date('H:i', strtotime($headerEtd . ' +' . round((int)$safeNum($sbData['times']['est_time_enroute'])/60) . ' minutes'));
         }
         
         // Operator
-        $headerOperator = $sbData['general']['icao_airline'] 
+        $headerOperator = $safeStr($sbData['general']['icao_airline'] 
             ?? ($sbData['general']['airline'] 
             ?? ($booking->route?->operator 
-            ?? ($booking->tenant?->name ?? 'V-Air Ops Airline')));
+            ?? ($booking->tenant?->name ?? 'V-Air Ops Airline'))));
             
         // Airframe / Registration
-        $headerReg = $sbData['aircraft']['reg'] 
-            ?? ($selectedAirframe ? $selectedAirframe->registration : ($booking->airframe?->registration ?? 'HB-AYE'));
-        $headerType = $sbData['aircraft']['icao_code'] 
-            ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320')));
+        $headerReg = $safeStr($sbData['aircraft']['reg'] 
+            ?? ($selectedAirframe ? $selectedAirframe->registration : ($booking->airframe?->registration ?? 'HB-AYE')));
+        $headerType = $safeStr($sbData['aircraft']['icao_code'] 
+            ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'))));
     @endphp
 
     @if($is_loading_simbrief && !$showOfpView)
@@ -203,7 +233,7 @@
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Departure Airport:</strong> {{ $headerDep }}</p>
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Arrival Airport:</strong> {{ $headerArr }}</p>
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Aircraft & Registration:</strong> {{ $headerType }} ({{ $headerReg }})</p>
-                    <p><strong style="color: var(--tenant-card-text, #ffffff);">Planned Route:</strong> {{ $sbData['general']['route'] ?? ($routing ?: 'Direct / SimBrief Auto-routing') }}</p>
+                    <p><strong style="color: var(--tenant-card-text, #ffffff);">Planned Route:</strong> {{ $safeStr($sbData['general']['route'] ?? ($routing ?: 'Direct / SimBrief Auto-routing')) }}</p>
                 </div>
             @endif
         </div>
@@ -223,7 +253,7 @@
                                 <span class="text-xs bg-black/30 text-slate-300 border border-white/10 px-2.5 py-0.5 rounded-full font-medium">Custom OFP</span>
                             @endif
                         </h2>
-                        <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">OFP Release for {{ $ofp['general']['callsign'] ?? $callsign }} · Format: {{ $ofp['general']['ofp_layout'] ?? 'LIDO' }}</p>
+                        <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">OFP Release for {{ $safeStr($ofp['general']['callsign'] ?? $callsign) }} · Format: {{ $safeStr($ofp['general']['ofp_layout'] ?? 'LIDO') }}</p>
                     </div>
 
                     <div class="flex gap-3 text-xs flex-wrap">
@@ -271,48 +301,48 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">
                             <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Estimated Fuel</span>
-                            <div class="text-2xl font-black text-tenant-accent font-mono">{{ number_format($ofp['fuel']['plan_ramp'] ?? 7100) }} <span class="text-sm font-normal opacity-70">kg</span></div>
+                            <div class="text-2xl font-black text-tenant-accent font-mono">{{ number_format($safeNum($ofp['fuel']['plan_ramp'] ?? 7100)) }} <span class="text-sm font-normal opacity-70">kg</span></div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Trip Burn:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['fuel']['enroute_burn'] ?? 4200) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Contingency:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['fuel']['contingency'] ?? 350) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alternate:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['fuel']['alternate'] ?? 1100) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Reserve:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['fuel']['reserve'] ?? 1200) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Trip Burn:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['fuel']['enroute_burn'] ?? 4200)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Contingency:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['fuel']['contingency'] ?? 350)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alternate:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['fuel']['alternate'] ?? 1100)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Reserve:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['fuel']['reserve'] ?? 1200)) }} kg</span></div>
                             </div>
                         </div>
 
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">
                             <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Weights Summary</span>
-                            <div class="text-2xl font-black font-mono" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['weights']['est_zfw'] ?? 61626) }} <span class="text-sm font-normal opacity-70">kg ZFW</span></div>
+                            <div class="text-2xl font-black font-mono" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['weights']['est_zfw'] ?? 61626)) }} <span class="text-sm font-normal opacity-70">kg ZFW</span></div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">TOW (Takeoff):</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['weights']['est_tow'] ?? 68476) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">LDW (Landing):</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['weights']['est_ldw'] ?? 64276) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Payload:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($ofp['weights']['payload'] ?? 16560) }} kg</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Pax / Bags:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['weights']['pax_count'] ?? 170 }} pax / {{ $ofp['weights']['bag_count'] ?? 152 }} bags</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">TOW (Takeoff):</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['weights']['est_tow'] ?? 68476)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">LDW (Landing):</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['weights']['est_ldw'] ?? 64276)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Payload:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ number_format($safeNum($ofp['weights']['payload'] ?? 16560)) }} kg</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Pax / Bags:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['weights']['pax_count'] ?? 170) }} pax / {{ $safeStr($ofp['weights']['bag_count'] ?? 152) }} bags</span></div>
                             </div>
                         </div>
 
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">
                             <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Flight Profile</span>
                             @php
-                                $rawOfpAlt = (int) ($ofp['general']['initial_altitude'] ?? ($ofp['general']['cruise_altitude'] ?? ($ofp['params']['fl'] ?? 36000)));
+                                $rawOfpAlt = (int) $safeNum($ofp['general']['initial_altitude'] ?? ($ofp['general']['cruise_altitude'] ?? ($ofp['params']['fl'] ?? 36000)));
                                 $ofpFl = ($rawOfpAlt >= 1000) ? 'FL' . floor($rawOfpAlt / 100) : 'FL' . $rawOfpAlt;
                                 $ofpFt = ($rawOfpAlt >= 1000) ? $rawOfpAlt : $rawOfpAlt * 100;
                             @endphp
                             <div class="text-2xl font-black text-sky-400 font-mono">{{ $ofpFl }} <span class="text-xs font-normal opacity-70">({{ number_format($ofpFt) }} ft)</span></div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Cost Index:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['general']['cost_index'] ?? 4 }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Est. ETE:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['general']['est_time_enroute'] ?? '01:30' }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Distance:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['general']['air_distance'] ?? 374 }} nm</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Cost Index:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['cost_index'] ?? 4) }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Est. ETE:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Distance:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['air_distance'] ?? 374) }} nm</span></div>
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Network:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $network }}</span></div>
                             </div>
                         </div>
 
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">
                             <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Alternates</span>
-                            <div class="text-xl font-black text-amber-400 font-mono">{{ $ofp['general']['alternate'] ?? 'EDDW' }}</div>
+                            <div class="text-xl font-black text-amber-400 font-mono">{{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}</div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['general']['alternate'] ?? 'EDDW' }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofp['general']['alternate2'] ?? 'EDHL' }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate2'] ?? 'EDHL') }}</span></div>
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Airframe:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }}</span></div>
                             </div>
                         </div>
@@ -322,10 +352,10 @@
                     <div class="bg-black/45 p-5 rounded-2xl border border-white/10 space-y-2 shadow-inner">
                         <div class="flex justify-between items-center text-xs">
                             <span class="font-bold uppercase tracking-wider" style="color: var(--tenant-card-text, #ffffff);">ATC Routing String</span>
-                            <button type="button" onclick="navigator.clipboard.writeText('{{ $ofp['general']['route'] ?? $routing }}')" class="text-tenant-accent font-bold hover:underline">Copy Route</button>
+                            <button type="button" onclick="navigator.clipboard.writeText('{{ $safeStr($ofp['general']['route'] ?? $routing) }}')" class="text-tenant-accent font-bold hover:underline">Copy Route</button>
                         </div>
                         <div class="p-4 bg-[#090C12] rounded-xl font-mono text-sm text-emerald-400 tracking-wide break-words border border-white/10 shadow-inner">
-                            {{ $ofp['general']['route'] ?? ($routing ?: 'DIRECT') }}
+                            {{ $safeStr($ofp['general']['route'] ?? ($routing ?: 'DIRECT')) }}
                         </div>
                     </div>
 
@@ -336,11 +366,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                     <span class="text-slate-400 block text-[10px] uppercase font-bold">Departure ({{ $booking->route->departure_icao }})</span>
-                                    <span class="text-slate-200 font-semibold">{{ $ofp['weather']['orig_metar'] }}</span>
+                                    <span class="text-slate-200 font-semibold">{{ $safeStr($ofp['weather']['orig_metar'] ?? '', 'No METAR available') }}</span>
                                 </div>
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                     <span class="text-slate-400 block text-[10px] uppercase font-bold">Arrival ({{ $booking->route->arrival_icao }})</span>
-                                    <span class="text-slate-200 font-semibold">{{ $ofp['weather']['dest_metar'] }}</span>
+                                    <span class="text-slate-200 font-semibold">{{ $safeStr($ofp['weather']['dest_metar'] ?? '', 'No METAR available') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -352,7 +382,7 @@
                     <div class="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/10 text-xs">
                         <div class="flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="font-bold">Official Operational Flight Plan &bull; <strong>{{ $ofp['general']['ofp_layout'] ?? 'LIDO' }}</strong></span>
+                            <span class="font-bold">Official Operational Flight Plan &bull; <strong>{{ $safeStr($ofp['general']['ofp_layout'] ?? 'LIDO') }}</strong></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" onclick="const el = document.getElementById('ofp-full-text'); navigator.clipboard.writeText(el.innerText || el.textContent); alert('OFP copied to clipboard!');" class="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition">
@@ -369,12 +399,12 @@
 
                     <!-- Monospaced OFP Viewer -->
                     <div id="ofp-full-text" class="bg-[#090C12] border border-white/15 rounded-2xl p-6 font-mono text-xs text-slate-200 overflow-x-auto max-h-[700px] leading-relaxed shadow-2xl select-text">
-                        @if(!empty($ofp['text']['plan_html']))
+                        @if(!empty($ofp['text']['plan_html']) && is_string($ofp['text']['plan_html']))
                             <div class="ofp-html-content font-mono whitespace-pre-wrap">
                                 {!! $ofp['text']['plan_html'] !!}
                             </div>
                         @elseif(!empty($ofp['text']['plan_text']))
-                            <pre class="whitespace-pre font-mono text-emerald-300">{{ $ofp['text']['plan_text'] }}</pre>
+                            <pre class="whitespace-pre font-mono text-emerald-300">{{ $safeStr($ofp['text']['plan_text']) }}</pre>
                         @else
                             <!-- Structured LIDO Template Fallback -->
                             <pre class="whitespace-pre font-mono text-slate-200">
@@ -383,39 +413,39 @@
 ================================================================================
 RELEASE: {{ strtoupper($callsign) }} / {{ date('dMY') }}   AIRFRAME: {{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} ({{ $selectedAirframe ? $selectedAirframe->aircraftType->code : 'A320' }})
 ORIGIN:  {{ $booking->route->departure_icao }}               DESTINATION: {{ $booking->route->arrival_icao }}
-ALTN:    {{ $ofp['general']['alternate'] ?? $alternate_1 }} (ALTN2: {{ $ofp['general']['alternate2'] ?? $alternate_2 }})
-CRUISE:  {{ $ofpFl ?? 'FL360' }}   COST INDEX: {{ $ofp['general']['cost_index'] ?? 4 }}   EST ETE: {{ $ofp['general']['est_time_enroute'] ?? '01:30' }}
+ALTN:    {{ $safeStr($ofp['general']['alternate'] ?? $alternate_1) }} (ALTN2: {{ $safeStr($ofp['general']['alternate2'] ?? $alternate_2) }})
+CRUISE:  {{ $ofpFl ?? 'FL360' }}   COST INDEX: {{ $safeStr($ofp['general']['cost_index'] ?? 4) }}   EST ETE: {{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}
 
 --------------------------------------------------------------------------------
 ATC ROUTE
 --------------------------------------------------------------------------------
-{{ $booking->route->departure_icao }}/{{ $ofpFl ?? 'FL360' }} {{ $ofp['general']['route'] ?? ($routing ?: 'DIRECT') }} {{ $booking->route->arrival_icao }}
+{{ $booking->route->departure_icao }}/{{ $ofpFl ?? 'FL360' }} {{ $safeStr($ofp['general']['route'] ?? ($routing ?: 'DIRECT')) }} {{ $booking->route->arrival_icao }}
 
 --------------------------------------------------------------------------------
 FUEL PLANNING (KGS)
 --------------------------------------------------------------------------------
-TRIP FUEL:        {{ str_pad(number_format($ofp['fuel']['enroute_burn'] ?? 4200), 8, ' ', STR_PAD_LEFT) }} KG    TIME: {{ $ofp['general']['est_time_enroute'] ?? '01:30' }}
-CONTINGENCY 5%:   {{ str_pad(number_format($ofp['fuel']['contingency'] ?? 350), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:15
-ALTERNATE ({{ $ofp['general']['alternate'] ?? 'EDDW' }}): {{ str_pad(number_format($ofp['fuel']['alternate'] ?? 1100), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
-FINAL RESERVE:    {{ str_pad(number_format($ofp['fuel']['reserve'] ?? 1200), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
+TRIP FUEL:        {{ str_pad(number_format($safeNum($ofp['fuel']['enroute_burn'] ?? 4200)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: {{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}
+CONTINGENCY 5%:   {{ str_pad(number_format($safeNum($ofp['fuel']['contingency'] ?? 350)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:15
+ALTERNATE ({{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}): {{ str_pad(number_format($safeNum($ofp['fuel']['alternate'] ?? 1100)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
+FINAL RESERVE:    {{ str_pad(number_format($safeNum($ofp['fuel']['reserve'] ?? 1200)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
 --------------------------------------------------------------------------------
-MIN REQUIRED:     {{ str_pad(number_format(($ofp['fuel']['enroute_burn'] ?? 4200) + ($ofp['fuel']['contingency'] ?? 350) + ($ofp['fuel']['alternate'] ?? 1100) + ($ofp['fuel']['reserve'] ?? 1200)), 8, ' ', STR_PAD_LEFT) }} KG
-BLOCK / RAMP:     {{ str_pad(number_format($ofp['fuel']['plan_ramp'] ?? 7100), 8, ' ', STR_PAD_LEFT) }} KG
+MIN REQUIRED:     {{ str_pad(number_format($safeNum($ofp['fuel']['enroute_burn'] ?? 4200) + $safeNum($ofp['fuel']['contingency'] ?? 350) + $safeNum($ofp['fuel']['alternate'] ?? 1100) + $safeNum($ofp['fuel']['reserve'] ?? 1200)), 8, ' ', STR_PAD_LEFT) }} KG
+BLOCK / RAMP:     {{ str_pad(number_format($safeNum($ofp['fuel']['plan_ramp'] ?? 7100)), 8, ' ', STR_PAD_LEFT) }} KG
 
 --------------------------------------------------------------------------------
 WEIGHT SUMMARY (KGS)
 --------------------------------------------------------------------------------
-EST ZFW:          {{ str_pad(number_format($ofp['weights']['est_zfw'] ?? 61626), 8, ' ', STR_PAD_LEFT) }} KG    MAX ZFW: 62,500 KG
-EST TOW:          {{ str_pad(number_format($ofp['weights']['est_tow'] ?? 68476), 8, ' ', STR_PAD_LEFT) }} KG    MAX TOW: 79,000 KG
-EST LDW:          {{ str_pad(number_format($ofp['weights']['est_ldw'] ?? 64276), 8, ' ', STR_PAD_LEFT) }} KG    MAX LDW: 66,000 KG
-PAYLOAD:          {{ str_pad(number_format($ofp['weights']['payload'] ?? 16560), 8, ' ', STR_PAD_LEFT) }} KG    PAX: {{ $ofp['weights']['pax_count'] ?? 170 }}  BAGS: {{ $ofp['weights']['bag_count'] ?? 152 }}
+EST ZFW:          {{ str_pad(number_format($safeNum($ofp['weights']['est_zfw'] ?? 61626)), 8, ' ', STR_PAD_LEFT) }} KG    MAX ZFW: 62,500 KG
+EST TOW:          {{ str_pad(number_format($safeNum($ofp['weights']['est_tow'] ?? 68476)), 8, ' ', STR_PAD_LEFT) }} KG    MAX TOW: 79,000 KG
+EST LDW:          {{ str_pad(number_format($safeNum($ofp['weights']['est_ldw'] ?? 64276)), 8, ' ', STR_PAD_LEFT) }} KG    MAX LDW: 66,000 KG
+PAYLOAD:          {{ str_pad(number_format($safeNum($ofp['weights']['payload'] ?? 16560)), 8, ' ', STR_PAD_LEFT) }} KG    PAX: {{ $safeStr($ofp['weights']['pax_count'] ?? 170) }}  BAGS: {{ $safeStr($ofp['weights']['bag_count'] ?? 152) }}
 
 --------------------------------------------------------------------------------
 WEATHER BRIEFING
 --------------------------------------------------------------------------------
-DEP METAR: {{ $ofp['weather']['orig_metar'] ?? 'N/A' }}
-ARR METAR: {{ $ofp['weather']['dest_metar'] ?? 'N/A' }}
-ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
+DEP METAR: {{ $safeStr($ofp['weather']['orig_metar'] ?? 'N/A') }}
+ARR METAR: {{ $safeStr($ofp['weather']['dest_metar'] ?? 'N/A') }}
+ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
 ================================================================================
                                 END OF OFP
 ================================================================================
@@ -430,8 +460,8 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                         <h3 class="text-sm font-bold uppercase tracking-wider mb-4" style="color: var(--tenant-card-text, #ffffff);">🧭 Navigation Log & Enroute Waypoints</h3>
                         
                         @php
-                            $fixes = $ofp['navlog']['fix'] ?? [];
-                            if (!is_array($fixes)) { $fixes = []; }
+                            $rawFixes = $ofp['navlog']['fix'] ?? [];
+                            $fixes = is_array($rawFixes) ? $rawFixes : [];
                             if (isset($fixes['ident'])) { $fixes = [$fixes]; }
                         @endphp
 
@@ -452,15 +482,29 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                                     </thead>
                                     <tbody class="divide-y divide-white/5">
                                         @foreach($fixes as $fix)
+                                            @php
+                                                if (!is_array($fix)) continue;
+                                                $fIdent = $safeStr($fix['ident'] ?? '', '--');
+                                                $fAirway = $safeStr($fix['via_airway'] ?? ($fix['airway'] ?? 'DCT'), 'DCT');
+                                                $fFreq = $safeStr($fix['frequency'] ?? '', '--');
+                                                $fTrack = str_pad((string)(int)$safeNum($fix['track_mag'] ?? ($fix['heading_mag'] ?? 0)), 3, '0', STR_PAD_LEFT);
+                                                $fDist = (string)$safeNum($fix['distance'] ?? ($fix['stage_distance'] ?? 0));
+                                                $fAltFeet = $safeNum($fix['altitude_feet'] ?? 0);
+                                                $fAlt = $fAltFeet > 0 ? 'FL' . floor($fAltFeet / 100) : ($ofpFl ?? 'FL360');
+                                                $fWindDir = str_pad((string)(int)$safeNum($fix['wind_dir'] ?? 0), 3, '0', STR_PAD_LEFT);
+                                                $fWindSpd = (string)$safeNum($fix['wind_spd'] ?? 0);
+                                                $fOat = (string)$safeNum($fix['oat'] ?? -45);
+                                                $fFuel = $safeNum($fix['fuel_plan_onboard'] ?? ($fix['fuel_rem'] ?? 0));
+                                            @endphp
                                             <tr class="hover:bg-white/5 transition">
-                                                <td class="py-2.5 px-3 font-bold text-white">{{ $fix['ident'] ?? '--' }}</td>
-                                                <td class="py-2.5 px-3 text-sky-400 font-bold">{{ $fix['via_airway'] ?? ($fix['airway'] ?? 'DCT') }}</td>
-                                                <td class="py-2.5 px-3 text-slate-300">{{ $fix['frequency'] ?? '--' }}</td>
-                                                <td class="py-2.5 px-3 text-amber-300 font-bold">{{ str_pad($fix['track_mag'] ?? ($fix['heading_mag'] ?? '000'), 3, '0', STR_PAD_LEFT) }}°</td>
-                                                <td class="py-2.5 px-3 text-slate-300">{{ $fix['distance'] ?? ($fix['stage_distance'] ?? '0') }} nm</td>
-                                                <td class="py-2.5 px-3 text-emerald-400 font-bold">{{ !empty($fix['altitude_feet']) ? 'FL' . floor($fix['altitude_feet']/100) : ($ofpFl ?? 'FL360') }}</td>
-                                                <td class="py-2.5 px-3 text-slate-300">{{ $fix['wind_dir'] ?? '000' }}/{{ $fix['wind_spd'] ?? '00' }}kt ({{ $fix['oat'] ?? '-45' }}°C)</td>
-                                                <td class="py-2.5 px-3 text-tenant-accent font-bold">{{ number_format($fix['fuel_plan_onboard'] ?? ($fix['fuel_rem'] ?? 0)) }}</td>
+                                                <td class="py-2.5 px-3 font-bold text-white">{{ $fIdent }}</td>
+                                                <td class="py-2.5 px-3 text-sky-400 font-bold">{{ $fAirway }}</td>
+                                                <td class="py-2.5 px-3 text-slate-300">{{ $fFreq }}</td>
+                                                <td class="py-2.5 px-3 text-amber-300 font-bold">{{ $fTrack }}°</td>
+                                                <td class="py-2.5 px-3 text-slate-300">{{ $fDist }} nm</td>
+                                                <td class="py-2.5 px-3 text-emerald-400 font-bold">{{ $fAlt }}</td>
+                                                <td class="py-2.5 px-3 text-slate-300">{{ $fWindDir }}/{{ $fWindSpd }}kt ({{ $fOat }}°C)</td>
+                                                <td class="py-2.5 px-3 text-tenant-accent font-bold">{{ number_format($fFuel) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -470,7 +514,7 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                             <div class="p-6 text-center text-slate-400 space-y-3 font-sans">
                                 <p class="text-sm">ATC Route Waypoint Sequence:</p>
                                 <div class="p-4 bg-[#090C12] rounded-xl font-mono text-sm text-emerald-400 break-words border border-white/10 shadow-inner">
-                                    {{ $ofp['general']['route'] ?? ($routing ?: 'DIRECT') }}
+                                    {{ $safeStr($ofp['general']['route'] ?? ($routing ?: 'DIRECT')) }}
                                 </div>
                                 <p class="text-xs opacity-70">Waypoints automatically parsed from ATC route string for cruise {{ $ofpFl ?? 'FL360' }}.</p>
                             </div>
@@ -489,12 +533,12 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                             </div>
                             <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                 <span class="text-slate-400 text-[10px] uppercase block font-bold">Current METAR</span>
-                                <p class="text-slate-200 font-semibold break-words">{{ $ofp['weather']['orig_metar'] ?? 'No METAR available' }}</p>
+                                <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['orig_metar'] ?? '', 'No METAR available') }}</p>
                             </div>
                             @if(!empty($ofp['weather']['orig_taf']))
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                     <span class="text-slate-400 text-[10px] uppercase block font-bold">Terminal Aerodrome Forecast (TAF)</span>
-                                    <p class="text-slate-200 break-words">{{ $ofp['weather']['orig_taf'] }}</p>
+                                    <p class="text-slate-200 break-words">{{ $safeStr($ofp['weather']['orig_taf']) }}</p>
                                 </div>
                             @endif
                         </div>
@@ -507,12 +551,12 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                             </div>
                             <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                 <span class="text-slate-400 text-[10px] uppercase block font-bold">Current METAR</span>
-                                <p class="text-slate-200 font-semibold break-words">{{ $ofp['weather']['dest_metar'] ?? 'No METAR available' }}</p>
+                                <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['dest_metar'] ?? '', 'No METAR available') }}</p>
                             </div>
                             @if(!empty($ofp['weather']['dest_taf']))
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
                                     <span class="text-slate-400 text-[10px] uppercase block font-bold">Terminal Aerodrome Forecast (TAF)</span>
-                                    <p class="text-slate-200 break-words">{{ $ofp['weather']['dest_taf'] }}</p>
+                                    <p class="text-slate-200 break-words">{{ $safeStr($ofp['weather']['dest_taf']) }}</p>
                                 </div>
                             @endif
                         </div>
@@ -525,13 +569,13 @@ ALT METAR: {{ $ofp['weather']['altn_metar'] ?? 'N/A' }}
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
-                                    <span class="text-slate-400 text-[10px] uppercase block font-bold">Primary Alternate ({{ $ofp['general']['alternate'] ?? $alternate_1 }})</span>
-                                    <p class="text-slate-200 font-semibold break-words">{{ $ofp['weather']['altn_metar'] ?? 'No METAR available' }}</p>
+                                    <span class="text-slate-400 text-[10px] uppercase block font-bold">Primary Alternate ({{ $safeStr($ofp['general']['alternate'] ?? $alternate_1) }})</span>
+                                    <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn_metar'] ?? '', 'No METAR available') }}</p>
                                 </div>
                                 @if(!empty($ofp['general']['alternate2']) || !empty($alternate_2))
                                     <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
-                                        <span class="text-slate-400 text-[10px] uppercase block font-bold">Secondary Alternate ({{ $ofp['general']['alternate2'] ?? $alternate_2 }})</span>
-                                        <p class="text-slate-200 font-semibold break-words">{{ $ofp['weather']['altn2_metar'] ?? 'No secondary alternate METAR reported' }}</p>
+                                        <span class="text-slate-400 text-[10px] uppercase block font-bold">Secondary Alternate ({{ $safeStr($ofp['general']['alternate2'] ?? $alternate_2) }})</span>
+                                        <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn2_metar'] ?? '', 'No secondary alternate METAR reported') }}</p>
                                     </div>
                                 @endif
                             </div>
