@@ -165,7 +165,8 @@
         @endif
     </ul>
 
-    <div class="px-5 py-3 border-t border-black/20 text-[10px] opacity-60 font-mono">
-        v-air-ops v1.0
+    <div class="px-5 py-3 border-t border-black/20 text-[10px] font-mono flex items-center justify-between opacity-80">
+        <span class="tracking-wider text-[9px] uppercase font-semibold">V-Air Ops</span>
+        <span class="px-1.5 py-0.5 rounded bg-black/40 font-bold text-white border border-white/10 shadow-sm">{{ \App\Services\VersionService::getVersion() }}</span>
     </div>
 </nav>
