@@ -135,12 +135,14 @@ class FleetManager extends Component
             'csvFile' => 'required|mimes:csv,txt|max:2048',
         ]);
 
+        $tenantId = $this->getActiveTenantId();
+
         if (($handle = fopen($this->csvFile->getRealPath(), "r")) !== FALSE) {
             $header = fgetcsv($handle, 1000, ",");
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                 if(count($data) >= 3) {
                     Airframe::updateOrCreate(
-                        ['tenant_id' => auth()->user()->tenant_id, 'registration' => $data[0]],
+                        ['tenant_id' => $tenantId, 'registration' => strtoupper(trim($data[0]))],
                         ['aircraft_type_id' => $data[1], 'name' => $data[2]]
                     );
                 }
@@ -158,28 +160,6 @@ class FleetManager extends Component
         return response()->streamDownload(function() use ($content) {
             echo $content;
         }, 'fleet_template.csv');
-    }
-
-    public $showGlobalImportModal = false;
-    public $importMode = 'real_world'; // 'real_world' or 'generate'
-    public $searchRealWorld = '';
-    public $filterAircraftCode = '';
-    public $selectedRealWorldAirframes = [];
-    public $selectAllRealWorld = false;
-
-    public $globalAircraftCode = '';
-    public $registrationPrefix = 'G-';
-    public $quantityToGenerate = 5;
-    public $customRegistrationsText = '';
-
-    public function updatingSearchRealWorld()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingFilterAircraftCode()
-    {
-        $this->resetPage();
     }
 
     public function openGlobalImportModal()
