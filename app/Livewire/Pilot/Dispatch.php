@@ -57,7 +57,6 @@ class Dispatch extends Component
     public $showSectionNetwork = true;
     public $showRouteDetails = false;
     public $showOfpView = false;
-    public $activeTab = 'summary'; // 'summary', 'full_ofp', 'navlog', 'weather'
 
     public function mount(Booking $booking)
     {
