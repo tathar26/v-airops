@@ -78,6 +78,11 @@ class RouteManager extends Component
         $this->resetPage();
     }
 
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters()
     {
         $this->reset(['search', 'selectedRouteType', 'filterDepIcao', 'filterArrIcao', 'filterAircraftType']);

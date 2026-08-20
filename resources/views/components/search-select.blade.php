@@ -12,12 +12,12 @@
 $selectedStr = (string)$selected;
 $displayLabel = $allLabel;
 
-// Find matching label if options is array of objects/arrays with id and name
+// Compute initial button label
 if (!empty($selectedStr)) {
     foreach ($options as $key => $opt) {
         if (is_array($opt) || is_object($opt)) {
             $optId = is_array($opt) ? ($opt['id'] ?? $opt['value'] ?? '') : ($opt->id ?? $opt->value ?? '');
-            $optName = is_array($opt) ? ($opt['name'] ?? $opt['label'] ?? $optId) : ($opt->name ?? $opt->label ?? $optId);
+            $optName = is_array($opt) ? ($opt['name'] ?? $opt['label'] ?? $opt['code'] ?? $optId) : ($opt->name ?? $opt->label ?? $opt->code ?? $optId);
             if ((string)$optId === $selectedStr) {
                 $displayLabel = ($label ? $label . ': ' : '') . $optName;
                 break;
@@ -30,52 +30,66 @@ if (!empty($selectedStr)) {
         }
     }
 }
+
+// Convert options to standard normalized array of { id, name }
+$normalizedOptions = [];
+foreach ($options as $key => $opt) {
+    if (is_array($opt) || is_object($opt)) {
+        $optId = is_array($opt) ? ($opt['id'] ?? $opt['value'] ?? '') : ($opt->id ?? $opt->value ?? '');
+        $optCode = is_array($opt) ? ($opt['code'] ?? '') : ($opt->code ?? '');
+        $optName = is_array($opt) ? ($opt['name'] ?? $opt['label'] ?? $optCode) : ($opt->name ?? $opt->label ?? $optCode);
+        $fullDisplay = (!empty($optCode) && !empty($optName) && $optCode !== $optName) ? "{$optCode} - {$optName}" : ($optName ?: $optCode);
+        $normalizedOptions[] = [
+            'id' => (string)$optId,
+            'name' => (string)$fullDisplay
+        ];
+    } else {
+        $val = (string)$opt;
+        $normalizedOptions[] = [
+            'id' => $val,
+            'name' => $val
+        ];
+    }
+}
 @endphp
 
 <div x-data="{
     open: false,
     query: '',
-    selected: @entangle($wireModel).live,
-    rawOptions: @js($options),
+    selectedVal: '{{ $selectedStr }}',
+    rawOptions: {{ json_encode($normalizedOptions) }},
     labelPrefix: '{{ $label ? $label . ': ' : '' }}',
     allText: '{{ $allLabel }}',
     get filteredOptions() {
-        if (!this.query.trim()) {
+        if (!this.query || !this.query.trim()) {
             return this.rawOptions;
         }
-        let q = this.query.toLowerCase();
-        if (Array.isArray(this.rawOptions)) {
-            return this.rawOptions.filter(item => {
-                if (typeof item === 'object' && item !== null) {
-                    let name = (item.name || item.label || item.code || item.id || '').toString().toLowerCase();
-                    return name.includes(q);
-                }
-                return item.toString().toLowerCase().includes(q);
-            });
-        }
-        return this.rawOptions;
+        let q = this.query.toLowerCase().trim();
+        return this.rawOptions.filter(item => {
+            return (item.name || item.id || '').toLowerCase().includes(q);
+        });
     },
     select(val) {
-        this.selected = val;
+        this.selectedVal = val;
         this.open = false;
         this.query = '';
+        @if(!empty($wireModel))
+            $wire.set('{{ $wireModel }}', val);
+        @endif
     }
 }" class="relative inline-block text-left" @click.outside="open = false">
 
     <!-- Trigger Button -->
     <button type="button" 
             @click="open = !open" 
-            class="{{ $minWidth }} inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition border focus:outline-none"
-            :class="selected ? 'border-tenant-accent bg-tenant-accent/15 text-tenant-accent font-bold' : 'border-white/10 text-white'"
+            class="{{ $minWidth }} inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition border focus:outline-none cursor-pointer"
+            :class="selectedVal ? 'border-tenant-accent bg-tenant-accent/15 text-tenant-accent font-bold' : 'border-white/10 text-white'"
             style="background-color: var(--tenant-input-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
         
-        <span class="truncate" x-text="selected ? (
+        <span class="truncate" x-text="selectedVal ? (
             (() => {
-                let found = Array.isArray(rawOptions) ? rawOptions.find(o => (typeof o === 'object' && o !== null ? (o.id == selected || o.value == selected) : o == selected)) : null;
-                if (found) {
-                    return labelPrefix + (typeof found === 'object' ? (found.code || found.name || found.label) : found);
-                }
-                return labelPrefix + selected;
+                let found = rawOptions.find(o => o.id == selectedVal);
+                return labelPrefix + (found ? found.name : selectedVal);
             })()
         ) : allText">
             {{ $displayLabel }}
@@ -88,6 +102,7 @@ if (!empty($selectedStr)) {
 
     <!-- Dropdown Menu -->
     <div x-show="open" 
+         x-cloak
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -95,7 +110,7 @@ if (!empty($selectedStr)) {
          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
          class="absolute right-0 mt-1.5 w-64 rounded-xl shadow-2xl z-[120] overflow-hidden p-2 border"
-         style="background-color: var(--tenant-card-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15)); display: none;">
+         style="background-color: var(--tenant-card-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
 
         <!-- Search input inside dropdown -->
         <div class="relative mb-2">
@@ -115,23 +130,23 @@ if (!empty($selectedStr)) {
             <!-- Reset / All Option -->
             <button type="button" 
                     @click="select('')"
-                    class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-between"
-                    :class="!selected ? 'bg-tenant-accent text-white font-bold' : 'hover:bg-white/10 text-slate-300 hover:text-white'">
+                    class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-between cursor-pointer"
+                    :class="!selectedVal ? 'bg-tenant-accent text-white font-bold' : 'hover:bg-white/10 text-slate-300 hover:text-white'">
                 <span x-text="allText">{{ $allLabel }}</span>
-                <span x-show="!selected" class="text-xs">✓</span>
+                <span x-show="!selectedVal" class="text-xs">✓</span>
             </button>
 
             <!-- Dynamic Options -->
-            <template x-for="(item, idx) in filteredOptions" :key="typeof item === 'object' && item !== null ? (item.id || item.value || idx) : item">
+            <template x-for="item in filteredOptions" :key="item.id">
                 <button type="button" 
-                        @click="select(typeof item === 'object' && item !== null ? (item.id !== undefined ? item.id : item.value) : item)"
-                        class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-between"
-                        :class="(selected == (typeof item === 'object' && item !== null ? (item.id !== undefined ? item.id : item.value) : item)) 
+                        @click="select(item.id)"
+                        class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-between cursor-pointer"
+                        :class="(selectedVal == item.id) 
                                 ? 'bg-tenant-accent text-white font-bold' 
                                 : 'hover:bg-white/10 text-slate-300 hover:text-white'">
                     
-                    <span class="truncate" x-text="typeof item === 'object' && item !== null ? (item.code ? (item.code + (item.name ? ' - ' + item.name : '')) : (item.name || item.label)) : item"></span>
-                    <span x-show="selected == (typeof item === 'object' && item !== null ? (item.id !== undefined ? item.id : item.value) : item)" class="text-xs ml-1.5 flex-shrink-0">✓</span>
+                    <span class="truncate" x-text="item.name"></span>
+                    <span x-show="selectedVal == item.id" class="text-xs ml-1.5 flex-shrink-0">✓</span>
                 </button>
             </template>
 
