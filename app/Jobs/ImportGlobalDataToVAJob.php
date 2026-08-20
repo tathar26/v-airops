@@ -21,25 +21,22 @@ class ImportGlobalDataToVAJob implements ShouldQueue
 
     protected $tenantId;
     protected $globalFlightIds;
+    protected $targetIcao;
+    protected $stripPrefix;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($tenantId, array $globalFlightIds)
+    public function __construct($tenantId, array $globalFlightIds, ?string $targetIcao = null, ?string $stripPrefix = null)
     {
         $this->tenantId = $tenantId;
         $this->globalFlightIds = $globalFlightIds;
+        $this->targetIcao = $targetIcao;
+        $this->stripPrefix = $stripPrefix;
     }
 
     /**
      * Execute the job.
-     *
-     * For each route being imported:
-     *  1. Try to find a real flight number via the AirLabs API (dep_icao + arr_icao + airline_iata)
-     *  2. AirLabs returns multiple rows per route (one per weekday) — we take the first match.
-     *  3. If AirLabs returns nothing (or key not set), generate a deterministic fictional number.
-     *     e.g. U2 EGKK→LIMC → "U21256", FR EGKK→LIMC → "FR5487"
-     *     Uses crc32 of the route key so the same route always gets the same fictional number.
      */
     public function handle(): void
     {
@@ -48,6 +45,11 @@ class ImportGlobalDataToVAJob implements ShouldQueue
         }
 
         $targetTenantId = $this->tenantId ?: (\App\Models\Tenant::first()?->id ?? 1);
+        $tenant = \App\Models\Tenant::find($targetTenantId);
+        $defaultTenantIcao = !empty($this->targetIcao) 
+            ? strtoupper(trim($this->targetIcao)) 
+            : ($tenant && !empty($tenant->icao) ? strtoupper($tenant->icao) : 'VOPS');
+
         $flights = SystemGlobalFlight::whereIn('id', $this->globalFlightIds)->get();
         $apiKey  = config('services.airlabs.key', env('AIRLABS_API_KEY'));
 
@@ -81,6 +83,24 @@ class ImportGlobalDataToVAJob implements ShouldQueue
                 $flightNum = $operatorPrefix . (($seed % 8999) + 1000); // e.g. U21256, FR5487
             }
 
+            // --- Step 3: Determine ATC Callsign (ICAO Prefix + Suffix) ---
+            $cleanFlightNum = strtoupper(trim($flightNum));
+            $suffix = $cleanFlightNum;
+
+            if (!empty($this->stripPrefix)) {
+                $pfx = strtoupper(trim($this->stripPrefix));
+                if (str_starts_with($cleanFlightNum, $pfx)) {
+                    $suffix = substr($cleanFlightNum, strlen($pfx));
+                }
+            } else {
+                // Auto strip leading letters or IATA prefix (e.g. U29999 -> 9999, FR2605 -> 2605, BA1181 -> 1181)
+                $stripped = preg_replace('/^[A-Z0-9]{2,3}/', '', $cleanFlightNum);
+                $suffix = !empty($stripped) ? $stripped : $cleanFlightNum;
+            }
+
+            $callsignIcao = $defaultTenantIcao;
+            $fullCallsign = $callsignIcao . $suffix;
+
             // Create or Update Route for the specific tenant
             $route = Route::withoutGlobalScopes()->updateOrCreate(
                 [
@@ -90,10 +110,13 @@ class ImportGlobalDataToVAJob implements ShouldQueue
                     'arrival_icao'   => $flight->arrival_icao,
                 ],
                 [
-                    'operator'   => $flight->operator,
-                    'block_time' => $blockTime ?? '02:00',
-                    'route_type' => $flight->route_type ?? 'Scheduled',
-                    'distance'   => $flight->distance,
+                    'callsign'        => $fullCallsign,
+                    'callsign_icao'   => $callsignIcao,
+                    'callsign_suffix' => $suffix,
+                    'operator'        => $callsignIcao,
+                    'block_time'      => $blockTime ?? '02:00',
+                    'route_type'      => $flight->route_type ?? 'Scheduled',
+                    'distance'        => $flight->distance,
                 ]
             );
 

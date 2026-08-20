@@ -16,6 +16,9 @@ class GlobalNetworkImport extends Component
     public $searchArrival = '';
     public $searchOperator = '';
     
+    public $targetIcao = '';
+    public $stripPrefix = '';
+
     public $selectedFlights = [];
     public $selectAll = false;
 
@@ -26,6 +29,13 @@ class GlobalNetworkImport extends Component
         'searchArrival' => ['except' => ''],
         'searchOperator' => ['except' => ''],
     ];
+
+    public function mount()
+    {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        $tenant = \App\Models\Tenant::find($tenantId);
+        $this->targetIcao = $tenant && !empty($tenant->icao) ? strtoupper($tenant->icao) : 'VOPS';
+    }
 
     public function search()
     {
@@ -134,7 +144,7 @@ class GlobalNetworkImport extends Component
         $jobs = [];
 
         foreach ($chunks as $chunk) {
-            $jobs[] = new ImportGlobalDataToVAJob($tenantId, $chunk);
+            $jobs[] = new ImportGlobalDataToVAJob($tenantId, $chunk, $this->targetIcao, $this->stripPrefix);
         }
 
         $batch = Bus::batch($jobs)
@@ -169,8 +179,17 @@ class GlobalNetworkImport extends Component
 
     public function render()
     {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        $tenant = \App\Models\Tenant::find($tenantId);
+        $availableIcaos = $tenant ? $tenant->getAllIcaos() : ['VOPS'];
+
+        $flights = $this->hasSearch() 
+            ? $this->buildQuery()->paginate(50) 
+            : null;
+
         return view('livewire.global-network-import', [
-            'flights' => $this->hasSearch() ? $this->buildQuery()->paginate(25) : null,
+            'flights' => $flights,
+            'availableIcaos' => $availableIcaos,
             'currentBatch' => $this->batch
         ])->layout('layouts.app');
     }

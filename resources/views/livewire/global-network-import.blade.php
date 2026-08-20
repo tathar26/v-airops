@@ -28,21 +28,42 @@
             </div>
         @endif
 
+        <!-- ATC Callsign Import Configuration -->
+        <div class="p-4 rounded-xl border border-white/10 mb-6 flex flex-wrap items-center justify-between gap-4" style="background-color: var(--tenant-card-bg, #141923);">
+            <div class="flex items-center gap-4 flex-wrap flex-1">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Target Airline ICAO</label>
+                    <select wire:model="targetIcao" class="rounded-xl py-2 px-3 text-sm font-mono font-bold">
+                        @foreach($availableIcaos as $icaoOpt)
+                            <option value="{{ $icaoOpt }}">{{ $icaoOpt }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Flight # Prefix to Cut Off (Optional)</label>
+                    <input type="text" wire:model="stripPrefix" placeholder="e.g. U2, FR, BA (auto if blank)" class="rounded-xl py-2 px-3 text-sm uppercase font-mono w-60" />
+                </div>
+                <div class="text-xs text-slate-400 self-end pb-2">
+                    Example: Flight <span class="font-mono font-bold text-white">U29999</span> with prefix <span class="font-mono font-bold text-tenant-accent">U2</span> generates ATC Callsign <span class="font-mono font-bold text-amber-300">{{ strtoupper($targetIcao ?: 'EZY') }}9999</span>.
+                </div>
+            </div>
+        </div>
+
         <div class="flex flex-col md:flex-row gap-4 mb-6">
             <div class="flex-1">
-                <x-input type="text" wire:model.defer="searchDeparture" placeholder="Filter Origin (e.g. EGLL, LHR, Heathrow)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
+                <x-input type="text" wire:model.defer="searchDeparture" placeholder="Filter Origin (e.g. EGLL, LHR, Heathrow)" class="w-full uppercase" />
             </div>
             <div class="flex-1">
-                <x-input type="text" wire:model.defer="searchArrival" placeholder="Filter Destination (e.g. LFPG, CDG, Paris)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
+                <x-input type="text" wire:model.defer="searchArrival" placeholder="Filter Destination (e.g. LFPG, CDG, Paris)" class="w-full uppercase" />
             </div>
             <div class="flex-1">
-                <x-input type="text" wire:model.defer="searchOperator" placeholder="Filter Operator (e.g. EZY, U2, easyJet)" class="w-full bg-[#212631] border-gray-600 text-white uppercase" />
+                <x-input type="text" wire:model.defer="searchOperator" placeholder="Filter Operator (e.g. EZY, U2, easyJet)" class="w-full uppercase" />
             </div>
             <div class="flex space-x-2">
-                <button wire:click="search" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded transition h-full flex items-center">
+                <button wire:click="search" class="bg-slate-800 hover:opacity-90 text-white font-bold py-2 px-6 rounded-xl transition h-full flex items-center">
                     🔍 Search
                 </button>
-                <button wire:click="importSelected" class="bg-tenant-accent hover:opacity-80 text-white font-bold py-2 px-6 rounded transition h-full flex items-center" {{ $currentBatch ? 'disabled' : '' }}>
+                <button wire:click="importSelected" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2 px-6 rounded-xl transition h-full flex items-center shadow-lg" {{ $currentBatch ? 'disabled' : '' }}>
                     <span class="mr-2">📥</span> Import Selected
                 </button>
             </div>

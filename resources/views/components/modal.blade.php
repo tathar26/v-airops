@@ -38,7 +38,7 @@ $maxWidth = $maxWidthMap[$maxWidth ?? '2xl'] ?? 'sm:max-w-2xl';
     </div>
 
     <div x-show="show" class="mb-6 rounded-2xl overflow-hidden shadow-2xl transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto"
-                    style="background-color: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8) !important;"
+                    style="background-color: var(--tenant-card-bg, #0f172a) !important; color: var(--tenant-card-text, #ffffff) !important; border: 1px solid var(--tenant-input-border, #334155) !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8) !important;"
                     x-trap.inert.noscroll="show"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
