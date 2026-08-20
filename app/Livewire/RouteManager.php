@@ -360,59 +360,190 @@ class RouteManager extends Component
 
         $tenantId = $this->getActiveTenantId();
         $tenant = \App\Models\Tenant::find($tenantId);
-        $defaultIcao = $tenant->icao ?? 'VOPS';
+        $defaultIcao = $tenant && !empty($tenant->icao) ? strtoupper($tenant->icao) : 'VOPS';
+        $importedCount = 0;
 
         if (($handle = fopen($this->csvFile->getRealPath(), "r")) !== FALSE) {
             $header = fgetcsv($handle, 1000, ",");
+            
+            // Default column index positions
+            $idx = [
+                'flight_number'   => 0,
+                'departure_icao'  => 1,
+                'arrival_icao'    => 2,
+                'block_time'      => 3,
+                'route_type'      => 4,
+                'callsign'        => 5,
+                'callsign_icao'   => null,
+                'callsign_suffix' => null,
+                'aircraft_types'  => null,
+                'route_string'    => null,
+                'distance'        => null,
+            ];
+
+            if ($header) {
+                $lowerHeader = array_map(fn($h) => strtolower(trim($h)), $header);
+                foreach ($lowerHeader as $i => $col) {
+                    if (in_array($col, ['flight_number', 'flight_num', 'flight', 'flightno'])) $idx['flight_number'] = $i;
+                    if (in_array($col, ['departure_icao', 'departure', 'origin', 'dep', 'dep_icao'])) $idx['departure_icao'] = $i;
+                    if (in_array($col, ['arrival_icao', 'arrival', 'destination', 'arr', 'arr_icao'])) $idx['arrival_icao'] = $i;
+                    if (in_array($col, ['block_time', 'time', 'duration', 'flight_time'])) $idx['block_time'] = $i;
+                    if (in_array($col, ['route_type', 'type'])) $idx['route_type'] = $i;
+                    if (in_array($col, ['callsign', 'atc_callsign', 'telephony'])) $idx['callsign'] = $i;
+                    if (in_array($col, ['callsign_icao', 'airline_icao', 'icao_prefix', 'operator'])) $idx['callsign_icao'] = $i;
+                    if (in_array($col, ['callsign_suffix', 'suffix', 'flight_suffix'])) $idx['callsign_suffix'] = $i;
+                    if (in_array($col, ['aircraft_types', 'aircraft', 'fleet', 'aircraft_type'])) $idx['aircraft_types'] = $i;
+                    if (in_array($col, ['route_string', 'route', 'routing'])) $idx['route_string'] = $i;
+                    if (in_array($col, ['distance', 'dist', 'nm'])) $idx['distance'] = $i;
+                }
+            }
+
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                if (count($data) >= 4) {
-                    \App\Models\Airport::fetchAndCreate($data[1]);
-                    \App\Models\Airport::fetchAndCreate($data[2]);
+                if (empty($data) || !isset($data[$idx['flight_number']]) || empty(trim($data[$idx['flight_number']]))) {
+                    continue;
+                }
 
-                    $fltNum = strtoupper(trim($data[0]));
-                    $callsign = isset($data[5]) ? strtoupper(trim($data[5])) : null;
-                    $operator = isset($data[6]) ? strtoupper(trim($data[6])) : $defaultIcao;
+                $fltNum   = strtoupper(trim($data[$idx['flight_number']]));
+                $depIcao  = isset($data[$idx['departure_icao']]) ? strtoupper(trim($data[$idx['departure_icao']])) : '';
+                $arrIcao  = isset($data[$idx['arrival_icao']]) ? strtoupper(trim($data[$idx['arrival_icao']])) : '';
 
-                    if (empty($callsign)) {
-                        $suffix = preg_replace('/^[A-Z0-9]{2,3}/', '', $fltNum) ?: $fltNum;
-                        $callsignIcao = $operator;
-                        $callsign = $callsignIcao . $suffix;
-                    } else {
-                        $rawCs = strtoupper(trim($callsign));
-                        if (preg_match('/^([A-Z]{2,4})(.*)$/', $rawCs, $matches)) {
-                            $callsignIcao = $matches[1];
-                            $suffix = $matches[2];
+                if (strlen($depIcao) < 3 || strlen($arrIcao) < 3) {
+                    continue;
+                }
+
+                $depAirport = \App\Models\Airport::fetchAndCreate($depIcao);
+                $arrAirport = \App\Models\Airport::fetchAndCreate($arrIcao);
+
+                // Distance calculation
+                $distance = ($idx['distance'] !== null && isset($data[$idx['distance']]) && is_numeric($data[$idx['distance']])) 
+                    ? (int)$data[$idx['distance']] 
+                    : null;
+
+                if (!$distance && $depAirport && $arrAirport) {
+                    $earth_radius = 3440.065;
+                    $lat1 = deg2rad($depAirport->lat);
+                    $lon1 = deg2rad($depAirport->lon);
+                    $lat2 = deg2rad($arrAirport->lat);
+                    $lon2 = deg2rad($arrAirport->lon);
+                    $dLat = $lat2 - $lat1;
+                    $dLon = $lon2 - $lon1;
+                    $a = sin($dLat/2) * sin($dLat/2) + cos($lat1) * cos($lat2) * sin($dLon/2) * sin($dLon/2);
+                    $c = 2 * asin(sqrt($a));
+                    $distance = (int) round($earth_radius * $c);
+                }
+
+                // Block time calculation
+                $blockTime = ($idx['block_time'] !== null && isset($data[$idx['block_time']]) && !empty(trim($data[$idx['block_time']]))) 
+                    ? trim($data[$idx['block_time']]) 
+                    : null;
+
+                if (!$blockTime && $distance) {
+                    $total_minutes = round(($distance / 420) * 60 + 30);
+                    $hours = floor($total_minutes / 60);
+                    $minutes = $total_minutes % 60;
+                    $blockTime = sprintf('%02d:%02d', $hours, $minutes);
+                }
+
+                $routeType = ($idx['route_type'] !== null && isset($data[$idx['route_type']]) && !empty(trim($data[$idx['route_type']]))) 
+                    ? ucfirst(strtolower(trim($data[$idx['route_type']]))) 
+                    : 'Scheduled';
+
+                if (!in_array($routeType, ['Scheduled', 'Charter', 'Cargo'])) {
+                    $routeType = 'Scheduled';
+                }
+
+                $routeString = ($idx['route_string'] !== null && isset($data[$idx['route_string']])) 
+                    ? trim($data[$idx['route_string']]) 
+                    : null;
+
+                // Callsign components
+                $rawCallsign = ($idx['callsign'] !== null && isset($data[$idx['callsign']]) && !empty(trim($data[$idx['callsign']]))) 
+                    ? strtoupper(trim($data[$idx['callsign']])) 
+                    : null;
+
+                $callsignIcao = ($idx['callsign_icao'] !== null && isset($data[$idx['callsign_icao']]) && !empty(trim($data[$idx['callsign_icao']]))) 
+                    ? strtoupper(trim($data[$idx['callsign_icao']])) 
+                    : null;
+
+                $callsignSuffix = ($idx['callsign_suffix'] !== null && isset($data[$idx['callsign_suffix']]) && !empty(trim($data[$idx['callsign_suffix']]))) 
+                    ? strtoupper(trim($data[$idx['callsign_suffix']])) 
+                    : null;
+
+                if (!$callsignIcao) {
+                    $callsignIcao = $defaultIcao;
+                }
+
+                if (!$callsignSuffix) {
+                    if ($rawCallsign) {
+                        if (str_starts_with($rawCallsign, $callsignIcao)) {
+                            $callsignSuffix = substr($rawCallsign, strlen($callsignIcao));
                         } else {
-                            $callsignIcao = $defaultIcao;
-                            $suffix = $rawCs;
+                            $callsignSuffix = $rawCallsign;
+                        }
+                    } else {
+                        // Strip leading letters if any
+                        $stripped = preg_replace('/^[A-Z0-9]{2,3}/', '', $fltNum);
+                        $callsignSuffix = !empty($stripped) ? $stripped : $fltNum;
+                    }
+                }
+
+                $fullCallsign = $rawCallsign ?: ($callsignIcao . $callsignSuffix);
+
+                $route = Route::updateOrCreate(
+                    [
+                        'tenant_id'     => $tenantId, 
+                        'flight_number' => $fltNum
+                    ],
+                    [
+                        'callsign'        => $fullCallsign,
+                        'callsign_icao'   => $callsignIcao,
+                        'callsign_suffix' => $callsignSuffix,
+                        'operator'        => $callsignIcao,
+                        'departure_icao'  => $depIcao,
+                        'arrival_icao'    => $arrIcao,
+                        'block_time'      => $blockTime ?? '02:00',
+                        'route_type'      => $routeType,
+                        'distance'        => $distance,
+                        'route_string'    => $routeString,
+                    ]
+                );
+
+                // Aircraft Types syncing
+                if ($idx['aircraft_types'] !== null && isset($data[$idx['aircraft_types']]) && !empty(trim($data[$idx['aircraft_types']]))) {
+                    $typeCodes = preg_split('/[,|\/]+/', trim($data[$idx['aircraft_types']]));
+                    $aircraftIds = [];
+                    foreach ($typeCodes as $tCode) {
+                        $tCode = strtoupper(trim($tCode));
+                        if (!empty($tCode)) {
+                            $acType = AircraftType::firstOrCreate(
+                                ['tenant_id' => $tenantId, 'code' => $tCode],
+                                ['name' => $tCode . ' Aircraft']
+                            );
+                            $aircraftIds[] = $acType->id;
                         }
                     }
-
-                    Route::updateOrCreate(
-                        ['tenant_id' => $tenantId, 'flight_number' => $fltNum],
-                        [
-                            'callsign'        => $callsign,
-                            'callsign_icao'   => $callsignIcao,
-                            'callsign_suffix' => $suffix,
-                            'operator'        => $callsignIcao,
-                            'departure_icao'  => strtoupper($data[1]),
-                            'arrival_icao'    => strtoupper($data[2]),
-                            'block_time'      => $data[3],
-                            'route_type'      => isset($data[4]) ? $data[4] : 'Scheduled',
-                        ]
-                    );
+                    if (!empty($aircraftIds)) {
+                        $route->aircraftTypes()->syncWithoutDetaching($aircraftIds);
+                    }
                 }
+
+                $importedCount++;
             }
             fclose($handle);
         }
 
         $this->reset('csvFile');
-        session()->flash('message', 'Routes imported successfully.');
+        session()->flash('message', "Successfully imported/updated {$importedCount} route(s) in your network.");
     }
 
     public function downloadTemplate()
     {
-        $content = "flight_number,departure_icao,arrival_icao,block_time,route_type,callsign,operator\nU28161,EGLL,LFPG,01:30,Scheduled,EZY8161,EZY\n";
+        $content = "flight_number,departure_icao,arrival_icao,block_time,route_type,callsign_icao,callsign_suffix,callsign,aircraft_types,route_string\n" .
+                   "U28161,EGLL,LFPG,01:30,Scheduled,EZY,8161,EZY8161,A320,DCT BOVIS L608 DET L608\n" .
+                   "U22141,EGKK,LGAV,03:45,Scheduled,EZY,2141,EZY2141,A320|A321,DVR UL9 KONAN\n" .
+                   "U21928,LFMT,EGKK,01:55,Scheduled,EZY,1928,EZY1928,A319,\n" .
+                   "U23314,LSGG,LEMD,02:05,Scheduled,EZS,3314,EZS3314,A320,\n";
+
         return response()->streamDownload(function() use ($content) {
             echo $content;
         }, 'routes_template.csv');

@@ -136,27 +136,82 @@ class FleetManager extends Component
         ]);
 
         $tenantId = $this->getActiveTenantId();
+        $importedCount = 0;
 
         if (($handle = fopen($this->csvFile->getRealPath(), "r")) !== FALSE) {
             $header = fgetcsv($handle, 1000, ",");
-            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                if(count($data) >= 3) {
-                    Airframe::updateOrCreate(
-                        ['tenant_id' => $tenantId, 'registration' => strtoupper(trim($data[0]))],
-                        ['aircraft_type_id' => $data[1], 'name' => $data[2]]
-                    );
+            
+            // Map header positions if named headers exist
+            $regIdx = 0;
+            $typeIdx = 1;
+            $nameIdx = 2;
+
+            if ($header) {
+                $lowerHeader = array_map(fn($h) => strtolower(trim($h)), $header);
+                foreach ($lowerHeader as $i => $col) {
+                    if (in_array($col, ['registration', 'reg', 'tail_number'])) $regIdx = $i;
+                    if (in_array($col, ['aircraft_type', 'type', 'aircraft_type_id', 'icao', 'icao_code'])) $typeIdx = $i;
+                    if (in_array($col, ['name', 'nickname', 'operator'])) $nameIdx = $i;
                 }
+            }
+
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                if (empty($data) || !isset($data[$regIdx]) || empty(trim($data[$regIdx]))) {
+                    continue;
+                }
+
+                $reg = strtoupper(trim($data[$regIdx]));
+                $typeRaw = isset($data[$typeIdx]) ? trim($data[$typeIdx]) : '';
+                $name = isset($data[$nameIdx]) ? trim($data[$nameIdx]) : '';
+
+                if (empty($typeRaw)) {
+                    continue;
+                }
+
+                $aircraftTypeId = null;
+
+                if (is_numeric($typeRaw)) {
+                    $existingType = AircraftType::where('tenant_id', $tenantId)->find((int)$typeRaw);
+                    if ($existingType) {
+                        $aircraftTypeId = $existingType->id;
+                    }
+                }
+
+                if (!$aircraftTypeId) {
+                    $typeCode = strtoupper($typeRaw);
+                    $aircraftType = AircraftType::firstOrCreate(
+                        ['tenant_id' => $tenantId, 'code' => $typeCode],
+                        ['name' => $typeCode . ' Aircraft']
+                    );
+                    $aircraftTypeId = $aircraftType->id;
+                }
+
+                Airframe::updateOrCreate(
+                    ['tenant_id' => $tenantId, 'registration' => $reg],
+                    [
+                        'aircraft_type_id' => $aircraftTypeId,
+                        'name'             => $name ?: ($reg . ' Airframe'),
+                    ]
+                );
+
+                $importedCount++;
             }
             fclose($handle);
         }
 
         $this->reset('csvFile');
-        session()->flash('message', 'Fleet imported successfully.');
+        session()->flash('message', "Successfully imported/updated {$importedCount} airframe(s) in your fleet.");
     }
 
     public function downloadTemplate()
     {
-        $content = "registration,aircraft_type_id,name\nG-EZYM,1,Spirit of easyJet\n";
+        $content = "registration,aircraft_type,name\n" .
+                   "G-EZYM,A320,Spirit of easyJet\n" .
+                   "G-EZTA,A320,Pride of the Fleet\n" .
+                   "G-EZAO,A319,City of London\n" .
+                   "OE-LKH,A320,Vienna Explorer\n" .
+                   "HB-JYA,A320,Geneva Jet\n";
+
         return response()->streamDownload(function() use ($content) {
             echo $content;
         }, 'fleet_template.csv');
