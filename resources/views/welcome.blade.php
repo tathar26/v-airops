@@ -30,6 +30,7 @@
     <meta name="twitter:image" content="https://vops-dev.artmex-hosting.com/og-preview.png">
 
     <!-- Structured Data JSON-LD (AI Crawlers & Google Schema.org) -->
+    @verbatim
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -57,11 +58,12 @@
       ]
     }
     </script>
+    @endverbatim
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght%40300;400;500;600;700;800;900&family=JetBrains+Mono:wght%40400;500;600;700&family=Outfit:wght%40400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS CDN (Self-contained for preview) -->
     <script src="https://cdn.tailwindcss.com"></script>
