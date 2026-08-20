@@ -9,7 +9,10 @@
         <div class="px-6 py-4 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h3 class="text-base font-bold text-white tracking-wide">ROUTE NETWORK &amp; SCHEDULES</h3>
-                <p class="text-xs text-gray-400 mt-0.5">Manage schedules, flight numbers, and airline ATC callsigns</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    Manage schedules, flight numbers, and airline ATC callsigns &bull; 
+                    <span class="text-tenant-accent font-semibold">{{ number_format($totalRoutesCount) }} Total Routes</span>
+                </p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <button wire:click="downloadTemplate" class="text-tenant-accent hover:underline transition-colors text-sm font-semibold">
@@ -36,6 +39,38 @@
                 </button>
             </div>
         </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="px-6 py-3.5 bg-[#141923] border-b border-white/5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3 flex-1 min-w-[280px] max-w-md">
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search by flight #, callsign, DEP/ARR ICAO, operator..." class="pl-9 pr-4 py-2 rounded-xl text-xs w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:border-tenant-accent focus:ring-1 focus:ring-tenant-accent transition" />
+                </div>
+                @if($search)
+                    <button wire:click="$set('search', '')" class="text-xs text-slate-400 hover:text-white px-2 py-1">Clear</button>
+                @endif
+            </div>
+
+            <div class="flex items-center gap-3">
+                <select wire:model.live="selectedRouteType" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
+                    <option value="">All Route Types</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Charter">Charter</option>
+                    <option value="Cargo">Cargo</option>
+                </select>
+
+                <select wire:model.live="perPage" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 focus:border-tenant-accent">
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                    <option value="250">250 per page</option>
+                </select>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-white/5">
                 <thead class="bg-white/5">
@@ -109,13 +144,23 @@
                     @empty
                     <tr>
                         <td colspan="8" class="px-6 py-8 text-center text-gray-400">
-                            No routes in your network. Click <strong>Add Route</strong> or <strong>Global Network Import</strong> above!
+                            @if($search || $selectedRouteType)
+                                No routes matched your filter. <button wire:click="$set('search', ''); $set('selectedRouteType', '')" class="text-tenant-accent underline ml-1">Reset filter</button>
+                            @else
+                                No routes in your network. Click <strong>Add Route</strong> or <strong>Global Network Import</strong> above!
+                            @endif
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($routes->hasPages())
+            <div class="px-6 py-4 bg-[#141923] border-t border-white/5">
+                {{ $routes->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- Add/Edit Route Modal -->

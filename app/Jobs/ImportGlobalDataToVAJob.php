@@ -47,6 +47,7 @@ class ImportGlobalDataToVAJob implements ShouldQueue
             return;
         }
 
+        $targetTenantId = $this->tenantId ?: (\App\Models\Tenant::first()?->id ?? 1);
         $flights = SystemGlobalFlight::whereIn('id', $this->globalFlightIds)->get();
         $apiKey  = config('services.airlabs.key', env('AIRLABS_API_KEY'));
 
@@ -81,9 +82,9 @@ class ImportGlobalDataToVAJob implements ShouldQueue
             }
 
             // Create or Update Route for the specific tenant
-            $route = Route::updateOrCreate(
+            $route = Route::withoutGlobalScopes()->updateOrCreate(
                 [
-                    'tenant_id'      => $this->tenantId,
+                    'tenant_id'      => $targetTenantId,
                     'flight_number'  => $flightNum,
                     'departure_icao' => $flight->departure_icao,
                     'arrival_icao'   => $flight->arrival_icao,
@@ -115,8 +116,8 @@ class ImportGlobalDataToVAJob implements ShouldQueue
                     $code = trim($code);
                     if (empty($code)) continue;
 
-                    $ac = AircraftType::firstOrCreate(
-                        ['tenant_id' => $this->tenantId, 'code' => $code],
+                    $ac = AircraftType::withoutGlobalScopes()->firstOrCreate(
+                        ['tenant_id' => $targetTenantId, 'code' => $code],
                         ['name' => $code . ' Aircraft']
                     );
                     $aircraftIds[] = $ac->id;

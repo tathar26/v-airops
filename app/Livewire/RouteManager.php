@@ -3,14 +3,18 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-
+use Livewire\WithPagination;
 use App\Models\Route;
 use App\Models\AircraftType;
 use Livewire\WithFileUploads;
 
 class RouteManager extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
+
+    public $search = '';
+    public $selectedRouteType = '';
+    public $perPage = 25;
 
     public $showAddModal = false;
     public $editMode = false;
@@ -29,6 +33,31 @@ class RouteManager extends Component
 
     public $csvFile;
 
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'selectedRouteType' => ['except' => ''],
+        'page' => ['except' => 1],
+    ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSelectedRouteType()
+    {
+        $this->resetPage();
+    }
+
+    protected function getActiveTenantId(): int
+    {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        if (!$tenantId) {
+            $tenantId = \App\Models\Tenant::first()?->id ?? 1;
+        }
+        return (int) $tenantId;
+    }
+
     protected function rules(): array
     {
         return [
@@ -37,7 +66,7 @@ class RouteManager extends Component
             'callsign_suffix' => 'required|string|max:8',
             'departure_icao' => 'required|string|size:4',
             'arrival_icao' => 'required|string|size:4',
-            'block_time' => 'nullable|string|max:10', // e.g., '02:30'
+            'block_time' => 'nullable|string|max:10',
             'distance' => 'nullable|numeric',
             'route_string' => 'nullable|string|max:255',
             'route_type' => 'required|string|in:Scheduled,Charter,Cargo',
@@ -50,15 +79,17 @@ class RouteManager extends Component
     {
         $this->reset(['flight_number', 'callsign_suffix', 'departure_icao', 'arrival_icao', 'block_time', 'distance', 'route_string', 'route_type', 'selectedAircraftTypes', 'editingId', 'editMode', 'csvFile']);
         
-        $tenant = auth()->user()->tenant;
+        $tenantId = $this->getActiveTenantId();
+        $tenant = \App\Models\Tenant::find($tenantId);
         $this->callsign_icao = $tenant->icao ?? 'VOPS';
         $this->showAddModal = true;
     }
 
     public function editRoute($id)
     {
-        $route = Route::with('aircraftTypes')->where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
-        $tenant = auth()->user()->tenant;
+        $tenantId = $this->getActiveTenantId();
+        $route = Route::with('aircraftTypes')->where('tenant_id', $tenantId)->findOrFail($id);
+        $tenant = \App\Models\Tenant::find($tenantId);
         $availableIcaos = $tenant ? $tenant->getAllIcaos() : [];
 
         $this->editingId = $route->id;
@@ -104,18 +135,20 @@ class RouteManager extends Component
 
     public function deleteRoute($id)
     {
-        Route::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id)->delete();
+        $tenantId = $this->getActiveTenantId();
+        Route::where('tenant_id', $tenantId)->findOrFail($id)->delete();
+        session()->flash('message', 'Route deleted successfully.');
     }
 
     public function saveRoute()
     {
         $this->validate();
+        $tenantId = $this->getActiveTenantId();
 
         $depAirport = \App\Models\Airport::fetchAndCreate($this->departure_icao);
         $arrAirport = \App\Models\Airport::fetchAndCreate($this->arrival_icao);
 
         if (empty($this->distance) && $depAirport && $arrAirport) {
-            // Haversine formula in NM
             $earth_radius = 3440.065;
             $lat1 = deg2rad($depAirport->lat);
             $lon1 = deg2rad($depAirport->lon);
@@ -129,7 +162,6 @@ class RouteManager extends Component
         }
 
         if (empty($this->block_time) && !empty($this->distance)) {
-            // Rough estimate: 420 kts + 30 mins taxi
             $total_minutes = round(($this->distance / 420) * 60 + 30);
             $hours = floor($total_minutes / 60);
             $minutes = $total_minutes % 60;
@@ -153,13 +185,15 @@ class RouteManager extends Component
         ];
 
         if ($this->editMode) {
-            $route = Route::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingId);
+            $route = Route::where('tenant_id', $tenantId)->findOrFail($this->editingId);
             $route->update($routePayload);
             $route->aircraftTypes()->sync($this->selectedAircraftTypes);
+            session()->flash('message', 'Route updated successfully.');
         } else {
-            $routePayload['tenant_id'] = auth()->user()->tenant_id;
+            $routePayload['tenant_id'] = $tenantId;
             $route = Route::create($routePayload);
             $route->aircraftTypes()->sync($this->selectedAircraftTypes);
+            session()->flash('message', 'Route created successfully.');
         }
 
         $this->reset(['flight_number', 'callsign_icao', 'callsign_suffix', 'departure_icao', 'arrival_icao', 'block_time', 'distance', 'route_string', 'route_type', 'selectedAircraftTypes', 'showAddModal', 'editMode', 'editingId']);
@@ -171,7 +205,8 @@ class RouteManager extends Component
             'csvFile' => 'required|mimes:csv,txt|max:2048',
         ]);
 
-        $tenant = auth()->user()->tenant;
+        $tenantId = $this->getActiveTenantId();
+        $tenant = \App\Models\Tenant::find($tenantId);
         $defaultIcao = $tenant->icao ?? 'VOPS';
 
         if (($handle = fopen($this->csvFile->getRealPath(), "r")) !== FALSE) {
@@ -186,7 +221,7 @@ class RouteManager extends Component
                     $operator = isset($data[6]) ? strtoupper(trim($data[6])) : $defaultIcao;
 
                     Route::updateOrCreate(
-                        ['tenant_id' => auth()->user()->tenant_id, 'flight_number' => $fltNum],
+                        ['tenant_id' => $tenantId, 'flight_number' => $fltNum],
                         [
                             'callsign' => $callsign,
                             'operator' => $operator,
@@ -215,14 +250,34 @@ class RouteManager extends Component
 
     public function render()
     {
-        $tenant = auth()->user()->tenant;
-        $tenantId = auth()->user()->tenant_id;
-        $routes = Route::with('aircraftTypes')->where('tenant_id', $tenantId)->get();
+        $tenantId = $this->getActiveTenantId();
+        $tenant = \App\Models\Tenant::find($tenantId);
+        
+        $query = Route::with('aircraftTypes')->where('tenant_id', $tenantId);
+
+        if (!empty($this->search)) {
+            $s = trim($this->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('flight_number', 'like', "%{$s}%")
+                  ->orWhere('callsign', 'like', "%{$s}%")
+                  ->orWhere('operator', 'like', "%{$s}%")
+                  ->orWhere('departure_icao', 'like', "%{$s}%")
+                  ->orWhere('arrival_icao', 'like', "%{$s}%");
+            });
+        }
+
+        if (!empty($this->selectedRouteType)) {
+            $query->where('route_type', $this->selectedRouteType);
+        }
+
+        $routes = $query->orderBy('flight_number', 'asc')->paginate($this->perPage);
+        $totalRoutesCount = Route::where('tenant_id', $tenantId)->count();
         $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
         $availableIcaos = $tenant ? $tenant->getAllIcaos() : ['VOPS'];
 
         return view('livewire.route-manager', [
             'routes' => $routes,
+            'totalRoutesCount' => $totalRoutesCount,
             'aircraftTypes' => $aircraftTypes,
             'availableIcaos' => $availableIcaos,
         ])->layout('layouts.app');

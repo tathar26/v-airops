@@ -124,12 +124,17 @@ class GlobalNetworkImport extends Component
             return;
         }
 
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        if (!$tenantId) {
+            $tenantId = \App\Models\Tenant::first()?->id;
+        }
+
         // We chunk the IDs into batches of 200 so we don't overwhelm a single job
         $chunks = array_chunk($this->selectedFlights, 200);
         $jobs = [];
 
         foreach ($chunks as $chunk) {
-            $jobs[] = new ImportGlobalDataToVAJob(auth()->user()->tenant_id, $chunk);
+            $jobs[] = new ImportGlobalDataToVAJob($tenantId, $chunk);
         }
 
         $batch = Bus::batch($jobs)

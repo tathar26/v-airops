@@ -9,7 +9,8 @@ class PirepsList extends Component
 {
     public function render()
     {
-        $pireps = Pirep::where('tenant_id', auth()->user()->tenant_id)
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        $pireps = Pirep::where('tenant_id', $tenantId)
             ->with(['user', 'route', 'airframe'])
             ->orderBy('created_at', 'desc')
             ->get();

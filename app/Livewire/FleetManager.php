@@ -34,9 +34,19 @@ class FleetManager extends Component
         $this->showAddModal = true;
     }
 
+    protected function getActiveTenantId(): int
+    {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        if (!$tenantId) {
+            $tenantId = \App\Models\Tenant::first()?->id ?? 1;
+        }
+        return (int) $tenantId;
+    }
+
     public function editAirframe($id)
     {
-        $airframe = Airframe::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
+        $tenantId = $this->getActiveTenantId();
+        $airframe = Airframe::where('tenant_id', $tenantId)->findOrFail($id);
         $this->editingId = $airframe->id;
         $this->registration = $airframe->registration;
         $this->aircraft_type_id = $airframe->aircraft_type_id;
@@ -47,15 +57,17 @@ class FleetManager extends Component
 
     public function deleteAirframe($id)
     {
-        Airframe::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id)->delete();
+        $tenantId = $this->getActiveTenantId();
+        Airframe::where('tenant_id', $tenantId)->findOrFail($id)->delete();
     }
 
     public function saveAirframe()
     {
         $this->validate();
+        $tenantId = $this->getActiveTenantId();
 
         if ($this->editMode) {
-            $airframe = Airframe::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingId);
+            $airframe = Airframe::where('tenant_id', $tenantId)->findOrFail($this->editingId);
             $airframe->update([
                 'aircraft_type_id' => $this->aircraft_type_id,
                 'registration' => $this->registration,
@@ -63,7 +75,7 @@ class FleetManager extends Component
             ]);
         } else {
             Airframe::create([
-                'tenant_id' => auth()->user()->tenant_id,
+                'tenant_id' => $tenantId,
                 'aircraft_type_id' => $this->aircraft_type_id,
                 'registration' => $this->registration,
                 'name' => $this->name,
@@ -162,7 +174,7 @@ class FleetManager extends Component
             return;
         }
 
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = $this->getActiveTenantId();
         $realAirframes = \App\Models\SystemGlobalAirframe::whereIn('id', $this->selectedRealWorldAirframes)->get();
         $importedCount = 0;
 
@@ -194,7 +206,7 @@ class FleetManager extends Component
             'quantityToGenerate' => 'required|integer|min:1|max:50',
         ]);
 
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = $this->getActiveTenantId();
         $globalAircraft = \App\Models\SystemGlobalAircraft::where('code', $this->globalAircraftCode)->first();
 
         $code = strtoupper($this->globalAircraftCode);
@@ -239,9 +251,9 @@ class FleetManager extends Component
 
     public function render()
     {
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = $this->getActiveTenantId();
         $airframes = Airframe::with('aircraftType')->where('tenant_id', $tenantId)->get();
-        $aircraftTypes = AircraftType::all();
+        $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
         $globalAircraftTypes = \App\Models\SystemGlobalAircraft::orderBy('code')->get();
 
         $realWorldAirframes = null;

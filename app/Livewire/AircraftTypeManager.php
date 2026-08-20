@@ -58,6 +58,15 @@ class AircraftTypeManager extends Component
         }
     }
 
+    protected function getActiveTenantId(): int
+    {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        if (!$tenantId) {
+            $tenantId = \App\Models\Tenant::first()?->id ?? 1;
+        }
+        return (int) $tenantId;
+    }
+
     public function importGlobalTypes()
     {
         if (empty($this->selectedGlobalAircraft)) {
@@ -66,7 +75,7 @@ class AircraftTypeManager extends Component
         }
 
         $globalAircraft = \App\Models\SystemGlobalAircraft::whereIn('id', $this->selectedGlobalAircraft)->get();
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = $this->getActiveTenantId();
         $importedCount = 0;
 
         foreach ($globalAircraft as $aircraft) {
@@ -83,7 +92,8 @@ class AircraftTypeManager extends Component
 
     public function editAircraftType($id)
     {
-        $aircraftType = AircraftType::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id);
+        $tenantId = $this->getActiveTenantId();
+        $aircraftType = AircraftType::where('tenant_id', $tenantId)->findOrFail($id);
         $this->editingId = $aircraftType->id;
         $this->code = $aircraftType->code;
         $this->name = $aircraftType->name;
@@ -93,22 +103,24 @@ class AircraftTypeManager extends Component
 
     public function deleteAircraftType($id)
     {
-        AircraftType::where('tenant_id', auth()->user()->tenant_id)->findOrFail($id)->delete();
+        $tenantId = $this->getActiveTenantId();
+        AircraftType::where('tenant_id', $tenantId)->findOrFail($id)->delete();
     }
 
     public function saveAircraftType()
     {
         $this->validate();
+        $tenantId = $this->getActiveTenantId();
 
         if ($this->editMode) {
-            $aircraftType = AircraftType::where('tenant_id', auth()->user()->tenant_id)->findOrFail($this->editingId);
+            $aircraftType = AircraftType::where('tenant_id', $tenantId)->findOrFail($this->editingId);
             $aircraftType->update([
                 'code' => strtoupper($this->code),
                 'name' => $this->name,
             ]);
         } else {
             AircraftType::create([
-                'tenant_id' => auth()->user()->tenant_id,
+                'tenant_id' => $tenantId,
                 'code' => strtoupper($this->code),
                 'name' => $this->name,
             ]);
@@ -119,7 +131,7 @@ class AircraftTypeManager extends Component
 
     public function render()
     {
-        $tenantId = auth()->user()->tenant_id;
+        $tenantId = $this->getActiveTenantId();
         $aircraftTypes = AircraftType::where('tenant_id', $tenantId)->get();
 
         $globalQuery = \App\Models\SystemGlobalAircraft::query();

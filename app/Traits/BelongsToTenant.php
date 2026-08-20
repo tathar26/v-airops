@@ -14,14 +14,20 @@ trait BelongsToTenant
         // Master admins (tenant_id = null) will bypass this scope or need special handling.
         
         static::addGlobalScope('tenant', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->tenant_id) {
-                $builder->where($builder->getModel()->getTable() . '.tenant_id', auth()->user()->tenant_id);
+            if (auth()->check()) {
+                $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+                if ($tenantId) {
+                    $builder->where($builder->getModel()->getTable() . '.tenant_id', $tenantId);
+                }
             }
         });
 
         static::creating(function ($model) {
-            if (auth()->check() && auth()->user()->tenant_id) {
-                $model->tenant_id = auth()->user()->tenant_id;
+            if (empty($model->tenant_id) && auth()->check()) {
+                $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+                if ($tenantId) {
+                    $model->tenant_id = $tenantId;
+                }
             }
         });
     }
