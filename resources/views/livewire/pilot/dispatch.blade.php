@@ -61,31 +61,73 @@
         // Callsign / Flight Number
         $headerCallsign = strtoupper($safeStr($sbData['params']['callsign'] ?? ($sbData['atc']['callsign'] ?? ($sbData['general']['callsign'] ?? ($callsign ?? 'FL101')))));
         
-        // Times (ETD, ETA, ETE)
-        $headerEtd = $departure_time;
-        if (!empty($sbData['times']['sched_out'])) {
-            $headerEtd = is_numeric($sbData['times']['sched_out']) ? date('H:i', (int)$sbData['times']['sched_out']) : substr((string)$sbData['times']['sched_out'], 0, 5);
-        } elseif (!empty($sbData['times']['est_out'])) {
-            $headerEtd = is_numeric($sbData['times']['est_out']) ? date('H:i', (int)$sbData['times']['est_out']) : substr((string)$sbData['times']['est_out'], 0, 5);
-        }
-        
-        $headerEte = '01:30';
-        if (!empty($sbData['times']['est_time_enroute'])) {
-            $eteSec = (int) $safeNum($sbData['times']['est_time_enroute']);
-            $headerEte = sprintf('%02d:%02d', floor($eteSec / 3600), floor(($eteSec % 3600) / 60));
-        } elseif (!empty($sbData['general']['est_time_enroute'])) {
-            $headerEte = $safeStr($sbData['general']['est_time_enroute']);
-        } elseif ($booking->route?->flight_time) {
-            $headerEte = sprintf('%02d:%02d', floor($booking->route->flight_time / 60), $booking->route->flight_time % 60);
-        }
-        
-        $headerEta = '--:--';
-        if (!empty($sbData['times']['sched_in'])) {
-            $headerEta = is_numeric($sbData['times']['sched_in']) ? date('H:i', (int)$sbData['times']['sched_in']) : substr((string)$sbData['times']['sched_in'], 0, 5);
-        } elseif (!empty($sbData['times']['est_in'])) {
-            $headerEta = is_numeric($sbData['times']['est_in']) ? date('H:i', (int)$sbData['times']['est_in']) : substr((string)$sbData['times']['est_in'], 0, 5);
-        } elseif ($headerEtd && !empty($sbData['times']['est_time_enroute'])) {
-            $headerEta = date('H:i', strtotime($headerEtd . ' +' . round((int)$safeNum($sbData['times']['est_time_enroute'])/60) . ' minutes'));
+        // Time Parsing Functions
+        $formatTime = function($val) {
+            if (empty($val) || is_array($val)) return null;
+            $str = trim((string)$val);
+            if (is_numeric($str)) {
+                $num = (int)$str;
+                if ($num > 1000000) {
+                    return date('H:i', $num) . 'z';
+                }
+                if (strlen($str) === 4) {
+                    return substr($str, 0, 2) . ':' . substr($str, 2, 2) . 'z';
+                }
+            }
+            if (preg_match('/(\d{2}:\d{2})/', $str, $matches)) {
+                return $matches[1] . 'z';
+            }
+            return $str;
+        };
+
+        $formatEte = function($val) {
+            if (empty($val) || is_array($val)) return null;
+            if (is_numeric($val)) {
+                $s = (int)$val;
+                if ($s > 0) {
+                    return sprintf('%02d:%02d', floor($s / 3600), floor(($s % 3600) / 60));
+                }
+            }
+            $str = trim((string)$val);
+            if (preg_match('/(\d{1,2}:\d{2})/', $str, $matches)) {
+                return $matches[1];
+            }
+            return $str;
+        };
+
+        // ETD (Estimated Time of Departure)
+        $rawEtd = $sbData['times']['est_out'] 
+            ?? ($sbData['times']['sched_out'] 
+            ?? ($sbData['times']['est_off'] 
+            ?? ($sbData['times']['sched_off'] 
+            ?? ($sbData['times']['orig_etd'] 
+            ?? ($sbData['general']['etd'] 
+            ?? ($sbData['general']['std'] 
+            ?? ($departure_time ?: date('H:i'))))))));
+        $headerEtd = $formatTime($rawEtd) ?? ($departure_time ? $departure_time . 'z' : date('H:i') . 'z');
+
+        // ETE (Estimated Time Enroute)
+        $rawEte = $sbData['times']['est_time_enroute'] 
+            ?? ($sbData['times']['sched_time_enroute'] 
+            ?? ($sbData['general']['est_time_enroute'] 
+            ?? ($sbData['times']['est_block'] 
+            ?? ($booking->route?->flight_time ? ($booking->route->flight_time * 60) : 5400))));
+        $headerEte = $formatEte($rawEte) ?? '01:30';
+
+        // ETA (Estimated Time of Arrival)
+        $rawEta = $sbData['times']['est_in'] 
+            ?? ($sbData['times']['sched_in'] 
+            ?? ($sbData['times']['est_on'] 
+            ?? ($sbData['times']['sched_on'] 
+            ?? ($sbData['times']['dest_eta'] 
+            ?? ($sbData['general']['eta'] 
+            ?? ($sbData['general']['sta'] ?? null))))));
+        $headerEta = $formatTime($rawEta);
+        if (!$headerEta) {
+            $cleanEtd = str_replace('z', '', $headerEtd);
+            $eteParts = explode(':', $headerEte);
+            $eteMinutes = ((int)($eteParts[0] ?? 1) * 60) + (int)($eteParts[1] ?? 30);
+            $headerEta = date('H:i', strtotime($cleanEtd . ' +' . $eteMinutes . ' minutes')) . 'z';
         }
         
         // Operator
@@ -96,9 +138,15 @@
             
         // Airframe / Registration
         $headerReg = $safeStr($sbData['aircraft']['reg'] 
-            ?? ($selectedAirframe ? $selectedAirframe->registration : ($booking->airframe?->registration ?? 'HB-AYE')));
+            ?? ($sbData['general']['registration']
+            ?? ($selectedAirframe ? $selectedAirframe->registration : ($booking->airframe?->registration ?? 'HB-AYE'))));
         $headerType = $safeStr($sbData['aircraft']['icao_code'] 
-            ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'))));
+            ?? ($sbData['aircraft']['icaocode']
+            ?? ($sbData['general']['aircraft_type']
+            ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'))))));
+
+        // OFP Layout format
+        $headerOfpLayout = strtoupper($safeStr($sbData['general']['ofp_layout'] ?? ($sbData['params']['planformat'] ?? ($ofp_format ?: ($resolvedFormat ?? 'LIDO')))));
     @endphp
 
     @if($is_loading_simbrief && !$showOfpView)
@@ -197,6 +245,9 @@
                     <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-black/40 text-tenant-accent border border-tenant-accent/40 font-mono tracking-wide">
                         {{ $headerCallsign }}
                     </span>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-black/40 text-amber-300 border border-amber-500/30 font-mono flex items-center gap-1.5 shadow-sm">
+                        ✈️ {{ $headerReg }} ({{ $headerType }})
+                    </span>
                     @if($showOfpView || $booking->status === 'dispatched')
                         <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Dispatched & Active
@@ -222,9 +273,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-6 text-sm pt-3 border-t" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
-                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">ETD</span> <span class="font-bold font-mono" style="color: var(--tenant-card-text, #ffffff);">{{ $headerEtd }}</span></div>
-                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">ETA</span> <span class="font-bold font-mono" style="color: var(--tenant-card-text, #ffffff);">{{ $headerEta }}</span></div>
+                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">ETD</span> <span class="font-bold font-mono text-emerald-400">{{ $headerEtd }}</span></div>
+                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">ETA</span> <span class="font-bold font-mono text-sky-400">{{ $headerEta }}</span></div>
                 <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">ETE</span> <span class="font-bold font-mono" style="color: var(--tenant-card-text, #ffffff);">{{ $headerEte }}</span></div>
+                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">Aircraft</span> <span class="font-bold font-mono text-amber-300">{{ $headerReg }} ({{ $headerType }})</span></div>
+                <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">OFP Layout</span> <span class="font-bold font-mono text-tenant-accent">{{ $headerOfpLayout }}</span></div>
                 <div><span style="color: var(--tenant-card-muted, #94a3b8);" class="uppercase text-xs font-bold mr-1.5">Operator</span> <span class="font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $headerOperator }}</span></div>
             </div>
 
@@ -233,6 +286,7 @@
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Departure Airport:</strong> {{ $headerDep }}</p>
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Arrival Airport:</strong> {{ $headerArr }}</p>
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Aircraft & Registration:</strong> {{ $headerType }} ({{ $headerReg }})</p>
+                    <p><strong style="color: var(--tenant-card-text, #ffffff);">OFP Layout Format:</strong> {{ $headerOfpLayout }}</p>
                     <p><strong style="color: var(--tenant-card-text, #ffffff);">Planned Route:</strong> {{ $safeStr($sbData['general']['route'] ?? ($routing ?: 'Direct / SimBrief Auto-routing')) }}</p>
                 </div>
             @endif
@@ -253,7 +307,7 @@
                                 <span class="text-xs bg-black/30 text-slate-300 border border-white/10 px-2.5 py-0.5 rounded-full font-medium">Custom OFP</span>
                             @endif
                         </h2>
-                        <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">OFP Release for {{ $safeStr($ofp['general']['callsign'] ?? $callsign) }} · Format: {{ $safeStr($ofp['general']['ofp_layout'] ?? 'LIDO') }}</p>
+                        <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">OFP Release for {{ $safeStr($ofp['general']['callsign'] ?? $callsign) }} · Format: <strong>{{ $headerOfpLayout }}</strong> · Aircraft: <strong>{{ $headerReg }} ({{ $headerType }})</strong></p>
                     </div>
 
                     <div class="flex gap-3 text-xs flex-wrap">
@@ -331,19 +385,22 @@
                             <div class="text-2xl font-black text-sky-400 font-mono">{{ $ofpFl }} <span class="text-xs font-normal opacity-70">({{ number_format($ofpFt) }} ft)</span></div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Cost Index:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['cost_index'] ?? 4) }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Est. ETE:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Est. ETE:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $headerEte }}</span></div>
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Distance:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['air_distance'] ?? 374) }} nm</span></div>
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Network:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $network }}</span></div>
                             </div>
                         </div>
 
                         <div class="bg-black/35 border border-white/10 p-5 rounded-2xl space-y-3 shadow-inner">
-                            <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Alternates</span>
-                            <div class="text-xl font-black text-amber-400 font-mono">{{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}</div>
+                            <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--tenant-card-muted, #94a3b8);">Assigned Aircraft</span>
+                            <div class="text-xl font-black text-amber-400 font-mono flex items-center gap-2">
+                                <span>✈️</span> {{ $headerReg }} <span class="text-xs font-bold text-white px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">{{ $headerType }}</span>
+                            </div>
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate2'] ?? 'EDHL') }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Airframe:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Airframe:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $selectedAirframe ? $selectedAirframe->registration . ' (' . ($selectedAirframe->aircraftType->name ?? $selectedAirframe->aircraftType->code) . ')' : $headerReg . ' (' . $headerType . ')' }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">OFP Format:</span> <span class="font-mono font-bold text-tenant-accent">{{ $headerOfpLayout }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate'] ?? ($alternate_1 ?: 'EDDW')) }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate2'] ?? ($alternate_2 ?: 'EDHL')) }}</span></div>
                             </div>
                         </div>
                     </div>
@@ -382,7 +439,7 @@
                     <div class="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/10 text-xs">
                         <div class="flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="font-bold">Official Operational Flight Plan &bull; <strong>{{ $safeStr($ofp['general']['ofp_layout'] ?? 'LIDO') }}</strong></span>
+                            <span class="font-bold">Official Operational Flight Plan &bull; <strong>{{ $headerOfpLayout }}</strong></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" onclick="const el = document.getElementById('ofp-full-text'); navigator.clipboard.writeText(el.innerText || el.textContent); alert('OFP copied to clipboard!');" class="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition">
@@ -610,7 +667,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                 </div>
 
                 <!-- Parameters Pill Summary Bar -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs bg-black/40 p-4 rounded-xl border border-white/10">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 text-xs bg-black/40 p-4 rounded-xl border border-white/10">
                     <div>
                         <span class="text-blue-200 block text-[10px] uppercase font-semibold">Aircraft</span>
                         <span class="font-bold text-white">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} · {{ $selectedAirframe ? $selectedAirframe->aircraftType->code : 'A20N' }}</span>
@@ -634,13 +691,19 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                     </div>
 
                     <div>
+                        <span class="text-blue-200 block text-[10px] uppercase font-semibold">OFP Format</span>
+                        <span class="font-bold text-amber-300 uppercase font-mono">{{ $ofp_format ?: ($resolvedFormat ?? 'LIDO') }}</span>
+                        <button wire:click="$set('showSectionAircraft', true)" class="text-blue-300 hover:text-white underline block text-[10px] mt-0.5">change</button>
+                    </div>
+
+                    <div>
                         <span class="text-blue-200 block text-[10px] uppercase font-semibold">Payload</span>
                         <span class="font-bold text-white">{{ number_format($estimated_zfw) }} kg ZFW</span>
                     </div>
 
                     <div>
                         <span class="text-blue-200 block text-[10px] uppercase font-semibold">SimBrief</span>
-                        <span class="font-bold text-white">{{ $dispatch_via_simbrief ? 'On' : 'Off' }} · {{ $num_alternates }} alternate</span>
+                        <span class="font-bold text-white">{{ $dispatch_via_simbrief ? 'On' : 'Off' }} · {{ $num_alternates }} altn</span>
                         <button wire:click="$set('showSectionAlternates', true)" class="text-blue-300 hover:text-white underline block text-[10px] mt-0.5">adjust</button>
                     </div>
                 </div>
@@ -667,7 +730,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                         </div>
                         <div>
                             <h3 class="font-bold text-white text-base">Aircraft & SimBrief Sync</h3>
-                            <p class="text-xs text-gray-400">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} · {{ strtoupper($callsign) }} · {{ strtoupper($flight_number) }} · SimBrief {{ $dispatch_via_simbrief ? 'on' : 'off' }}</p>
+                            <p class="text-xs text-gray-400">{{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} · {{ strtoupper($callsign) }} · {{ strtoupper($flight_number) }} · Layout {{ $ofp_format ?: ($resolvedFormat ?? 'LIDO') }} · SimBrief {{ $dispatch_via_simbrief ? 'on' : 'off' }}</p>
                         </div>
                     </div>
                     <span class="text-gray-400">{{ $showSectionAircraft ? '∧' : '∨' }}</span>
@@ -692,20 +755,31 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             <p class="text-[11px] text-gray-400">Enter your Navigraph Alias or SimBrief Pilot ID above to pull your exact live generated OFP directly into V-Ops.</p>
                         </div>
 
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <x-label for="airframe_id" value="{{ __('Aircraft') }}" class="text-white font-medium" />
-                                <div class="flex gap-3 text-xs">
-                                    <a href="{{ route('fleet') }}" target="_blank" class="text-tenant-accent hover:underline">Aircraft Picker</a>
-                                    <a href="https://www.flightradar24.com" target="_blank" class="text-gray-400 hover:text-white underline">FR24 Lookup</a>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <x-label for="airframe_id" value="{{ __('Aircraft') }}" class="text-white font-medium" />
+                                    <div class="flex gap-3 text-xs">
+                                        <a href="{{ route('fleet') }}" target="_blank" class="text-tenant-accent hover:underline">Aircraft Picker</a>
+                                        <a href="https://www.flightradar24.com" target="_blank" class="text-gray-400 hover:text-white underline">FR24 Lookup</a>
+                                    </div>
                                 </div>
+                                <select id="airframe_id" wire:model.live="airframe_id" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent">
+                                    <option value="">Select Airframe...</option>
+                                    @foreach($fleet as $airframe)
+                                        <option value="{{ $airframe->id }}">{{ $airframe->registration }} | {{ $airframe->aircraftType->name ?? $airframe->aircraftType->code }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <select id="airframe_id" wire:model.live="airframe_id" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent">
-                                <option value="">Select Airframe...</option>
-                                @foreach($fleet as $airframe)
-                                    <option value="{{ $airframe->id }}">{{ $airframe->registration }} | {{ $airframe->aircraftType->name ?? $airframe->aircraftType->code }}</option>
-                                @endforeach
-                            </select>
+
+                            <div>
+                                <x-label for="ofp_format" value="{{ __('SimBrief OFP Format / Layout') }}" class="text-white font-medium mb-1" />
+                                <select id="ofp_format" wire:model.live="ofp_format" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent font-semibold">
+                                    @foreach($availableOfpFormats as $fmtKey => $fmtName)
+                                        <option value="{{ $fmtKey }}">{{ $fmtName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

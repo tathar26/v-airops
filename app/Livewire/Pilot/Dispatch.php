@@ -49,6 +49,9 @@ class Dispatch extends Component
     public $network = 'Offline';
     public $copilot_user_id = null;
 
+    // OFP Format / Layout
+    public $ofp_format = '';
+
     // UI States
     public $showSectionAircraft = true;
     public $showSectionSchedule = true;
@@ -108,6 +111,12 @@ class Dispatch extends Component
         $this->routing = $simData['general']['route'] ?? ($simData['routing'] ?? ($booking->route->route_string ?? ''));
         $this->flight_level = $simData['general']['initial_altitude'] ?? ($simData['flight_level'] ?? '');
         $this->cost_index = $simData['general']['cost_index'] ?? ($simData['cost_index'] ?? 4);
+
+        // OFP Layout Format
+        $this->ofp_format = strtoupper((string)($simData['general']['ofp_layout'] 
+            ?? ($simData['planformat'] 
+            ?? ($profile?->simbrief_ofp_format 
+            ?? ($tenant?->default_simbrief_ofp_format ?? 'LIDO')))));
 
         // Alternates Defaults
         $this->auto_find_alternates = $simData['auto_find_alternates'] ?? true;
@@ -367,10 +376,14 @@ class Dispatch extends Component
     public function generateOfpData()
     {
         $selectedAirframe = Airframe::with('aircraftType')->find($this->airframe_id);
+        $targetTypeCode = $selectedAirframe?->aircraftType?->code ?? ($this->booking->route->aircraftType->code ?? ($this->booking->route->aircraftTypes?->first()?->code ?? 'A20N'));
+        $targetRegCode = $selectedAirframe ? $selectedAirframe->registration : ($this->booking->airframe?->registration ?? 'HB-AYE');
+        $targetPlanFormat = strtoupper((string)($this->ofp_format ?: (auth()->user()->pilotProfiles()->first()?->simbrief_ofp_format ?: ($this->booking->tenant?->default_simbrief_ofp_format ?? 'LIDO'))));
 
         $dispatchParams = [
-            'type' => $selectedAirframe ? $selectedAirframe->aircraftType->code : ($this->booking->route->aircraftType->code ?? 'A20N'),
-            'reg' => $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE',
+            'type' => $targetTypeCode,
+            'reg' => $targetRegCode,
+            'airframe_id' => $this->airframe_id,
             'callsign' => strtoupper($this->callsign),
             'flight_number' => strtoupper($this->flight_number),
             'orig' => $this->booking->route->departure_icao,
@@ -389,6 +402,7 @@ class Dispatch extends Component
             'dispatch_via_simbrief' => $this->dispatch_via_simbrief,
             'network' => $this->network,
             'copilot_user_id' => $this->copilot_user_id,
+            'planformat' => $targetPlanFormat,
             'simbrief_username' => trim($this->simbrief_username),
         ];
 
@@ -489,6 +503,34 @@ class Dispatch extends Component
         $depH = (int)date('H', strtotime($this->departure_time ?: date('H:i')));
         $depM = (int)date('i', strtotime($this->departure_time ?: date('H:i')));
 
+        $profile = auth()->user()->pilotProfiles()->first();
+        $tenant = $this->booking->tenant ?? auth()->user()->tenant;
+        $resolvedFormat = strtoupper((string)($this->ofp_format ?: ($profile?->simbrief_ofp_format ?: ($tenant?->default_simbrief_ofp_format ?? 'LIDO'))));
+
+        $availableOfpFormats = [
+            'LIDO' => 'LIDO (Standard IATA / European)',
+            'EZY' => 'EZY (easyJet)',
+            'BAW' => 'BAW (British Airways)',
+            'DLH' => 'DLH (Lufthansa)',
+            'AFR' => 'AFR (Air France)',
+            'KLM' => 'KLM (Royal Dutch Airlines)',
+            'RYR' => 'RYR (Ryanair)',
+            'AAL' => 'AAL (American Airlines)',
+            'DAL' => 'DAL (Delta Air Lines)',
+            'UAL' => 'UAL (United Airlines)',
+            'SWA' => 'SWA (Southwest Airlines)',
+            'ACA' => 'ACA (Air Canada)',
+            'QFA' => 'QFA (Qantas)',
+            'UAE' => 'UAE (Emirates)',
+            'THY' => 'THY (Turkish Airlines)',
+            'WZZ' => 'WZZ (Wizz Air)',
+            'SAS' => 'SAS (Scandinavian Airlines)',
+            'FIN' => 'FIN (Finnair)',
+            'VOZ' => 'VOZ (Virgin Australia)',
+            'VIR' => 'VIR (Virgin Atlantic)',
+            'JBU' => 'JBU (JetBlue)',
+        ];
+
         // Navigraph SimBrief Dispatch Redirect Parameters
         $simbriefParams = [
             'airline' => $airlineCode,
@@ -513,7 +555,7 @@ class Dispatch extends Component
             'pax' => (int)$this->passengers,
             'cargo' => round(($this->hold_bags * 15) / 1000, 1),
             'units' => 'KGS',
-            'planformat' => auth()->user()->pilotProfiles()->first()->simbrief_ofp_format ?? 'LIDO',
+            'planformat' => $resolvedFormat,
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 
@@ -525,6 +567,8 @@ class Dispatch extends Component
             'fleet' => $fleet,
             'selectedAirframe' => $selectedAirframe,
             'copilots' => $copilots,
+            'availableOfpFormats' => $availableOfpFormats,
+            'resolvedFormat' => $resolvedFormat,
             'simbriefParams' => $simbriefParams,
             'simbriefPopupUrl' => $simbriefPopupUrl,
         ])->layout('layouts.app');

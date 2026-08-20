@@ -58,6 +58,15 @@ class SimBriefService
                     if (empty($json['general']['route']) && isset($json['general']['route'])) {
                         $json['general']['route'] = $json['general']['route'];
                     }
+                    if (empty($json['general']['ofp_layout'])) {
+                        $json['general']['ofp_layout'] = strtoupper((string)($json['params']['planformat'] ?? ($json['params']['plan_format'] ?? ($json['ofp_layout'] ?? ($json['general']['layout'] ?? 'LIDO')))));
+                    }
+                    if (empty($json['general']['aircraft_type']) && isset($json['aircraft']['icaocode'])) {
+                        $json['general']['aircraft_type'] = $json['aircraft']['icaocode'];
+                    }
+                    if (empty($json['general']['registration']) && isset($json['aircraft']['reg'])) {
+                        $json['general']['registration'] = $json['aircraft']['reg'];
+                    }
 
                     return $json;
                 }
