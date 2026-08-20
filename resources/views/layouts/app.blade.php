@@ -331,32 +331,33 @@
                 color: var(--tenant-card-muted) !important;
             }
 
-            /* ── Dispatch Console & Dark Cards (avionics — always dark) */
-            .dispatch-console,
-            .dark-card { color: #ffffff !important; }
-            .dispatch-console .text-white, .dark-card .text-white { color: #ffffff !important; }
-            .dispatch-console .text-gray-200, .dark-card .text-gray-200 { color: #e2e8f0 !important; }
-            .dispatch-console .text-gray-300, .dark-card .text-gray-300 { color: #cbd5e1 !important; }
-            .dispatch-console .text-gray-400, .dark-card .text-gray-400 { color: #94a3b8 !important; }
-            .dispatch-console .text-gray-500, .dark-card .text-gray-500 { color: #64748b !important; }
-            .dispatch-console input[type="text"],
-            .dispatch-console input[type="number"],
-            .dispatch-console input[type="time"],
-            .dispatch-console input[type="date"],
-            .dispatch-console select,
-            .dispatch-console textarea,
-            .dark-card input[type="text"],
-            .dark-card input[type="number"],
-            .dark-card input[type="time"],
-            .dark-card input[type="date"],
-            .dark-card select,
-            .dark-card textarea {
-                background-color: #1e293b !important;
-                border-color: #334155 !important;
-                color: #ffffff !important;
+            /* ── Dispatch Console & Avionics Cards */
+            .dispatch-console {
+                color: var(--tenant-card-text, #ffffff);
             }
-            .dispatch-console select option, .dark-card select option { background-color: #1e293b !important; color: #ffffff !important; }
-            .dispatch-console input::placeholder, .dark-card input::placeholder { color: #64748b !important; }
+            .dispatch-console .va-card,
+            .dispatch-console .dispatch-card {
+                background-color: var(--tenant-card-bg, #12161F);
+                color: var(--tenant-card-text, #ffffff);
+                border-color: var(--tenant-input-border, rgba(255,255,255,0.1));
+            }
+            .dispatch-console .text-tenant-main {
+                color: var(--tenant-card-text, #ffffff) !important;
+            }
+            .dispatch-console .text-tenant-muted {
+                color: var(--tenant-card-muted, #94a3b8) !important;
+            }
+
+            /* Dedicated Raw Avionics Terminals (always dark for realistic flight deck displays) */
+            .avionics-terminal {
+                background-color: #090C12 !important;
+                color: #e2e8f0 !important;
+                border-color: rgba(255,255,255,0.12) !important;
+            }
+            .avionics-terminal pre,
+            .avionics-terminal code {
+                color: #4ade80 !important;
+            }
         </style>
     </head>
     <body class="font-sans antialiased selection:bg-tenant-accent selection:text-white {{ $isLight ? 'theme-light' : '' }}">
