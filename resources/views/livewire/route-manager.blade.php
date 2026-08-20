@@ -11,8 +11,8 @@
         </div>
     @endif
 
-    <div class="va-main-panel rounded-2xl overflow-hidden shadow-2xl mt-6">
-        <div class="px-6 py-5 border-b border-white/10 flex justify-between items-center flex-wrap gap-4" style="background-color: var(--tenant-panel-bg, #181D29);">
+    <div class="va-card rounded-2xl overflow-hidden shadow-2xl mt-6 border" style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.12)); color: var(--tenant-card-text, #ffffff);">
+        <div class="px-6 py-5 border-b flex justify-between items-center flex-wrap gap-4" style="background-color: var(--tenant-panel-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
             <div>
                 <h3 class="text-base font-bold tracking-wide" style="color: var(--tenant-panel-text, #ffffff);">ROUTE MANAGEMENT &amp; SCHEDULES</h3>
                 <p class="text-xs mt-0.5" style="color: var(--tenant-card-muted, #94a3b8);">
@@ -26,7 +26,7 @@
                 </button>
                 <div class="relative flex items-center">
                     <input type="file" wire:model="csvFile" id="csvRouteFile" class="hidden" accept=".csv,.txt" />
-                    <label for="csvRouteFile" class="cursor-pointer btn-secondary px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition border border-white/10 mr-2 inline-flex items-center gap-1.5">
+                    <label for="csvRouteFile" class="cursor-pointer btn-secondary px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition border mr-2 inline-flex items-center gap-1.5" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                         Select CSV
                     </label>
                     @if($csvFile)
@@ -64,7 +64,7 @@
                     <button wire:click="massDelete" wire:confirm="Are you sure you want to permanently delete these {{ count($selectedRoutes) }} route(s)?" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition">
                         🗑️ Delete Selected
                     </button>
-                    <button wire:click="$set('selectedRoutes', []); $set('selectAll', false)" class="text-xs text-slate-300 hover:text-white px-2 py-1 underline">
+                    <button wire:click="$set('selectedRoutes', []); $set('selectAll', false)" class="text-xs hover:underline px-2 py-1" style="color: var(--tenant-card-muted, #cbd5e1);">
                         Clear Selection
                     </button>
                 </div>
@@ -72,7 +72,7 @@
         @endif
 
         <!-- Search & Filter Controls with Autocomplete -->
-        <div class="px-6 py-4 border-b border-white/5 flex flex-wrap items-center justify-between gap-3" style="background-color: var(--tenant-card-bg, #141923);">
+        <div class="px-6 py-4 border-b flex flex-wrap items-center justify-between gap-3" style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
             <div class="flex items-center gap-3 flex-1 min-w-[260px] max-w-md">
                 <div class="relative w-full">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -82,7 +82,8 @@
                            list="route-autocomplete"
                            wire:model.live.debounce.300ms="search" 
                            placeholder="Search flight #, callsign, ICAO, DEP, ARR, type..." 
-                           class="pl-9 pr-4 py-2 rounded-xl text-xs w-full transition" />
+                           class="pl-9 pr-4 py-2 rounded-xl text-xs w-full transition border" 
+                           style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-input-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));" />
                     
                     <datalist id="route-autocomplete">
                         @foreach($autocompleteList as $item)
@@ -91,7 +92,7 @@
                     </datalist>
                 </div>
                 @if($search || $selectedRouteType || $filterDepIcao || $filterArrIcao || $filterAircraftType)
-                    <button wire:click="resetFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 flex-shrink-0">Clear</button>
+                    <button wire:click="resetFilters" class="text-xs text-tenant-accent hover:underline px-2 py-1 flex-shrink-0 font-semibold">Clear</button>
                 @endif
             </div>
 
@@ -149,8 +150,8 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-white/5">
-                <thead class="bg-white/5">
+            <table class="min-w-full divide-y" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
+                <thead style="background-color: rgba(0,0,0,0.12); border-bottom: 1px solid var(--tenant-input-border, rgba(255,255,255,0.08));">
                     <tr>
                         <th class="p-4 w-12 text-center">
                             <input type="checkbox" wire:model.live="selectAll" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent cursor-pointer">
@@ -165,7 +166,7 @@
                         <th class="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.05));">
                     @forelse($routes as $route)
                     <tr class="hover:bg-white/5 transition-colors">
                         <!-- Selection Checkbox -->
@@ -178,23 +179,26 @@
                             {{ $route->flight_number }}
                         </td>
 
-                        <!-- ATC Callsign (Primary Accent Color & Solid Badge) -->
+                        <!-- ATC Callsign -->
                         <td class="px-5 py-4 whitespace-nowrap text-sm font-mono">
-                            <span class="px-2.5 py-1 rounded-md bg-[#181D29] text-tenant-accent border border-tenant-accent/40 font-mono font-bold text-xs tracking-wider shadow-sm inline-block">
+                            <span class="px-2.5 py-1 rounded-lg font-mono font-bold text-xs tracking-wider shadow-sm inline-block border"
+                                  style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-accent); border-color: var(--tenant-accent);">
                                 {{ $route->callsign ?: $route->flight_number }}
                             </span>
                         </td>
 
                         <!-- Departure -->
                         <td class="px-5 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg bg-tenant-accent/15 text-tenant-accent">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg border"
+                                  style="background-color: rgba(var(--tenant-accent-rgb, 249, 115, 22), 0.12); color: var(--tenant-accent); border-color: rgba(var(--tenant-accent-rgb, 249, 115, 22), 0.3);">
                                 {{ $route->departure_icao }}
                             </span>
                         </td>
 
                         <!-- Arrival -->
                         <td class="px-5 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg bg-tenant-accent/15 text-tenant-accent">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold font-mono rounded-lg border"
+                                  style="background-color: rgba(var(--tenant-accent-rgb, 249, 115, 22), 0.12); color: var(--tenant-accent); border-color: rgba(var(--tenant-accent-rgb, 249, 115, 22), 0.3);">
                                 {{ $route->arrival_icao }}
                             </span>
                         </td>
@@ -206,7 +210,8 @@
 
                         <!-- Route Type -->
                         <td class="px-5 py-4 whitespace-nowrap text-sm">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-lg {{ $route->route_type === 'Charter' ? 'bg-purple-900/50 text-purple-300' : ($route->route_type === 'Cargo' ? 'bg-yellow-900/50 text-yellow-300' : 'bg-blue-900/50 text-blue-300') }}">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-lg border"
+                                  style="{{ $route->route_type === 'Charter' ? 'background-color: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);' : ($route->route_type === 'Cargo' ? 'background-color: rgba(234, 179, 8, 0.15); color: #facc15; border-color: rgba(234, 179, 8, 0.3);' : 'background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);') }}">
                                 {{ $route->route_type }}
                             </span>
                         </td>
@@ -214,23 +219,24 @@
                         <!-- Aircraft Types -->
                         <td class="px-5 py-4 text-sm">
                             @forelse($route->aircraftTypes as $type)
-                                <span class="px-2 py-1 mr-1 mb-1 inline-block text-xs font-mono font-bold rounded-md bg-slate-800 text-slate-300 border border-slate-700">{{ $type->code }}</span>
+                                <span class="px-2 py-1 mr-1 mb-1 inline-block text-xs font-mono font-bold rounded-md border"
+                                      style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-card-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">{{ $type->code }}</span>
                             @empty
-                                <span class="text-xs text-gray-500 italic">Any</span>
+                                <span class="text-xs italic" style="color: var(--tenant-card-muted, #64748b);">Any</span>
                             @endforelse
                         </td>
 
                         <!-- Actions -->
                         <td class="px-5 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button wire:click="editRoute({{ $route->id }})" class="text-tenant-accent hover:opacity-80 transition-colors mr-3 font-semibold">Edit</button>
-                            <button wire:click="deleteRoute({{ $route->id }})" wire:confirm="Are you sure you want to delete this route?" class="text-red-400 hover:text-red-300 transition-colors font-semibold">Delete</button>
+                            <button wire:click="editRoute({{ $route->id }})" class="text-tenant-accent hover:underline transition-colors mr-3 font-bold">Edit</button>
+                            <button wire:click="deleteRoute({{ $route->id }})" wire:confirm="Are you sure you want to delete this route?" class="text-red-400 hover:text-red-300 hover:underline transition-colors font-bold">Delete</button>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-8 text-center text-gray-400">
+                        <td colspan="9" class="px-6 py-8 text-center" style="color: var(--tenant-card-muted, #94a3b8);">
                             @if($search || $selectedRouteType || $filterDepIcao || $filterArrIcao || $filterAircraftType)
-                                No routes matched your filter. <button wire:click="resetFilters" class="text-tenant-accent underline ml-1">Reset filters</button>
+                                No routes matched your filter. <button wire:click="resetFilters" class="text-tenant-accent underline ml-1 font-semibold">Reset filters</button>
                             @else
                                 No routes in your network. Click <strong>Add Route</strong> or <strong>Global Network Import</strong> above!
                             @endif
@@ -242,7 +248,7 @@
         </div>
 
         @if($routes->hasPages())
-            <div class="px-6 py-4 border-t border-white/5" style="background-color: var(--tenant-card-bg, #141923);">
+            <div class="px-6 py-4 border-t" style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
                 {{ $routes->links() }}
             </div>
         @endif
@@ -265,7 +271,7 @@
                 </div>
                 <div class="col-span-1">
                     <x-label for="route_type" value="{{ __('Route Type') }}" class="font-semibold text-xs uppercase tracking-wider mb-1.5" style="color: var(--tenant-card-text, #ffffff);" />
-                    <select id="route_type" wire:model="route_type" class="mt-1 block w-full rounded-xl shadow-sm text-sm">
+                    <select id="route_type" wire:model="route_type" class="mt-1 block w-full rounded-xl shadow-sm text-sm" style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-input-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                         <option value="Scheduled">Scheduled</option>
                         <option value="Charter">Charter</option>
                         <option value="Cargo">Cargo</option>
@@ -275,11 +281,11 @@
             </div>
 
             <!-- ATC Callsign Selection (ICAO Prefix Dropdown + Callsign Suffix) -->
-            <div class="p-4 rounded-xl border border-white/10 mb-4 space-y-2" style="background-color: var(--tenant-input-bg, #141923);">
+            <div class="p-4 rounded-xl border mb-4 space-y-2" style="background-color: var(--tenant-input-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                 <div class="flex items-center justify-between">
-                    <x-label value="{{ __('ATC Callsign Configuration (ICAO Prefix + Suffix)') }}" class="text-amber-300 font-bold text-xs uppercase tracking-wider" />
+                    <x-label value="{{ __('ATC Callsign Configuration (ICAO Prefix + Suffix)') }}" class="text-tenant-accent font-bold text-xs uppercase tracking-wider" />
                     @if($callsign_icao && $callsign_suffix)
-                        <span class="px-2.5 py-1 rounded bg-[#181D29] text-amber-300 font-mono text-xs font-bold border border-amber-500/40 shadow-sm">
+                        <span class="px-2.5 py-1 rounded text-tenant-accent font-mono text-xs font-bold border shadow-sm" style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-accent);">
                             Preview: {{ strtoupper($callsign_icao . $callsign_suffix) }}
                         </span>
                     @endif
@@ -289,7 +295,7 @@
                     <!-- Callsign ICAO Prefix Dropdown -->
                     <div class="col-span-1">
                         <x-label for="callsign_icao" value="{{ __('Airline ICAO') }}" class="text-xs mb-1" style="color: var(--tenant-card-muted, #94a3b8);" />
-                        <select id="callsign_icao" wire:model.live="callsign_icao" class="block w-full rounded-xl shadow-sm text-sm font-mono font-bold">
+                        <select id="callsign_icao" wire:model.live="callsign_icao" class="block w-full rounded-xl shadow-sm text-sm font-mono font-bold" style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-input-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                             @foreach($availableIcaos as $icaoOption)
                                 <option value="{{ $icaoOption }}">{{ $icaoOption }}</option>
                             @endforeach
@@ -301,7 +307,7 @@
                     <div class="col-span-2">
                         <x-label for="callsign_suffix" value="{{ __('Callsign Number / Suffix') }}" class="text-xs mb-1" style="color: var(--tenant-card-muted, #94a3b8);" />
                         <x-input id="callsign_suffix" type="text" wire:model.live="callsign_suffix" maxlength="8" class="block w-full uppercase font-mono font-bold text-sm" placeholder="e.g. 508HZ or 8161" />
-                        <p class="text-[11px] mt-1" style="color: var(--tenant-card-muted, #94a3b8);">e.g. <span class="font-mono">508HZ</span> creates <span class="font-mono text-amber-300 font-bold">{{ strtoupper($callsign_icao ?: 'EZY') }}508HZ</span></p>
+                        <p class="text-[11px] mt-1" style="color: var(--tenant-card-muted, #94a3b8);">e.g. <span class="font-mono">508HZ</span> creates <span class="font-mono text-tenant-accent font-bold">{{ strtoupper($callsign_icao ?: 'EZY') }}508HZ</span></p>
                         <x-input-error for="callsign_suffix" class="mt-1 text-red-400 text-xs" />
                     </div>
                 </div>
@@ -346,7 +352,7 @@
             <!-- Allowed Aircraft Types -->
             <div class="col-span-6 sm:col-span-4">
                 <x-label value="{{ __('Allowed Aircraft Types') }}" class="font-semibold text-xs uppercase tracking-wider mb-1.5" style="color: var(--tenant-card-text, #ffffff);" />
-                <div class="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-y-auto rounded-xl p-3 border border-white/10" style="background-color: var(--tenant-input-bg, #0a0d14);">
+                <div class="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-y-auto rounded-xl p-3 border" style="background-color: var(--tenant-input-bg, #0a0d14); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                     @foreach($aircraftTypes as $type)
                         <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" wire:model="selectedAircraftTypes" value="{{ $type->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent shadow-sm focus:ring-tenant-accent cursor-pointer">
@@ -384,7 +390,7 @@
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="col-span-1">
                     <x-label for="massTargetIcao" value="{{ __('New Airline ICAO Prefix') }}" class="font-semibold text-xs uppercase tracking-wider mb-1.5" style="color: var(--tenant-card-text, #ffffff);" />
-                    <select id="massTargetIcao" wire:model="massTargetIcao" class="block w-full rounded-xl shadow-sm text-sm font-mono font-bold">
+                    <select id="massTargetIcao" wire:model="massTargetIcao" class="block w-full rounded-xl shadow-sm text-sm font-mono font-bold" style="background-color: var(--tenant-input-bg, #141923); color: var(--tenant-input-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                         @foreach($availableIcaos as $icaoOpt)
                             <option value="{{ $icaoOpt }}">{{ $icaoOpt }}</option>
                         @endforeach
@@ -397,14 +403,14 @@
                 </div>
             </div>
 
-            <div class="p-3 rounded-xl border border-white/10 mb-4 text-xs" style="background-color: var(--tenant-input-bg, #0a0d14); color: var(--tenant-card-muted, #94a3b8);">
-                Example: If a selected route has Flight Number <strong style="color: var(--tenant-card-text, #ffffff);">U29999</strong> and prefix is set to <strong class="text-tenant-accent">U2</strong>, its ATC Callsign will become <strong class="text-amber-300 font-mono">{{ strtoupper($massTargetIcao ?: 'EZY') }}9999</strong>.
+            <div class="p-3 rounded-xl border mb-4 text-xs" style="background-color: var(--tenant-input-bg, #0a0d14); border-color: var(--tenant-input-border, rgba(255,255,255,0.15)); color: var(--tenant-card-muted, #94a3b8);">
+                Example: If a selected route has Flight Number <strong style="color: var(--tenant-card-text, #ffffff);">U29999</strong> and prefix is set to <strong class="text-tenant-accent">U2</strong>, its ATC Callsign will become <strong class="text-tenant-accent font-mono">{{ strtoupper($massTargetIcao ?: 'EZY') }}9999</strong>.
             </div>
 
             <!-- Mass Assign Aircraft Types -->
             <div class="mb-4">
                 <x-label value="{{ __('Assign Aircraft Types to Selected (Optional)') }}" class="font-semibold text-xs uppercase tracking-wider mb-1.5" style="color: var(--tenant-card-text, #ffffff);" />
-                <div class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto rounded-xl p-3 border border-white/10" style="background-color: var(--tenant-input-bg, #0a0d14);">
+                <div class="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto rounded-xl p-3 border" style="background-color: var(--tenant-input-bg, #0a0d14); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                     @foreach($aircraftTypes as $type)
                         <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" wire:model="massSelectedAircraftTypes" value="{{ $type->id }}" class="rounded bg-black/50 border-gray-600 text-tenant-accent shadow-sm focus:ring-tenant-accent cursor-pointer">

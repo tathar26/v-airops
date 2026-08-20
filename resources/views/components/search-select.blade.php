@@ -83,8 +83,8 @@ foreach ($options as $key => $opt) {
     <button type="button" 
             @click="open = !open" 
             class="{{ $minWidth }} inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition border focus:outline-none cursor-pointer"
-            :class="selectedVal ? 'border-tenant-accent bg-tenant-accent/15 text-tenant-accent font-bold' : 'border-white/10 text-white'"
-            style="background-color: var(--tenant-input-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
+            :class="selectedVal ? 'border-tenant-accent bg-tenant-accent/15 text-tenant-accent font-bold' : ''"
+            style="background-color: var(--tenant-input-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15)); color: var(--tenant-input-text, #ffffff);">
         
         <span class="truncate" x-text="selectedVal ? (
             (() => {
@@ -110,7 +110,7 @@ foreach ($options as $key => $opt) {
          x-transition:leave-start="opacity-100 scale-100 translate-y-0"
          x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
          class="absolute right-0 mt-1.5 w-64 rounded-xl shadow-2xl z-[120] overflow-hidden p-2 border"
-         style="background-color: var(--tenant-card-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
+         style="background-color: var(--tenant-card-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.15)); color: var(--tenant-card-text, #ffffff);">
 
         <!-- Search input inside dropdown -->
         <div class="relative mb-2">
@@ -131,7 +131,8 @@ foreach ($options as $key => $opt) {
             <button type="button" 
                     @click="select('')"
                     class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-between cursor-pointer"
-                    :class="!selectedVal ? 'bg-tenant-accent text-white font-bold' : 'hover:bg-white/10 text-slate-300 hover:text-white'">
+                    :class="!selectedVal ? 'bg-tenant-accent text-white font-bold' : 'hover:bg-white/10 hover:bg-black/10'"
+                    :style="!selectedVal ? '' : 'color: var(--tenant-card-text, #ffffff);'">
                 <span x-text="allText">{{ $allLabel }}</span>
                 <span x-show="!selectedVal" class="text-xs">✓</span>
             </button>
@@ -143,14 +144,15 @@ foreach ($options as $key => $opt) {
                         class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center justify-between cursor-pointer"
                         :class="(selectedVal == item.id) 
                                 ? 'bg-tenant-accent text-white font-bold' 
-                                : 'hover:bg-white/10 text-slate-300 hover:text-white'">
+                                : 'hover:bg-white/10 hover:bg-black/10'"
+                        :style="(selectedVal == item.id) ? '' : 'color: var(--tenant-card-text, #ffffff);'">
                     
                     <span class="truncate" x-text="item.name"></span>
                     <span x-show="selectedVal == item.id" class="text-xs ml-1.5 flex-shrink-0">✓</span>
                 </button>
             </template>
 
-            <div x-show="filteredOptions.length === 0" class="px-3 py-4 text-xs text-center text-slate-400">
+            <div x-show="filteredOptions.length === 0" class="px-3 py-4 text-xs text-center" style="color: var(--tenant-card-muted, #94a3b8);">
                 No matching choices found
             </div>
         </div>
