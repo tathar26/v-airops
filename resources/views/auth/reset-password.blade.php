@@ -1,36 +1,80 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0A1835] text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set New Password | V-Air Ops Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-4 bg-[#0A1835] overflow-x-hidden">
 
-        <x-validation-errors class="mb-4" />
+    <div class="w-full max-w-md space-y-6 my-auto">
+        <!-- Logo / Brand Header -->
+        <div class="text-center space-y-2">
+            <a href="/" class="inline-block">
+                <img src="{{ asset('images/v-air-ops-logo.png') }}" alt="V-Air Ops" class="h-20 w-auto object-contain mx-auto">
+            </a>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white">Set New Password</h1>
+            <p class="text-slate-400 text-sm">Choose a strong password for your pilot account</p>
+        </div>
 
-        <form method="POST" action="{{ route('password.update') }}">
-            @csrf
+        <!-- Card -->
+        <div class="bg-[#0F224A] border border-[#142954] rounded-2xl p-8 shadow-2xl space-y-6">
+            
+            @if ($errors->any())
+                <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <p>• {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
-            <input type="hidden" name="token" value="{{ $request->route('token') }}">
+            <form method="POST" action="{{ route('password.update') }}" class="space-y-5">
+                @csrf
 
-            <div class="block">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
+                <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+                    <div class="relative">
+                        <input type="email" name="email" value="{{ old('email', $request->email) }}" required autofocus autocomplete="username"
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">New Password</label>
+                    <div class="relative">
+                        <input type="password" name="password" required autocomplete="new-password" placeholder="••••••••••••"
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Confirm New Password</label>
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" required autocomplete="new-password" placeholder="••••••••••••"
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3.5 px-4 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-semibold shadow-md transition-colors active:scale-[0.99]">
+                    Reset Password &amp; Sign In
+                </button>
+            </form>
+
+            <div class="pt-4 border-t border-[#142954] text-center text-xs text-slate-400">
+                <a href="{{ route('login') }}" class="text-[#21A19D] hover:text-teal-300 font-semibold underline underline-offset-4">Return to login</a>
             </div>
+        </div>
+    </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            </div>
-
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            </div>
-
-            <div class="flex items-center justify-end mt-4">
-                <x-button>
-                    {{ __('Reset Password') }}
-                </x-button>
-            </div>
-        </form>
-    </x-authentication-card>
-</x-guest-layout>
+</body>
+</html>
