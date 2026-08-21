@@ -189,10 +189,10 @@
         @apply bg-[#060E22]/70 border border-white/10 rounded-xl focus:ring-2 focus:ring-vops-primary focus:border-transparent text-gray-200;
     }
     .glass-button {
-        @apply bg-gradient-to-r from-vops-primary to-vops-secondary text-white font-semibold rounded-xl px-4 py-2 hover:opacity-95 transition-all duration-300 transform hover:scale-[1.02] shadow-[0_0_15px_rgba(33,161,157,0.4)];
+        @apply bg-[#21A19D] hover:bg-[#1C8C88] text-white font-semibold rounded-lg px-4 py-2 transition-colors shadow-md;
     }
     .glass-button-secondary {
-        @apply bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-semibold rounded-xl px-4 py-2 transition-all duration-300 transform hover:scale-[1.02];
+        @apply bg-[#0F224A] hover:bg-[#142954] border border-[#142954] text-gray-200 font-semibold rounded-lg px-4 py-2 transition-colors;
     }
     /* ─────────────────────────────────────────────
        Live Flight Map & Tooltip Styling

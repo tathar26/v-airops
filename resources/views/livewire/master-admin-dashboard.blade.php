@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h2 class="font-semibold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-vops-primary to-vops-secondary leading-tight">
+    <h2 class="font-bold text-2xl text-white leading-tight">
         {{ __('Platform Administration') }}
     </h2>
 </x-slot>
@@ -76,7 +76,7 @@
     <!-- Pending VA Approvals Section (If Any) -->
     @if($pendingTenants->isNotEmpty())
     <div class="glass-panel border-amber-500/40 shadow-xl shadow-amber-500/10 overflow-hidden mb-8">
-        <div class="px-6 py-5 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border-b border-amber-500/30 flex items-center justify-between">
+        <div class="px-6 py-5 bg-[#0F224A] border-b border-amber-500/30 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
                     <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -113,7 +113,7 @@
                                 @if($pending->logo_path)
                                     <img src="{{ Storage::url($pending->logo_path) }}" alt="{{ $pending->name }}" class="h-8 w-8 object-contain rounded bg-slate-900 p-0.5 border border-white/10">
                                 @else
-                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs">
+                                    <div class="h-8 w-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold text-xs">
                                         {{ substr($pending->name, 0, 2) }}
                                     </div>
                                 @endif
@@ -207,7 +207,7 @@
                                 @if($tenant->logo_path)
                                     <img src="{{ Storage::url($tenant->logo_path) }}" alt="{{ $tenant->name }}" class="h-8 w-8 object-contain rounded bg-slate-900 p-0.5 border border-white/10">
                                 @else
-                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-vops-primary to-vops-secondary flex items-center justify-center text-white font-bold text-xs">
+                                    <div class="h-8 w-8 rounded-full bg-[#21A19D] flex items-center justify-center text-white font-bold text-xs">
                                         {{ substr($tenant->name, 0, 2) }}
                                     </div>
                                 @endif
@@ -400,8 +400,8 @@
                             style="background-color: #1e293b; color: #94a3b8; border: 1px solid #334155;">
                             Cancel
                         </button>
-                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center gap-2"
-                            style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important; color: #ffffff !important; border: none;">
+                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2"
+                            style="background-color: #21A19D !important; color: #ffffff !important; border: none;">
                             <span wire:loading.remove wire:target="createVirtualAirline">Create Virtual Airline</span>
                             <span wire:loading wire:target="createVirtualAirline">Creating VA...</span>
                         </button>

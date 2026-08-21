@@ -11,12 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
-<body class="h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+<body class="h-full flex items-center justify-center p-4 bg-[#0A1835]">
 
     <div class="w-full max-w-md space-y-6 text-center">
-        <!-- Animated Icon -->
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-2 shadow-xl shadow-amber-500/10">
-            <svg class="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Brand / Icon -->
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#0F224A] border border-[#142954] text-[#21A19D] mb-2 shadow-xl">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
         </div>
@@ -28,7 +28,7 @@
 
         <!-- Flash Status Messages -->
         @if (session('success'))
-            <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center space-x-2 animate-fade-in">
+            <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center space-x-2">
                 <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
@@ -37,7 +37,7 @@
         @endif
 
         @if (session('error') || $errors->any())
-            <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center space-x-2 animate-fade-in">
+            <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-center space-x-2">
                 <svg class="w-4 h-4 text-rose-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -45,11 +45,11 @@
             </div>
         @endif
 
-        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div class="bg-[#0F224A] border border-[#142954] rounded-2xl p-6 shadow-2xl space-y-4">
             @if (!empty($email) || session('email_sent'))
-                <div class="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 text-left">
+                <div class="p-3 rounded-lg bg-[#060E22] border border-[#142954] text-left">
                     <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recipient Email</div>
-                    <div class="text-xs font-mono text-sky-400 truncate mt-0.5">{{ $email ?? session('email_sent') }}</div>
+                    <div class="text-xs font-mono text-[#21A19D] truncate mt-0.5">{{ $email ?? session('email_sent') }}</div>
                 </div>
             @endif
 
@@ -82,7 +82,7 @@
                     @csrf
                     @if (empty($email) && !session('email_sent'))
                         <div class="text-left">
-                            <input type="email" name="email" required placeholder="Enter your registered email" class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+                            <input type="email" name="email" required placeholder="Enter your registered email" class="w-full bg-[#060E22] border border-[#142954] rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#21A19D] transition">
                         </div>
                     @else
                         <input type="hidden" name="email" value="{{ $email ?? session('email_sent') }}">
@@ -90,8 +90,8 @@
 
                     <button type="submit" 
                         :disabled="timeLeft > 0"
-                        :class="timeLeft > 0 ? 'opacity-60 cursor-not-allowed bg-slate-800/80 text-slate-400 border border-slate-700' : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transform hover:scale-[1.01] active:scale-[0.99]'"
-                        class="w-full py-3.5 px-4 rounded-2xl font-bold text-xs tracking-wide transition-all flex items-center justify-center space-x-2">
+                        :class="timeLeft > 0 ? 'opacity-60 cursor-not-allowed bg-navy-950 text-slate-400 border border-navy-700' : 'bg-[#21A19D] hover:bg-[#1C8C88] text-white shadow-md transition-colors'"
+                        class="w-full py-3.5 px-4 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center space-x-2">
                         <svg class="w-4 h-4" :class="{ 'animate-spin': timeLeft > 0 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>

@@ -13,7 +13,7 @@
         body { font-family: 'Outfit', sans-serif; }
     </style>
 </head>
-<body class="h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0F224A] via-[#0A1835] to-[#060E22] overflow-x-hidden">
+<body class="h-full flex items-center justify-center p-4 bg-[#0A1835] overflow-x-hidden">
 
     <div class="w-full max-w-md space-y-6 my-auto">
         <!-- Logo / Brand Header -->
@@ -26,9 +26,9 @@
         </div>
 
         <!-- Registration Card -->
-        <div class="bg-[#0F224A]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6">
+        <div class="bg-[#0F224A] border border-[#142954] rounded-2xl p-8 shadow-2xl space-y-6">
             @if ($errors->any())
-                <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm space-y-1">
+                <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm space-y-1">
                     @foreach ($errors->all() as $error)
                         <p>• {{ $error }}</p>
                     @endforeach
@@ -42,7 +42,7 @@
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Username</label>
                     <div class="relative">
                         <input type="text" name="username" value="{{ old('username') }}" required placeholder="CaptainSmith"
-                            class="w-full px-4 py-3 bg-[#060E22]/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
                     </div>
                 </div>
 
@@ -50,25 +50,25 @@
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">First Name</label>
                         <input type="text" name="first_name" value="{{ old('first_name') }}" required placeholder="John"
-                            class="w-full px-4 py-3 bg-[#060E22]/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Last Name</label>
                         <input type="text" name="last_name" value="{{ old('last_name') }}" required placeholder="Doe"
-                            class="w-full px-4 py-3 bg-[#060E22]/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                            class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
                     <input type="email" name="email" value="{{ old('email') }}" required placeholder="pilot@flight-sim.org"
-                        class="w-full px-4 py-3 bg-[#060E22]/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                        class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Password</label>
                     <input type="password" name="password" required placeholder="••••••••••••"
-                        class="w-full px-4 py-3 bg-[#060E22]/80 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
+                        class="w-full px-4 py-3 bg-[#060E22] border border-[#142954] rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#21A19D] focus:border-transparent transition-all">
                 </div>
 
                 <!-- Cloudflare Turnstile Security Widget -->
@@ -77,13 +77,13 @@
                 </div>
 
                 <button type="submit"
-                    class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#21A19D] to-[#6F3B84] hover:from-[#1C8C88] hover:to-[#5B306D] text-white font-semibold shadow-lg shadow-[#21A19D]/25 hover:shadow-[#21A19D]/40 transition-all duration-200 active:scale-[0.98]">
+                    class="w-full py-3.5 px-4 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-semibold shadow-md transition-colors active:scale-[0.99]">
                     Create Free Pilot Account
                 </button>
             </form>
 
-            <div class="pt-4 border-t border-white/10 text-center text-xs text-slate-400">
-                Already registered? <a href="{{ route('login') }}" class="text-[#21A19D] hover:text-[#2DD4BF] font-semibold underline underline-offset-4">Log in here</a>
+            <div class="pt-4 border-t border-[#142954] text-center text-xs text-slate-400">
+                Already registered? <a href="{{ route('login') }}" class="text-[#21A19D] hover:text-teal-300 font-semibold underline underline-offset-4">Log in here</a>
             </div>
         </div>
     </div>

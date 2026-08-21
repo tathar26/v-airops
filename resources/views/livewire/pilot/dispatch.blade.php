@@ -160,7 +160,7 @@
             <div class="relative w-36 h-36 mx-auto flex items-center justify-center">
                 <div class="absolute inset-0 rounded-full bg-blue-500/15 animate-ping"></div>
                 <div class="absolute inset-2 rounded-full border-2 border-dashed border-blue-400/40 animate-spin" style="animation-duration: 8s;"></div>
-                <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-700 via-indigo-700 to-purple-800 border-2 border-blue-400 flex items-center justify-center text-4xl shadow-2xl shadow-blue-500/50">
+                <div class="w-24 h-24 rounded-full bg-[#0F224A] border-2 border-[#21A19D] flex items-center justify-center text-4xl shadow-2xl shadow-blue-500/50">
                     ✈️
                 </div>
             </div>
@@ -208,7 +208,7 @@
                     <span class="text-gray-400 font-mono text-[11px]">Validating Callsign & Route</span>
                 </div>
                 <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-500 via-indigo-400 to-purple-500 h-full w-full animate-pulse"></div>
+                    <div class="bg-[#21A19D] h-full w-full animate-pulse"></div>
                 </div>
                 <p class="text-[11px] text-gray-400 text-left">
                     🔒 <strong class="text-gray-200">Strict Match Verification:</strong> V-Air Ops ensures older SimBrief OFPs won't be matched unless origin (<span class="text-white font-mono">{{ $booking->route->departure_icao }}</span>), destination (<span class="text-white font-mono">{{ $booking->route->arrival_icao }}</span>), and callsign (<span class="text-white font-mono">{{ strtoupper($callsign) }}</span>) strictly match!
@@ -641,7 +641,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                 </div>
 
                 <!-- vPilot ACARS Connection Prompt -->
-                <div class="bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 p-5 rounded-2xl border border-blue-500/30 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+                <div class="bg-[#0F224A] p-5 rounded-xl border border-[#142954] flex flex-wrap items-center justify-between gap-4 shadow-lg">
                     <div class="space-y-1">
                         <h4 class="font-extrabold text-white text-base flex items-center gap-2">
                             📡 Ready to Fly with vPilot ACARS
@@ -657,10 +657,10 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
             </div>
         @else
             <!-- READY TO DISPATCH Main Banner -->
-            <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-xl p-6 shadow-2xl space-y-5 border border-blue-400/30">
+            <div class="bg-[#0F224A] rounded-xl p-6 shadow-2xl space-y-5 border border-[#142954]">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-blue-300 animate-pulse"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#21A19D] animate-pulse"></div>
                         <h2 class="text-lg font-bold text-white tracking-wide uppercase">READY TO DISPATCH</h2>
                     </div>
                     <span class="text-xs font-medium text-blue-200">{{ date('d M Y') }}</span>

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-vops-primary to-vops-secondary leading-tight">
+        <h2 class="font-bold text-2xl text-white leading-tight">
             {{ __('Virtual Airline Dashboard') }}
         </h2>
     </x-slot>

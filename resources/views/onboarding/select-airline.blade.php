@@ -9,14 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
-<body class="min-h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black p-6 md:p-12"
-      x-data="{ showCreateModal: {{ ($errors->any() && (old('name') || old('icao') || session('show_create_modal'))) ? 'true' : 'false' }}, accentColor: '{{ old('accent_color', '#f97316') }}', bgColor: '{{ old('bg_color', '#1e1e1e') }}' }">
+<body class="min-h-full bg-[#0A1835] p-6 md:p-12"
+      x-data="{ showCreateModal: {{ ($errors->any() && (old('name') || old('icao') || session('show_create_modal'))) ? 'true' : 'false' }}, accentColor: '{{ old('accent_color', '#21A19D') }}', bgColor: '{{ old('bg_color', '#0A1835') }}' }">
 
     <div class="max-w-4xl mx-auto space-y-8">
         <!-- Header -->
         <div class="text-center space-y-3">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#0F224A] border border-[#142954] text-[#21A19D] text-xs font-semibold uppercase tracking-widest">
+                <span class="w-2 h-2 rounded-full bg-[#21A19D]"></span>
                 Pilot Airline Selection
             </div>
             <h1 class="text-3xl md:text-4xl font-extrabold text-white">Select or Create Your Virtual Airline</h1>
@@ -26,13 +26,13 @@
         </div>
 
         @if (session('success'))
-            <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center">
+            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center">
                 {{ session('success') }}
             </div>
         @endif
 
         @if ($errors->has('general'))
-            <div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
                 {{ $errors->first('general') }}
             </div>
         @endif
@@ -40,9 +40,9 @@
         <!-- Action Grid -->
         <div class="space-y-6">
             <!-- Create Airline Banner Card -->
-            <div class="p-6 rounded-3xl bg-gradient-to-r from-purple-900/40 via-indigo-900/30 to-slate-900 border border-purple-500/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="p-6 rounded-2xl bg-[#0F224A] border border-[#142954] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="space-y-1 text-center md:text-left">
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#060E22] text-[#6F3B84] text-xs font-bold uppercase tracking-wider border border-[#142954]">
                         ✨ Start Your Own Fleet
                     </div>
                     <h3 class="text-xl font-extrabold text-white">Want to manage your own Virtual Airline?</h3>
@@ -51,7 +51,7 @@
                     </p>
                 </div>
                 <button type="button" @click="showCreateModal = true"
-                    class="py-3.5 px-6 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-purple-600/30 hover:shadow-purple-600/50 transition-all duration-200 whitespace-nowrap transform hover:-translate-y-0.5 flex items-center gap-2">
+                    class="py-3.5 px-6 rounded-lg bg-[#6F3B84] hover:bg-[#5B306D] text-white font-bold shadow-md transition-colors whitespace-nowrap flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Create Virtual Airline
                 </button>
@@ -77,43 +77,43 @@
                         <label class="relative block cursor-pointer group">
                             <input type="checkbox" name="airline_ids[]" value="{{ $airline->id }}" {{ $isAlreadyJoined ? 'checked disabled' : '' }} class="peer sr-only">
                             
-                            <div class="h-full p-6 rounded-3xl bg-slate-900/80 border border-slate-800 peer-checked:border-sky-500 peer-checked:bg-slate-900 peer-checked:ring-2 peer-checked:ring-sky-500/30 transition-all duration-200 hover:border-slate-700 shadow-xl flex flex-col justify-between space-y-4">
+                            <div class="h-full p-6 rounded-2xl bg-[#0F224A] border border-[#142954] peer-checked:border-[#21A19D] peer-checked:bg-[#142954] peer-checked:ring-2 peer-checked:ring-[#21A19D]/30 transition-all duration-200 hover:border-[#21A19D] shadow-xl flex flex-col justify-between space-y-4">
                                 <div class="flex items-start justify-between">
-                                    <div class="flex items-center gap-4">
-                                        @if ($airline->logo_path)
-                                            <img src="{{ asset('storage/' . $airline->logo_path) }}" alt="{{ $airline->name }}" class="w-12 h-12 object-contain rounded-xl bg-slate-950 p-2 border border-slate-800">
-                                        @else
-                                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center font-bold text-sky-400 border border-slate-700 font-mono">
-                                                {{ strtoupper($airline->icao ?: 'VA') }}
-                                            </div>
-                                        @endif
+                                     <div class="flex items-center gap-4">
+                                         @if ($airline->logo_path)
+                                             <img src="{{ asset('storage/' . $airline->logo_path) }}" alt="{{ $airline->name }}" class="w-12 h-12 object-contain rounded-lg bg-[#060E22] p-2 border border-[#142954]">
+                                         @else
+                                             <div class="w-12 h-12 rounded-lg bg-[#060E22] flex items-center justify-center font-bold text-[#21A19D] border border-[#142954] font-mono">
+                                                 {{ strtoupper($airline->icao ?: 'VA') }}
+                                             </div>
+                                         @endif
 
-                                        <div>
-                                            <h3 class="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">{{ $airline->name }}</h3>
-                                            <p class="text-xs text-slate-400 font-mono">ICAO: {{ strtoupper($airline->icao ?: 'VA') }}</p>
-                                        </div>
-                                    </div>
+                                         <div>
+                                             <h3 class="text-lg font-bold text-white group-hover:text-[#21A19D] transition-colors">{{ $airline->name }}</h3>
+                                             <p class="text-xs text-slate-400 font-mono">ICAO: {{ strtoupper($airline->icao ?: 'VA') }}</p>
+                                         </div>
+                                     </div>
 
-                                    <div class="w-6 h-6 rounded-full border border-slate-700 peer-checked:border-sky-500 peer-checked:bg-sky-500 flex items-center justify-center transition-all">
-                                        <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
+                                     <div class="w-6 h-6 rounded-full border border-[#142954] peer-checked:border-[#21A19D] peer-checked:bg-[#21A19D] flex items-center justify-center transition-all">
+                                         <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                         </svg>
+                                     </div>
                                 </div>
 
-                                <div class="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
+                                <div class="pt-3 border-t border-[#142954] flex items-center justify-between text-xs">
                                     <span class="text-slate-400">Callsign Preview</span>
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-sky-400 font-mono font-semibold">
+                                    <span class="px-2.5 py-1 rounded-md bg-[#060E22] border border-[#142954] text-[#21A19D] font-mono font-semibold">
                                         {{ strtoupper($airline->icao ?: 'VA') }} (Auto-Assigned)
                                     </span>
                                 </div>
                             </div>
                         </label>
                     @empty
-                        <div class="md:col-span-2 p-12 text-center rounded-3xl bg-slate-900/40 border border-dashed border-slate-800 space-y-3">
+                        <div class="md:col-span-2 p-12 text-center rounded-2xl bg-[#0F224A] border border-dashed border-[#142954] space-y-3">
                             <p class="text-slate-400 text-sm">No virtual airlines have been created yet.</p>
                             <button type="button" @click="showCreateModal = true"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold">
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#6F3B84] hover:bg-[#5B306D] text-white text-xs font-bold transition-colors">
                                 + Create the First Virtual Airline
                             </button>
                         </div>
@@ -123,8 +123,8 @@
                 @if($airlines->isNotEmpty())
                 <div class="flex justify-center pt-4">
                     <button type="submit"
-                        class="py-4 px-10 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold shadow-xl shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-200 transform hover:-translate-y-0.5">
-                        Confirm & Enter Dashboard →
+                        class="py-4 px-10 rounded-xl bg-[#21A19D] hover:bg-[#1C8C88] text-white font-bold shadow-lg transition-colors">
+                        Confirm &amp; Enter Dashboard &rarr;
                     </button>
                 </div>
                 @endif
@@ -252,14 +252,14 @@
                         </div>
                     </div>
 
-                    <div class="px-6 py-4 flex items-center justify-end gap-3" style="background-color: #020617 !important; border-top: 1px solid #1e293b !important;">
-                        <button type="button" @click="showCreateModal = false" class="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-                            style="background-color: #1e293b; color: #94a3b8; border: 1px solid #334155;">
+                    <div class="px-6 py-4 flex items-center justify-end gap-3" style="background-color: #060E22 !important; border-top: 1px solid #142954 !important;">
+                        <button type="button" @click="showCreateModal = false" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            style="background-color: #0F224A; color: #94a3b8; border: 1px solid #142954;">
                             Cancel
                         </button>
-                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center gap-2"
-                            style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important; color: #ffffff !important; border: none;">
-                            <span>Create & Launch Airline →</span>
+                        <button type="submit" class="px-6 py-2.5 rounded-lg text-sm font-bold shadow-md transition-all flex items-center gap-2"
+                            style="background-color: #21A19D !important; color: #ffffff !important; border: none;">
+                            <span>Create &amp; Launch Airline &rarr;</span>
                         </button>
                     </div>
                 </form>

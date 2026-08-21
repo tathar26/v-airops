@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Invitation | V-Air Ops</title>
+    <title>Reset Your V-Air Ops Password</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0A1835; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0A1835; padding: 40px 20px;">
@@ -15,40 +15,41 @@
                         <td align="center" style="padding: 32px 30px 24px; background-color: #060E22; border-bottom: 1px solid #142954;">
                             <img src="{{ config('app.url') }}/images/v-air-ops-logo.png" alt="V-Air Ops" width="160" style="display: block; width: 160px; max-width: 160px; height: auto; margin: 0 auto; border: 0;" />
                             <div style="font-size: 11px; font-weight: 700; color: #21A19D; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 10px;">
-                                Team Invitation
+                                Password Reset Request
                             </div>
                         </td>
                     </tr>
 
-                    <!-- Content -->
+                    <!-- Body Content -->
                     <tr>
                         <td style="padding: 36px 30px;">
                             <h2 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 0; margin-bottom: 16px;">
-                                You're Invited!
+                                Password Reset Request
                             </h2>
                             <p style="font-size: 14px; line-height: 24px; color: #cbd5e1; margin-bottom: 24px;">
-                                You have been invited to join the <strong style="color: #ffffff;">{{ $invitation->team->name }}</strong> team on V-Air Ops.
+                                You are receiving this email because we received a password reset request for your V-Air Ops account. Click the button below to choose a new password.
                             </p>
 
-                            <!-- Action Button -->
+                            <!-- Reset Button -->
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{{ $acceptUrl }}" style="display: inline-block; background-color: #21A19D; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">
-                                            Accept Invitation &rarr;
+                                        <a href="{{ $url }}" target="_blank" style="display: inline-block; padding: 14px 32px; background-color: #21A19D; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; border-radius: 8px; letter-spacing: 0.5px;">
+                                            Reset Password &rarr;
                                         </a>
                                     </td>
                                 </tr>
                             </table>
 
                             <p style="font-size: 13px; color: #94a3b8; margin-top: 24px; line-height: 20px;">
-                                If you do not have an account yet, click the button above to create your pilot account and automatically join the team.
+                                This password reset link will expire in {{ $count ?? 60 }} minutes. If you did not request a password reset, no further action is required and your account remains secure.
                             </p>
 
                             <hr style="border: 0; border-top: 1px solid #142954; margin: 28px 0;">
 
-                            <p style="font-size: 11px; color: #64748b; margin: 0;">
-                                If you did not expect to receive this invitation, you may safely ignore and discard this email.
+                            <p style="font-size: 11px; color: #64748b; word-break: break-all; margin: 0;">
+                                Having trouble clicking the button? Copy and paste this URL into your browser:<br>
+                                <a href="{{ $url }}" style="color: #21A19D; text-decoration: underline;">{{ $url }}</a>
                             </p>
                         </td>
                     </tr>
