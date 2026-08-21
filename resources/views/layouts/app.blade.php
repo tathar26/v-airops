@@ -28,8 +28,8 @@
                     $activeTenant = auth()->user()->tenant;
                 }
             }
-            $tenantAccent   = $activeTenant && $activeTenant->accent_color ? $activeTenant->accent_color : '#f97316';
-            $tenantBg       = $activeTenant && $activeTenant->bg_color ? $activeTenant->bg_color : '#0f1117';
+            $tenantAccent   = $activeTenant && $activeTenant->accent_color ? $activeTenant->accent_color : '#21A19D';
+            $tenantBg       = $activeTenant && $activeTenant->bg_color ? $activeTenant->bg_color : '#0A1835';
             $tenantPanelBg  = $activeTenant && $activeTenant->panel_bg_color ? $activeTenant->panel_bg_color : $tenantAccent;
             $tenantCardBg   = $activeTenant && $activeTenant->card_bg_color ? $activeTenant->card_bg_color : $tenantBg;
             $tenantCardText = $activeTenant && $activeTenant->card_text_color ? $activeTenant->card_text_color : null;

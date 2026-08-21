@@ -15,16 +15,16 @@
        VA Card System (replaces hardcoded hex blocks)
        ───────────────────────────────────────────── */
     .va-card {
-        background-color: var(--tenant-card-bg, #12161F);
+        background-color: var(--tenant-card-bg, #0F224A);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 0.75rem; /* rounded-xl */
         overflow: hidden;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
     }
     .va-card-header {
-        background-color: var(--tenant-card-bg, #181D29);
+        background-color: var(--tenant-card-bg, #142954);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        border-top: 2px solid var(--tenant-accent, #38bdf8);
+        border-top: 2px solid var(--tenant-accent, #21A19D);
         padding: 0.875rem 1.25rem;
         font-size: 0.75rem;
         font-weight: 700;
@@ -33,7 +33,7 @@
         color: #94a3b8;
     }
     .va-card-body {
-        background-color: var(--tenant-card-bg, #12161F);
+        background-color: var(--tenant-card-bg, #0F224A);
         padding: 1.25rem 1.5rem;
     }
 
@@ -183,16 +183,16 @@
        Glass Panel (legacy — kept for compat)
        ───────────────────────────────────────────── */
     .glass-panel {
-        @apply bg-[#12161F] border border-white/10 rounded-xl shadow-xl overflow-hidden;
+        @apply bg-[#0A1835]/90 border border-white/10 rounded-xl shadow-xl overflow-hidden backdrop-blur-xl;
     }
     .glass-input {
-        @apply bg-vops-dark/50 border border-white/10 rounded-xl focus:ring-2 focus:ring-vops-primary focus:border-transparent text-gray-200;
+        @apply bg-[#060E22]/70 border border-white/10 rounded-xl focus:ring-2 focus:ring-vops-primary focus:border-transparent text-gray-200;
     }
     .glass-button {
-        @apply bg-gradient-to-r from-vops-primary to-vops-secondary text-white font-semibold rounded-xl px-4 py-2 hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-[0_0_15px_rgba(99,102,241,0.5)];
+        @apply bg-gradient-to-r from-vops-primary to-vops-secondary text-white font-semibold rounded-xl px-4 py-2 hover:opacity-95 transition-all duration-300 transform hover:scale-[1.02] shadow-[0_0_15px_rgba(33,161,157,0.4)];
     }
     .glass-button-secondary {
-        @apply bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-semibold rounded-xl px-4 py-2 transition-all duration-300 transform hover:scale-105;
+        @apply bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-semibold rounded-xl px-4 py-2 transition-all duration-300 transform hover:scale-[1.02];
     }
     /* ─────────────────────────────────────────────
        Live Flight Map & Tooltip Styling

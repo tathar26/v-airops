@@ -79,17 +79,30 @@
                     },
                     colors: {
                         navy: {
-                            950: '#060911',
-                            900: '#0b1120',
-                            850: '#10192d',
-                            800: '#162238',
-                            700: '#1f2e4d',
+                            950: '#060E22',
+                            900: '#0A1835',
+                            850: '#0F224A',
+                            800: '#142954',
+                            700: '#1C376E',
+                        },
+                        teal: {
+                            300: '#5EEAD4',
+                            400: '#2DD4BF',
+                            500: '#21A19D',
+                            600: '#17807D',
+                            700: '#0F5A58',
+                        },
+                        purple: {
+                            400: '#A855F7',
+                            500: '#8B4DA5',
+                            600: '#6F3B84',
+                            700: '#532864',
                         },
                         radar: {
                             green: '#22c55e',
-                            cyan: '#38bdf8',
+                            cyan: '#21A19D',
                             orange: '#f97316',
-                            purple: '#a855f7',
+                            purple: '#6F3B84',
                         }
                     },
                     animation: {
@@ -114,13 +127,13 @@
 
     <style>
         body {
-            background-color: #060911;
+            background-color: #0A1835;
             color: #f8fafc;
             font-family: 'Inter', sans-serif;
         }
 
         .glass-card {
-            background: rgba(16, 25, 45, 0.65);
+            background: rgba(15, 34, 74, 0.7);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -130,20 +143,20 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .glass-card-hover:hover {
-            background: rgba(22, 34, 56, 0.85);
-            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(20, 41, 84, 0.88);
+            border-color: rgba(33, 161, 157, 0.4);
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 30px -10px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 30px -10px rgba(33, 161, 157, 0.25);
         }
 
         .gradient-text {
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #38bdf8 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #21A19D 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .gradient-accent-text {
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #f97316 100%);
+            background: linear-gradient(135deg, #21A19D 0%, #2DD4BF 45%, #6F3B84 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -156,58 +169,46 @@
         }
 
         .radar-grid {
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(33, 161, 157, 0.08) 0%, transparent 70%);
         }
     </style>
 </head>
-<body class="bg-navy-950 text-slate-100 antialiased overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+<body class="bg-navy-900 text-slate-100 antialiased overflow-x-hidden selection:bg-[#21A19D] selection:text-white">
 
     <!-- Ambient Glow Pods -->
-    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-cyan-600/15 via-indigo-600/10 to-orange-500/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
-    <div class="fixed top-[40%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[160px] pointer-events-none z-0"></div>
-    <div class="fixed bottom-[-10%] left-[-10%] w-[700px] h-[700px] bg-purple-600/10 rounded-full blur-[160px] pointer-events-none z-0"></div>
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-[#21A19D]/15 via-[#6F3B84]/12 to-[#0A1835]/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
+    <div class="fixed top-[40%] right-[-10%] w-[600px] h-[600px] bg-[#21A19D]/10 rounded-full blur-[160px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] left-[-10%] w-[700px] h-[700px] bg-[#6F3B84]/15 rounded-full blur-[160px] pointer-events-none z-0"></div>
 
     <!-- Navigation Header -->
-    <header class="sticky top-0 z-50 backdrop-blur-xl bg-navy-950/75 border-b border-white/5 transition-all">
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-navy-950/80 border-b border-white/5 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo -->
             <a href="/" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-orange-500 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition">
-                    <div class="w-full h-full bg-navy-950 rounded-[10px] flex items-center justify-center">
-                        <svg class="w-5 h-5 text-cyan-400 transform group-hover:scale-110 transition duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-heading font-black text-xl tracking-tight text-white flex items-center gap-1.5">
-                        V-AIR OPS <span class="text-[10px] font-mono uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded font-bold">PLATFORM</span>
-                    </span>
-                    <span class="text-[10px] text-slate-400 font-mono tracking-wider">NEXT-GEN VA INFRASTRUCTURE</span>
-                </div>
+                <img src="{{ asset('images/v-air-ops-logo-cropped.png') }}" alt="V-Air Ops" class="h-10 sm:h-11 w-auto object-contain transition duration-300 group-hover:scale-105">
             </a>
 
             <!-- Desktop Nav Links -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-                <a href="#features" class="hover:text-cyan-400 transition">Features</a>
-                <a href="#dispatch" class="hover:text-cyan-400 transition">Smart Dispatch</a>
-                <a href="#portal" class="hover:text-cyan-400 transition">Pilot Portal</a>
-                <a href="#radar" class="hover:text-cyan-400 transition">Live ACARS</a>
-                <a href="#infrastructure" class="hover:text-cyan-400 transition">Enterprise Ops</a>
+                <a href="#features" class="hover:text-[#21A19D] transition">Features</a>
+                <a href="#dispatch" class="hover:text-[#21A19D] transition">Smart Dispatch</a>
+                <a href="#portal" class="hover:text-[#21A19D] transition">Pilot Portal</a>
+                <a href="#radar" class="hover:text-[#21A19D] transition">Live ACARS</a>
+                <a href="#infrastructure" class="hover:text-[#21A19D] transition">Enterprise Ops</a>
             </nav>
 
             <!-- Authentication / CTAs -->
             <div class="flex items-center gap-4">
                 <?php if (auth()->check()): ?>
-                    <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition">
+                    <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-xl bg-[#21A19D]/10 hover:bg-[#21A19D]/20 text-[#21A19D] border border-[#21A19D]/30 text-xs font-bold font-mono transition">
                         GO TO CONSOLE &rarr;
                     </a>
                 <?php else: ?>
                     <a href="{{ route('login') }}" class="text-xs font-bold text-slate-300 hover:text-white px-4 py-2 transition">
                         Sign In
                     </a>
-                    <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-bold text-xs shadow-lg shadow-cyan-500/25 transition">
-                        Start 14-Day Trial
+                    <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#21A19D] to-[#6F3B84] hover:opacity-95 text-white font-heading font-bold text-xs shadow-lg shadow-[#21A19D]/25 transition">
+                        Join or create your own airline.
                     </a>
                 <?php endif; ?>
             </div>
@@ -220,11 +221,11 @@
             <div class="text-center max-w-4xl mx-auto space-y-8">
                 
                 <!-- Badge -->
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border-cyan-500/30 text-xs text-cyan-300 shadow-xl">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border-[#21A19D]/30 text-xs text-teal-300 shadow-xl">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span class="font-mono font-semibold uppercase tracking-wider text-[11px]">Built for MSFS 2024 &amp; X-Plane 12 High-Fidelity Airliners</span>
+                    <span class="font-mono font-semibold uppercase tracking-wider text-[11px]">100% Free &bull; Built for MSFS 2024 &amp; X-Plane 12</span>
                     <span class="text-slate-500">&bull;</span>
-                    <span class="text-orange-400 font-bold">PMDG &bull; iFly &bull; Fenix Ready</span>
+                    <span class="text-purple-400 font-bold">PMDG &bull; iFly &bull; Fenix Ready</span>
                 </div>
 
                 <!-- Main Heading -->
@@ -240,28 +241,28 @@
 
                 <!-- Call To Actions -->
                 <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                    <a href="/register" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-extrabold text-base shadow-2xl shadow-cyan-500/30 hover:scale-[1.02] transition flex items-center gap-3">
-                        <span>Start 14-Day Free Trial</span>
+                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-[#21A19D] to-[#6F3B84] hover:opacity-95 text-white font-heading font-extrabold text-base shadow-2xl shadow-[#21A19D]/30 hover:scale-[1.02] transition flex items-center gap-3">
+                        <span>Join or create your own airline.</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
 
                     <a href="#features" class="px-8 py-4 rounded-2xl glass-card hover:bg-white/10 text-slate-200 font-heading font-bold text-base border border-white/10 transition flex items-center gap-2">
-                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-5 h-5 text-[#21A19D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <span>Explore Features</span>
                     </a>
                 </div>
 
                 <!-- Micro Proof Text -->
                 <div class="flex items-center justify-center gap-6 text-xs text-slate-400 font-mono pt-2">
+                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> 100% Free Forever</span>
                     <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> No Credit Card Required</span>
                     <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Instant 2-Minute Setup</span>
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> 99.99% Event Uptime</span>
                 </div>
             </div>
 
             <!-- Hero Mockup Container -->
             <div class="mt-16 lg:mt-24 relative max-w-6xl mx-auto">
-                <div class="absolute -inset-1.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 rounded-3xl blur-xl opacity-30 animate-pulse-slow"></div>
+                <div class="absolute -inset-1.5 bg-gradient-to-r from-[#21A19D] via-teal-500 to-[#6F3B84] rounded-3xl blur-xl opacity-30 animate-pulse-slow"></div>
                 
                 <div class="relative rounded-2xl glass-card border border-white/15 overflow-hidden shadow-2xl">
                     <!-- Window Header Controls -->
@@ -626,26 +627,26 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="glass-card border border-white/15 rounded-3xl p-8 sm:p-16 text-center relative overflow-hidden space-y-8">
                 <!-- Background Accent Glow -->
-                <div class="absolute -top-24 -left-24 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -top-24 -left-24 w-96 h-96 bg-[#21A19D]/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-[#6F3B84]/25 rounded-full blur-3xl pointer-events-none"></div>
 
                 <h2 class="font-heading font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
                     Ready to Launch Your Airline?
                 </h2>
                 
                 <p class="text-slate-300 text-base sm:text-xl max-w-2xl mx-auto font-light leading-relaxed">
-                    Join thousands of virtual airline pilots and community managers already using V-Ops to power their flight ops infrastructure.
+                    Join thousands of virtual airline pilots and community managers already using V-Air Ops to power their flight ops infrastructure for 100% free.
                 </p>
 
                 <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                    <a href="/register" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-orange-500 hover:opacity-95 text-white font-heading font-extrabold text-base shadow-2xl shadow-cyan-500/30 hover:scale-[1.02] transition flex items-center gap-3">
-                        <span>Start 14-Day Free Trial</span>
+                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-[#21A19D] to-[#6F3B84] hover:opacity-95 text-white font-heading font-extrabold text-base shadow-2xl shadow-[#21A19D]/30 hover:scale-[1.02] transition flex items-center gap-3">
+                        <span>Join or create your own airline.</span>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
                 </div>
 
                 <p class="text-xs font-mono text-slate-400">
-                    Instant Setup &bull; Free Migration Support from vAMSYS / phpVMS &bull; No Credit Card Required
+                    100% Free Forever &bull; Instant Setup &bull; Free Migration Support from vAMSYS / phpVMS &bull; No Credit Card Required
                 </p>
             </div>
         </div>
@@ -657,12 +658,9 @@
             <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
                 <!-- Brand Info -->
                 <div class="col-span-2 space-y-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-orange-500 flex items-center justify-center text-white">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        </div>
-                        <span class="font-heading font-black text-lg text-white">V-AIR OPS</span>
-                    </div>
+                    <a href="/" class="inline-block">
+                        <img src="{{ asset('images/v-air-ops-logo.png') }}" alt="V-Air Ops" class="h-16 w-auto object-contain">
+                    </a>
                     <p class="text-slate-400 max-w-sm leading-relaxed">
                         High-performance Virtual Airline SaaS platform &amp; sub-second ACARS telemetry engine for modern flight simulation communities.
                     </p>

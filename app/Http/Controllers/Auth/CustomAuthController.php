@@ -26,6 +26,32 @@ class CustomAuthController extends Controller
      */
     public function register(Request $request)
     {
+        $turnstileSecret = config('services.cloudflare.turnstile_secret_key') ?: env('CLOUDFLARE_TURNSTILE_SECRET_KEY');
+        if ($turnstileSecret) {
+            $turnstileToken = $request->input('cf-turnstile-response');
+            if (!$turnstileToken) {
+                return back()->withErrors([
+                    'cf-turnstile-response' => 'Please complete the Cloudflare Turnstile security check.',
+                ])->withInput();
+            }
+
+            try {
+                $turnstileVerify = \Illuminate\Support\Facades\Http::asForm()->timeout(5)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret' => $turnstileSecret,
+                    'response' => $turnstileToken,
+                    'remoteip' => $request->ip(),
+                ]);
+
+                if (!$turnstileVerify->successful() || !$turnstileVerify->json('success')) {
+                    return back()->withErrors([
+                        'cf-turnstile-response' => 'Cloudflare Turnstile verification failed. Please try again.',
+                    ])->withInput();
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Cloudflare Turnstile verification error: ' . $e->getMessage());
+            }
+        }
+
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,name'],
             'first_name' => ['required', 'string', 'max:50'],

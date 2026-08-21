@@ -4,8 +4,11 @@
         @if (auth()->check() && auth()->user()->tenant && auth()->user()->tenant->logo_path)
             <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="h-8 w-auto object-contain">
         @else
-            <div class="font-bold text-sm uppercase tracking-widest leading-tight text-inherit">
-                {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops Admin' }}
+            <div class="flex items-center gap-2.5">
+                <img src="{{ asset('images/v-air-ops-mark.png') }}" alt="V-Air Ops" class="h-7 w-auto object-contain">
+                <div class="font-bold text-xs uppercase tracking-widest leading-tight text-inherit">
+                    {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops' }}
+                </div>
             </div>
         @endif
     </div>

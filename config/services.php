@@ -39,4 +39,9 @@ return [
         'key' => env('AIRLABS_API_KEY'),
     ],
 
+    'cloudflare' => [
+        'turnstile_site_key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY'),
+        'turnstile_secret_key' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

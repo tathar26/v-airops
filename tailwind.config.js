@@ -18,11 +18,16 @@ export default {
             },
             colors: {
                 vops: {
-                    dark: '#0B0F19', // Very dark blue/black background
-                    card: '#151C2C', // Slightly lighter for cards
-                    accent: '#3B82F6', // Blue accent
-                    primary: '#6366F1', // Indigo primary
-                    secondary: '#EC4899', // Pink secondary for gradient
+                    navy: '#0A1835',
+                    'navy-dark': '#060E22',
+                    'navy-light': '#0F224A',
+                    dark: '#0A1835', // Deep Navy/Dark Blue background
+                    card: '#0F224A', // Slightly lighter for cards
+                    teal: '#21A19D', // Vibrant Teal / Cyan
+                    accent: '#21A19D', // Primary button / CTA accent
+                    primary: '#21A19D', // Vibrant Teal primary
+                    secondary: '#6F3B84', // Purple secondary / subtle accent
+                    purple: '#6F3B84', // Purple
                     success: '#10B981', // Emerald
                 }
             },
