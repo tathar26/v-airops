@@ -32,7 +32,7 @@ class VersionService
             }
 
             // 3. Fallback
-            return config('app.version', 'v1.0.50');
+            return config('app.version', 'v1.0.60');
         });
     }
 }

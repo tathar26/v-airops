@@ -363,7 +363,67 @@
     <body class="font-sans antialiased selection:bg-tenant-accent selection:text-white {{ $isLight ? 'theme-light' : '' }}">
         <x-banner />
 
-        <div class="min-h-screen flex w-full">
+        <div class="min-h-screen flex w-full" x-data="{ mobileNavOpen: false }">
+            <!-- Mobile Off-Canvas Navigation Drawer -->
+            <div x-show="mobileNavOpen"
+                 class="relative z-50 md:hidden"
+                 style="display: none;"
+                 role="dialog"
+                 aria-modal="true">
+                
+                <!-- Backdrop overlay -->
+                <div x-show="mobileNavOpen"
+                     x-transition:enter="transition-opacity ease-linear duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition-opacity ease-linear duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     @click="mobileNavOpen = false"
+                     class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
+
+                <div class="fixed inset-0 flex">
+                    <!-- Drawer Content Panel -->
+                    <div x-show="mobileNavOpen"
+                         x-transition:enter="transition ease-in-out duration-250 transform"
+                         x-transition:enter-start="-translate-x-full"
+                         x-transition:enter-end="translate-x-0"
+                         x-transition:leave="transition ease-in-out duration-200 transform"
+                         x-transition:leave-start="translate-x-0"
+                         x-transition:leave-end="-translate-x-full"
+                         class="relative mr-16 flex w-full max-w-xs flex-1 flex-col sidebar-shell shadow-2xl">
+                        
+                        <!-- Close button -->
+                        <div class="absolute right-0 top-0 -mr-12 pt-3">
+                            <button type="button" @click="mobileNavOpen = false" class="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10 focus:outline-none" aria-label="Close Navigation">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Brand Header in Mobile Drawer -->
+                        <div class="px-5 pt-5 pb-3 flex items-center justify-between border-b border-black/20">
+                            @if (auth()->check() && auth()->user()->tenant && auth()->user()->tenant->logo_path)
+                                <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="h-8 w-auto object-contain">
+                            @else
+                                <div class="flex items-center gap-2.5">
+                                    <img src="{{ asset('images/v-air-ops-mark.png') }}" alt="V-Air Ops" class="h-7 w-auto object-contain">
+                                    <div class="font-bold text-xs uppercase tracking-widest leading-tight text-inherit">
+                                        {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops' }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Navigation Items -->
+                        <div class="flex-1 overflow-y-auto" @click="if ($event.target.closest('a')) mobileNavOpen = false">
+                            @livewire('navigation-menu')
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sidebar — always-dark shell, independent of tenant theme -->
             <div class="w-56 flex-shrink-0 sidebar-shell hidden md:flex flex-col">
                 @livewire('navigation-menu')
@@ -373,12 +433,17 @@
             <div class="flex-grow flex flex-col min-w-0">
                 <!-- Top Navigation Bar -->
                 <header class="h-14 topbar-shell flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-                    <!-- Mobile: logo / VA name -->
-                    <div class="md:hidden flex items-center">
+                    <!-- Mobile: hamburger + logo / VA name -->
+                    <div class="md:hidden flex items-center gap-2.5">
+                        <button @click="mobileNavOpen = true" type="button" class="p-1.5 rounded-lg border border-black/20 bg-black/20 text-inherit hover:bg-black/30 transition focus:outline-none" aria-label="Open Navigation Menu">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
                         @if (auth()->check() && auth()->user()->tenant && auth()->user()->tenant->logo_path)
-                            <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="block h-8 w-auto mr-3 object-contain">
+                            <img src="{{ Storage::url(auth()->user()->tenant->logo_path) }}" alt="VA Logo" class="block h-7 w-auto object-contain">
                         @else
-                            <h1 class="text-base font-bold tracking-widest uppercase">
+                            <h1 class="text-sm font-bold tracking-wider uppercase truncate max-w-[140px] xs:max-w-[200px]">
                                 {{ auth()->check() && auth()->user()->tenant ? auth()->user()->tenant->name : 'V-Air Ops' }}
                             </h1>
                         @endif

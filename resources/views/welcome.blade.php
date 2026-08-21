@@ -12,7 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Scripts and CSS -->
+    <!-- Alpine.js & Tailwind -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -98,11 +99,11 @@
 <body class="bg-navy-900 text-slate-100 antialiased overflow-x-hidden selection:bg-[#21A19D] selection:text-white">
 
     <!-- Navigation Header -->
-    <header class="sticky top-0 z-50 bg-navy-950 border-b border-navy-700 transition-all">
+    <header class="sticky top-0 z-50 bg-navy-950 border-b border-navy-700 transition-all" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo -->
             <a href="/" class="flex items-center gap-3 group">
-                <img src="{{ asset('images/v-air-ops-logo-cropped.png') }}" alt="V-Air Ops" class="h-10 sm:h-11 w-auto object-contain transition duration-200 group-hover:opacity-90">
+                <img src="{{ asset('images/v-air-ops-logo-cropped.png') }}" alt="V-Air Ops" class="h-9 sm:h-11 w-auto object-contain transition duration-200 group-hover:opacity-90">
             </a>
 
             <!-- Desktop Nav Links -->
@@ -114,8 +115,8 @@
                 <a href="#infrastructure" class="hover:text-[#21A19D] transition">Enterprise Ops</a>
             </nav>
 
-            <!-- Authentication / CTAs -->
-            <div class="flex items-center gap-4">
+            <!-- Desktop Authentication / CTAs -->
+            <div class="hidden md:flex items-center gap-4">
                 <?php if (auth()->check()): ?>
                     <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono transition">
                         GO TO CONSOLE &rarr;
@@ -125,6 +126,82 @@
                         Sign In
                     </a>
                     <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
+                        Join or create your own airline.
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <!-- Mobile Actions (Console/Sign-in + Hamburger button) -->
+            <div class="flex items-center gap-2 md:hidden">
+                <?php if (auth()->check()): ?>
+                    <a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-lg bg-navy-800 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono">
+                        Console &rarr;
+                    </a>
+                <?php else: ?>
+                    <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-lg bg-navy-800 text-slate-200 border border-navy-700 text-xs font-semibold">
+                        Sign In
+                    </a>
+                <?php endif; ?>
+
+                <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        type="button"
+                        class="p-2 rounded-lg bg-navy-900 border border-navy-700 text-slate-300 hover:text-white hover:bg-navy-800 transition focus:outline-none"
+                        aria-label="Toggle Navigation">
+                    <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                    <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Dropdown Navigation Menu -->
+        <div x-show="mobileMenuOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             @click.away="mobileMenuOpen = false"
+             class="md:hidden bg-navy-950 border-b border-navy-700 px-4 pt-3 pb-6 space-y-4 shadow-2xl"
+             style="display: none;">
+            
+            <nav class="flex flex-col space-y-1 text-sm font-medium text-slate-200">
+                <a href="#features" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>Features</span>
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#dispatch" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>Smart Dispatch</span>
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#portal" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>Pilot Portal</span>
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#radar" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>Live ACARS</span>
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#infrastructure" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>Enterprise Ops</span>
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </nav>
+
+            <div class="pt-3 border-t border-navy-700 flex flex-col gap-2.5">
+                <?php if (auth()->check()): ?>
+                    <a href="{{ url('/dashboard') }}" class="w-full text-center px-4 py-3 rounded-lg bg-navy-800 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono transition">
+                        GO TO CONSOLE &rarr;
+                    </a>
+                <?php else: ?>
+                    <a href="{{ route('login') }}" class="w-full text-center px-4 py-2.5 rounded-lg bg-navy-900 border border-navy-700 text-xs font-bold text-slate-200 hover:text-white transition">
+                        Sign In
+                    </a>
+                    <a href="{{ route('register') }}" class="w-full text-center px-4 py-3 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
                         Join or create your own airline.
                     </a>
                 <?php endif; ?>

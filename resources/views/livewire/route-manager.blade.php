@@ -14,10 +14,11 @@
     <div class="va-card rounded-2xl overflow-hidden shadow-2xl mt-6 border"
         style="color: var(--tenant-card-text, #ffffff);">
         <div class="px-6 py-5 border-b flex justify-between items-center flex-wrap gap-4"
-            style="background-color: var(--tenant-panel-bg, #141923); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
+            style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
             <div>
-                <h3 class="text-base font-bold tracking-wide" style="color: var(--tenant-panel-text, #ffffff);">ROUTE
-                    MANAGEMENT &amp; SCHEDULES</h3>
+                <h3 class="text-base font-bold tracking-wide"
+                    style="color: var(--tenant-card-text, #ffffff);">
+                    ROUTE MANAGEMENT &amp; SCHEDULES</h3>
                 <p class="text-xs mt-0.5" style="color: var(--tenant-card-muted, #94a3b8);">
                     Manage schedules, flight numbers, aircraft assignments, and airline ATC callsigns &bull;
                     <span class="text-tenant-accent font-semibold">{{ number_format($totalRoutesCount) }} Total
