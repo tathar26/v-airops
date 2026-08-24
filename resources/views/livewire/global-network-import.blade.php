@@ -44,23 +44,46 @@
             </div>
         @endif
 
-        <!-- ATC Callsign Import Configuration -->
-        <div class="p-4 rounded-xl border border-white/10 mb-6 flex flex-wrap items-center justify-between gap-4" style="background-color: var(--tenant-card-bg, #141923);">
-            <div class="flex items-center gap-4 flex-wrap flex-1">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Target VA ICAO Prefix</label>
-                    <select wire:model="targetIcao" class="rounded-xl py-2 px-3 text-sm font-mono font-bold bg-slate-900 border border-white/10 text-white">
-                        @foreach($availableIcaos as $icaoOpt)
-                            <option value="{{ $icaoOpt }}">{{ $icaoOpt }}</option>
-                        @endforeach
-                    </select>
+        <!-- Active Callsign & Flight Number Conversion Rules -->
+        @php
+            $tenantMappings = $tenant ? $tenant->getCallsignMappings() : [];
+        @endphp
+        <div class="p-4 rounded-xl border border-white/10 mb-6" style="background-color: var(--tenant-card-bg, #141923);">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Flight Number Synthesis & Callsign Rules</h4>
+                        <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono font-bold">Auto-Mapped</span>
+                    </div>
+                    <p class="text-xs text-gray-400">
+                        The live API provides ATC callsigns. Commercial flight numbers are generated using your VA's prefix mapping rules (e.g. <span class="font-mono text-amber-300 font-bold">EZY8412</span> &rarr; <span class="font-mono text-tenant-accent font-bold">U28412</span>).
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        @forelse($tenantMappings as $rule)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-black/40 border border-white/10 text-xs font-mono">
+                                <strong class="text-amber-300">{{ $rule['callsign_prefix'] }}</strong>
+                                <span class="text-gray-500">&rarr;</span>
+                                <strong class="text-tenant-accent">{{ $rule['flight_number_prefix'] }}</strong>
+                            </span>
+                        @empty
+                            <span class="text-xs text-gray-500 italic">Using standard default airline prefix mappings (e.g. EZY&rarr;U2, BAW&rarr;BA, KLM&rarr;KL, RYR&rarr;FR, DLH&rarr;LH).</span>
+                        @endforelse
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Prefix to Cut Off (Optional)</label>
-                    <input type="text" wire:model="stripPrefix" placeholder="e.g. BA, KLM, U2 (auto if blank)" class="rounded-xl py-2 px-3 text-sm uppercase font-mono w-60 bg-slate-900 border border-white/10 text-white" />
-                </div>
-                <div class="text-xs text-slate-400 self-end pb-2">
-                    Example: Schedule <span class="font-mono font-bold text-white">BAW1420</span> generates VA Route Callsign <span class="font-mono font-bold text-amber-300">{{ strtoupper($targetIcao ?: 'VOPS') }}1420</span>.
+
+                <div class="flex items-center gap-3 self-end md:self-center">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target VA ICAO</label>
+                        <select wire:model="targetIcao" class="rounded-xl py-1.5 px-3 text-xs font-mono font-bold bg-slate-900 border border-white/10 text-white">
+                            @foreach($availableIcaos as $icaoOpt)
+                                <option value="{{ $icaoOpt }}">{{ $icaoOpt }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Strip Prefix (Opt.)</label>
+                        <input type="text" wire:model="stripPrefix" placeholder="e.g. BA, U2" class="rounded-xl py-1.5 px-2.5 text-xs uppercase font-mono w-28 bg-slate-900 border border-white/10 text-white" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -73,7 +96,7 @@
                 <x-input type="text" wire:model.defer="searchArrival" placeholder="Destination ICAO (e.g. LFPG, EDDF, KLAX)" class="w-full uppercase" />
             </div>
             <div class="flex-1">
-                <x-input type="text" wire:model.defer="searchOperator" placeholder="Airline ICAO or Callsign (e.g. DLH, KLM, BAW)" class="w-full uppercase" />
+                <x-input type="text" wire:model.defer="searchOperator" placeholder="Airline ICAO or Callsign (e.g. EZY, KLM, BAW)" class="w-full uppercase" />
             </div>
             <div class="flex flex-wrap gap-2">
                 <button wire:click="search" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-xl transition h-full flex items-center border border-white/10">
@@ -94,11 +117,11 @@
             <div class="flex flex-col items-center justify-center py-20 text-center">
                 <div class="text-6xl mb-4">🌍</div>
                 <h3 class="text-xl font-bold text-white mb-2">Live Worldwide Schedules Database</h3>
-                <p class="text-gray-400 max-w-md">Enter an origin airport, destination, or airline ICAO (e.g., <span class="font-mono text-tenant-accent font-bold">KLM</span>, <span class="font-mono text-tenant-accent font-bold">BAW</span>, <span class="font-mono text-tenant-accent font-bold">EHAM</span>) and click <strong class="text-white">Search Live</strong>.</p>
+                <p class="text-gray-400 max-w-md">Enter an origin airport, destination, or airline ICAO (e.g., <span class="font-mono text-tenant-accent font-bold">EZY</span>, <span class="font-mono text-tenant-accent font-bold">KLM</span>, <span class="font-mono text-tenant-accent font-bold">BAW</span>) and click <strong class="text-white">Search Live</strong>.</p>
             </div>
         @else
             <div class="flex items-center justify-between text-xs text-gray-400 mb-3 px-1">
-                <span>Showing {{ number_format($flights->firstItem() ?? 0) }}–{{ number_format($flights->lastItem() ?? 0) }} of <strong class="text-white">{{ number_format($flights->total()) }}</strong> schedules found</span>
+                <span>Showing {{ number_format($flights->firstItem() ?? 0) }}–{{ number_format($flights->lastItem() ?? 0) }} of <strong class="text-white">{{ number_format($flights->total()) }}</strong> live schedules found</span>
                 <span>Sorted by latest observation</span>
             </div>
 
@@ -110,7 +133,8 @@
                                 <input type="checkbox" wire:model.live="selectAll" class="rounded bg-black/50 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
                             </th>
                             <th class="p-4">Airline</th>
-                            <th class="p-4">Callsign / Flight</th>
+                            <th class="p-4">Live Callsign</th>
+                            <th class="p-4">Generated Flight #</th>
                             <th class="p-4">Origin</th>
                             <th class="p-4">Destination</th>
                             <th class="p-4">Schedule UTC</th>
@@ -124,6 +148,9 @@
                                 $itemKey = $flight['id'] ?? ($flight['callsign'] . '_' . $flight['origin_icao'] . '_' . $flight['destination_icao']);
                                 $depAirport = $flight['origin_airport'] ?? null;
                                 $arrAirport = $flight['destination_airport'] ?? null;
+                                $rawCallsign = $flight['callsign'] ?? '';
+                                $airlineIcao = $flight['airline_icao'] ?? '';
+                                $generatedFlightNumber = $tenant ? $tenant->resolveFlightNumber($rawCallsign, $airlineIcao) : $rawCallsign;
                                 $durationMins = (int)($flight['duration_minutes'] ?? 0);
                                 $durationStr = $durationMins > 0 ? sprintf('%02dh %02dm', floor($durationMins/60), $durationMins%60) : '—';
                             @endphp
@@ -133,12 +160,17 @@
                                 </td>
                                 <td class="p-4">
                                     <span class="px-2.5 py-1 text-xs font-mono font-bold bg-slate-800 text-white rounded border border-white/10">
-                                        {{ $flight['airline_icao'] ?? 'N/A' }}
+                                        {{ $airlineIcao ?: 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="p-4">
                                     <span class="font-mono font-bold text-amber-300 text-sm">
-                                        {{ $flight['callsign'] ?? '—' }}
+                                        {{ $rawCallsign ?: '—' }}
+                                    </span>
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2.5 py-1 text-xs font-mono font-bold bg-tenant-accent/20 text-tenant-accent rounded border border-tenant-accent/30 shadow-sm">
+                                        {{ $generatedFlightNumber }}
                                     </span>
                                 </td>
                                 <td class="p-4">
@@ -159,7 +191,7 @@
                                 </td>
                                 <td class="p-4 font-mono text-sm text-gray-300">
                                     @if(!empty($flight['departure_time_utc']) && !empty($flight['arrival_time_utc']))
-                                        {{ substr($flight['departure_time_utc'], 0, 5) }} → {{ substr($flight['arrival_time_utc'], 0, 5) }}z
+                                        {{ substr($flight['departure_time_utc'], 0, 5) }} &rarr; {{ substr($flight['arrival_time_utc'], 0, 5) }}z
                                     @else
                                         —
                                     @endif
@@ -175,7 +207,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="p-8 text-center text-gray-500">
+                                <td colspan="9" class="p-8 text-center text-gray-500">
                                     No live schedules found matching your query.
                                 </td>
                             </tr>

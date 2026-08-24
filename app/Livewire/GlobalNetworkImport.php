@@ -260,9 +260,11 @@ class GlobalNetworkImport extends Component
         }
 
         return view('livewire.global-network-import', [
+            'tenant' => $tenant,
             'flights' => $paginatedFlights,
             'availableIcaos' => $availableIcaos,
             'currentBatch' => $this->batch,
         ])->layout('layouts.app');
     }
 }
+

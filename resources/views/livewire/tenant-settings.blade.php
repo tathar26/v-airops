@@ -79,7 +79,66 @@
                             <x-input-error for="newSecondaryIcao" class="text-red-400 text-xs" />
                         </div>
 
+                        <!-- Callsign to Flight Number Mappings -->
+                        <div class="p-4 bg-[#141a24] rounded-xl border border-white/10 space-y-3">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h4 class="text-white font-bold text-sm flex items-center gap-2">
+                                        <span>ATC Callsign &rarr; Commercial Flight Number Mappings</span>
+                                        <span class="text-[10px] uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30 font-mono font-bold">Global Import Rule</span>
+                                    </h4>
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Configure automatic conversion rules for global imports. When a live schedule callsign matches a prefix (e.g. <strong class="text-amber-300 font-mono">EZY</strong>), it is converted to the commercial flight number prefix (e.g. <strong class="text-tenant-accent font-mono">U2</strong>): <span class="text-slate-300 font-mono font-bold">EZY8412 &rarr; U28412</span>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if(!empty($callsign_mappings))
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                                    @foreach($callsign_mappings as $index => $mapping)
+                                        <div class="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/10 text-xs font-mono">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-amber-300 bg-amber-400/10 px-2 py-1 rounded border border-amber-400/20">{{ $mapping['callsign_prefix'] }}</span>
+                                                <span class="text-gray-500 font-bold">&rarr;</span>
+                                                <span class="font-bold text-tenant-accent bg-tenant-accent/10 px-2 py-1 rounded border border-tenant-accent/20">{{ $mapping['flight_number_prefix'] }}</span>
+                                            </div>
+                                            <button type="button" wire:click="removeCallsignMapping({{ $index }})" class="text-red-400 hover:text-red-300 transition p-1" title="Remove Mapping">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-xs text-gray-500 italic py-1">No custom callsign mappings defined. Standard airline default ICAO &rarr; IATA mappings (e.g. EZY&rarr;U2, BAW&rarr;BA, KLM&rarr;KL) will be used automatically.</p>
+                            @endif
+
+                            <!-- Add New Mapping Form -->
+                            <div class="pt-2 border-t border-white/5">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <div class="w-36">
+                                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Callsign Starts With</label>
+                                        <x-input type="text" wire:model="newCallsignPrefix" maxlength="5" class="w-full bg-[#1e2532] border-gray-700 text-white uppercase text-xs font-mono font-bold" placeholder="e.g. EZY" />
+                                    </div>
+                                    <div class="pt-5 text-gray-500 font-bold">&rarr;</div>
+                                    <div class="w-36">
+                                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Flight # Prefix</label>
+                                        <x-input type="text" wire:model="newFlightNumberPrefix" maxlength="5" class="w-full bg-[#1e2532] border-gray-700 text-white uppercase text-xs font-mono font-bold" placeholder="e.g. U2" />
+                                    </div>
+                                    <div class="pt-4">
+                                        <button type="button" wire:click="addCallsignMapping" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-tenant-accent border border-tenant-accent/30 rounded-xl text-xs font-bold transition whitespace-nowrap shadow-sm">
+                                            + Add Mapping Rule
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 mt-1">
+                                    <x-input-error for="newCallsignPrefix" class="text-red-400 text-xs" />
+                                    <x-input-error for="newFlightNumberPrefix" class="text-red-400 text-xs" />
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Base Theme Settings -->
+
                         <div class="grid grid-cols-6 gap-6">
                             <div class="col-span-6 md:col-span-3">
                                 <x-label for="accent_color" value="{{ __('Primary Accent Color') }}" class="text-white" />

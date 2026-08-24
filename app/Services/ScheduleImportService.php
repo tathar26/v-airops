@@ -249,7 +249,7 @@ class ScheduleImportService
         $chunks = array_chunk($schedules, 100);
 
         foreach ($chunks as $chunk) {
-            DB::transaction(function () use ($chunk, $tenantId, $defaultTenantIcao, $stripPrefix, &$routesImported) {
+            DB::transaction(function () use ($chunk, $tenantModel, $tenantId, $defaultTenantIcao, $stripPrefix, &$routesImported) {
                 foreach ($chunk as $item) {
                     $depIcao = strtoupper(trim($item['origin_icao'] ?? ''));
                     $arrIcao = strtoupper(trim($item['destination_icao'] ?? ''));
@@ -260,7 +260,12 @@ class ScheduleImportService
                         continue;
                     }
 
-                    // Determine suffix and full tenant callsign
+                    // Resolve commercial flight number using tenant mapping rules or default dictionary
+                    $flightNumber = $tenantModel
+                        ? $tenantModel->resolveFlightNumber($rawCallsign, $operatorIcao)
+                        : $this->fallbackResolveFlightNumber($rawCallsign, $operatorIcao);
+
+                    // Determine suffix for ATC callsign
                     $suffix = $rawCallsign;
                     if (!empty($stripPrefix)) {
                         $pfx = strtoupper(trim($stripPrefix));
@@ -268,14 +273,13 @@ class ScheduleImportService
                             $suffix = substr($rawCallsign, strlen($pfx));
                         }
                     } else {
-                        // Auto-strip leading 2-3 character airline prefix (e.g., KLM1234 -> 1234, BAW1420 -> 1420)
+                        // Strip leading 2-3 letter prefix from callsign (e.g., EZY8412 -> 8412, BAW1420 -> 1420)
                         $stripped = preg_replace('/^[A-Z0-9]{2,3}/', '', $rawCallsign);
                         $suffix = !empty($stripped) ? $stripped : $rawCallsign;
                     }
 
                     $callsignIcao = $defaultTenantIcao;
                     $fullCallsign = $callsignIcao . $suffix;
-                    $flightNumber = !empty($rawCallsign) ? $rawCallsign : ($operatorIcao . $suffix);
 
                     // Determine block time (HH:MM)
                     $durationMins = (int) ($item['duration_minutes'] ?? 0);
@@ -285,6 +289,7 @@ class ScheduleImportService
                     } elseif (!empty($item['departure_time_utc']) && !empty($item['arrival_time_utc'])) {
                         $blockTime = $this->calculateBlockTimeFromUtc($item['departure_time_utc'], $item['arrival_time_utc']);
                     }
+
 
                     // Compute distance in Nautical Miles if airports coordinates exist
                     $distanceNm = null;
@@ -433,4 +438,48 @@ class ScheduleImportService
             return '02:00';
         }
     }
+
+    /**
+     * Fallback resolution for flight numbers when no tenant model is loaded.
+     */
+    public function fallbackResolveFlightNumber(string $callsign, ?string $airlineIcao = null): string
+    {
+        $cleanCallsign = strtoupper(trim($callsign));
+        if (empty($cleanCallsign)) {
+            return 'FL0001';
+        }
+
+        $defaultIcaoToIata = [
+            'EZY' => 'U2', 'EZS' => 'DS', 'EJU' => 'EC',
+            'RYR' => 'FR', 'RUK' => 'RK', 'MAY' => 'M4',
+            'BAW' => 'BA', 'KLM' => 'KL', 'DLH' => 'LH',
+            'AFR' => 'AF', 'WZZ' => 'W6', 'WUK' => 'W9',
+            'THY' => 'TK', 'SAS' => 'SK', 'FIN' => 'AY',
+            'IBE' => 'IB', 'TAP' => 'TP', 'SWR' => 'LX',
+            'AUA' => 'OS', 'BEL' => 'SN', 'UAE' => 'EK',
+            'QTR' => 'QR', 'ETD' => 'EY', 'QFA' => 'QF',
+            'ANZ' => 'NZ', 'SIA' => 'SQ', 'CPA' => 'CX',
+            'ANA' => 'NH', 'JAL' => 'JL', 'AAL' => 'AA',
+            'DAL' => 'DL', 'UAL' => 'UA', 'SWA' => 'WN',
+            'ACA' => 'AC', 'VLG' => 'VY', 'TRA' => 'HV',
+            'AZA' => 'AZ', 'EIN' => 'EI', 'NVR' => 'N9',
+            'GWI' => '4U', 'VOE' => 'V7', 'EXS' => 'LS',
+            'TOM' => 'BY', 'EWG' => 'EW', 'TUI' => 'X3',
+        ];
+
+        $prefix3 = substr($cleanCallsign, 0, 3);
+        if (isset($defaultIcaoToIata[$prefix3])) {
+            return $defaultIcaoToIata[$prefix3] . substr($cleanCallsign, 3);
+        }
+
+        if (!empty($airlineIcao) && isset($defaultIcaoToIata[strtoupper($airlineIcao)])) {
+            $iata = $defaultIcaoToIata[strtoupper($airlineIcao)];
+            $stripped = preg_replace('/^[A-Z0-9]{2,3}/', '', $cleanCallsign);
+            $suffix = !empty($stripped) ? $stripped : $cleanCallsign;
+            return $iata . $suffix;
+        }
+
+        return $cleanCallsign;
+    }
 }
+

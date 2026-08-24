@@ -22,6 +22,9 @@ class TenantSettings extends Component
     public $icao = '';
     public $secondary_icaos = [];
     public $newSecondaryIcao = '';
+    public $callsign_mappings = [];
+    public $newCallsignPrefix = '';
+    public $newFlightNumberPrefix = '';
     public $newHubIcao = '';
     public $accent_color = '';
     public $bg_color = '';
@@ -56,7 +59,9 @@ class TenantSettings extends Component
         $this->name = $tenant->name;
         $this->icao = $tenant->icao;
         $this->secondary_icaos = $tenant->secondary_icaos ?? [];
+        $this->callsign_mappings = $tenant->getCallsignMappings();
         $this->accent_color = $tenant->accent_color ?? '#f97316';
+
         $this->bg_color = $tenant->bg_color ?? '#0f1117';
         $this->panel_bg_color = $tenant->panel_bg_color ?? $this->accent_color;
         $this->card_bg_color = $tenant->card_bg_color ?? $this->bg_color;
@@ -150,6 +155,42 @@ class TenantSettings extends Component
         }
     }
 
+    public function addCallsignMapping()
+    {
+        $this->validate([
+            'newCallsignPrefix' => 'required|string|min:2|max:5|alpha_num',
+            'newFlightNumberPrefix' => 'required|string|min:1|max:5|alpha_num',
+        ]);
+
+        $csPrefix = strtoupper(trim($this->newCallsignPrefix));
+        $fnPrefix = strtoupper(trim($this->newFlightNumberPrefix));
+
+        // Check if mapping already exists for this callsign prefix
+        foreach ($this->callsign_mappings as $mapping) {
+            if ($mapping['callsign_prefix'] === $csPrefix) {
+                $this->addError('newCallsignPrefix', "Callsign prefix '{$csPrefix}' is already mapped to '{$mapping['flight_number_prefix']}'.");
+                return;
+            }
+        }
+
+        $this->callsign_mappings[] = [
+            'callsign_prefix' => $csPrefix,
+            'flight_number_prefix' => $fnPrefix,
+        ];
+
+        $this->newCallsignPrefix = '';
+        $this->newFlightNumberPrefix = '';
+        $this->resetErrorBag(['newCallsignPrefix', 'newFlightNumberPrefix']);
+    }
+
+    public function removeCallsignMapping($index)
+    {
+        if (isset($this->callsign_mappings[$index])) {
+            unset($this->callsign_mappings[$index]);
+            $this->callsign_mappings = array_values($this->callsign_mappings);
+        }
+    }
+
     public function saveSettings()
     {
         $tenant = auth()->user()->tenant;
@@ -190,6 +231,7 @@ class TenantSettings extends Component
         $tenant->name = $this->name;
         $tenant->icao = $icaoUpper;
         $tenant->secondary_icaos = array_values(array_unique(array_filter($this->secondary_icaos)));
+        $tenant->callsign_mappings = array_values($this->callsign_mappings);
         $tenant->accent_color = $this->accent_color;
         $tenant->bg_color = $this->bg_color;
         $tenant->panel_bg_color = $this->panel_bg_color ?: $this->accent_color;
@@ -212,6 +254,7 @@ class TenantSettings extends Component
             }
             $tenant->logo_path = $this->logo->store('logos', 'public');
         }
+
 
         $tenant->save();
 
