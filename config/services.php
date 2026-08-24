@@ -39,9 +39,18 @@ return [
         'key' => env('AIRLABS_API_KEY'),
     ],
 
+    'schedules_api' => [
+        'base_url' => env('SCHEDULES_API_BASE_URL', 'https://schedules.artmex-hosting.com'),
+        'key' => env('SCHEDULES_API_KEY'),
+        'timeout' => (int) env('SCHEDULES_API_TIMEOUT', 30),
+        'retry_attempts' => (int) env('SCHEDULES_API_RETRY_ATTEMPTS', 3),
+        'retry_sleep' => (int) env('SCHEDULES_API_RETRY_SLEEP_MS', 500),
+    ],
+
     'cloudflare' => [
         'turnstile_site_key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY'),
         'turnstile_secret_key' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY'),
     ],
 
 ];
+
