@@ -6,10 +6,17 @@
                 <p class="text-gray-400 text-sm mt-1">Search real-world worldwide airline schedules live from the central microservice and import them into your Virtual Airline network.</p>
             </div>
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Live Schedules API Connected
-                </span>
+                @if($apiConnected)
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="{{ $apiStatusMessage }}">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Live Schedules API Connected
+                    </span>
+                @else
+                    <button wire:click="checkApiStatus" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition cursor-pointer" title="Click to test connection">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        {{ $apiStatusMessage ?: 'API Disconnected (Click to retry)' }}
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -119,7 +126,7 @@
                             </th>
                             <th class="p-4">Airline</th>
                             <th class="p-4">Live Callsign</th>
-                            <th class="p-4">Generated Flight #</th>
+                            <th class="p-4">Target Flight #</th>
                             <th class="p-4">Origin</th>
                             <th class="p-4">Destination</th>
                             <th class="p-4">Schedule UTC</th>
@@ -135,7 +142,7 @@
                                 $arrAirport = $flight['destination_airport'] ?? null;
                                 $rawCallsign = $flight['callsign'] ?? '';
                                 $airlineIcao = $flight['airline_icao'] ?? '';
-                                $generatedFlightNumber = $tenant ? $tenant->resolveFlightNumber($rawCallsign, $airlineIcao) : $rawCallsign;
+                                $generatedFlightNumber = $tenant ? $tenant->resolveFlightNumberForTarget($rawCallsign, $targetIcao, $stripPrefix) : $rawCallsign;
                                 $durationMins = (int)($flight['duration_minutes'] ?? 0);
                                 $durationStr = $durationMins > 0 ? sprintf('%02dh %02dm', floor($durationMins/60), $durationMins%60) : '—';
                             @endphp
@@ -241,18 +248,18 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">Target VA ICAO Prefix</label>
-                    <select wire:model="targetIcao" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono font-bold bg-[#1e2532] border border-gray-700 text-white focus:ring-tenant-accent focus:border-tenant-accent">
+                    <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">Target VA Airline ICAO</label>
+                    <select wire:model.live="targetIcao" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono font-bold bg-[#1e2532] border border-gray-700 text-white focus:ring-tenant-accent focus:border-tenant-accent">
                         @foreach($availableIcaos as $icaoOpt)
                             <option value="{{ $icaoOpt }}">{{ $icaoOpt }} ({{ $icaoOpt === ($tenant?->icao ?? 'VOPS') ? 'Primary' : 'Secondary' }})</option>
                         @endforeach
                     </select>
-                    <p class="text-xs text-gray-400 mt-1">This ICAO code will prefix the ATC callsign for all imported routes in your Virtual Airline.</p>
+                    <p class="text-xs text-gray-400 mt-1">Routes will be created under this airline ICAO code with commercial flight numbers derived from its mapping rule.</p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">Callsign Prefix to Strip (Optional)</label>
-                    <x-input type="text" wire:model="stripPrefix" placeholder="e.g. BA, KLM, U2, TOM (auto if blank)" class="w-full bg-[#1e2532] border-gray-700 text-white uppercase text-sm font-mono" />
+                    <x-input type="text" wire:model.live="stripPrefix" placeholder="e.g. BA, KLM, U2, TOM (auto if blank)" class="w-full bg-[#1e2532] border-gray-700 text-white uppercase text-sm font-mono" />
                     <p class="text-xs text-gray-400 mt-1">Leave blank to automatically strip standard airline prefixes and apply your VA's configured Callsign &rarr; Flight Number mapping rules.</p>
                 </div>
 
@@ -261,13 +268,13 @@
                     <div class="text-gray-400 text-[10px] uppercase font-bold mb-1.5">Live Example Transformation:</div>
                     <div class="flex items-center gap-2 flex-wrap text-slate-200">
                         <span class="text-gray-400">Incoming:</span>
-                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">EZY8412</span>
+                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">KLM82A</span>
                         <span class="text-gray-500">&rarr;</span>
                         <span>VA ATC Callsign:</span>
-                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">{{ strtoupper($targetIcao ?: 'VOPS') }}8412</span>
+                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">{{ strtoupper($targetIcao ?: 'VOPS') }}82A</span>
                         <span class="text-gray-500">|</span>
                         <span>Flight #:</span>
-                        <span class="text-tenant-accent font-bold bg-tenant-accent/10 px-1.5 py-0.5 rounded">{{ $tenant ? $tenant->resolveFlightNumber('EZY8412', 'EZY') : 'U28412' }}</span>
+                        <span class="text-tenant-accent font-bold bg-tenant-accent/10 px-1.5 py-0.5 rounded">{{ $tenant ? $tenant->resolveFlightNumberForTarget('KLM82A', $targetIcao, $stripPrefix) : 'EC82A' }}</span>
                     </div>
                 </div>
             </div>

@@ -25,6 +25,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
       - CLOUDFLARE_TURNSTILE_SITE_KEY=${CLOUDFLARE_TURNSTILE_SITE_KEY}
       - CLOUDFLARE_TURNSTILE_SECRET_KEY=${CLOUDFLARE_TURNSTILE_SECRET_KEY}
+      - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
+      - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -54,6 +56,8 @@ services:
       - QUEUE_CONNECTION=redis
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
+      - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -83,11 +87,14 @@ services:
       - QUEUE_CONNECTION=redis
       - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
+      - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
     depends_on:
       mariadb:
         condition: service_healthy
       redis:
         condition: service_started
+
     volumes:
       - prod-storage:/var/www/html/storage
 

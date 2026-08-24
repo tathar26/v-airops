@@ -161,6 +161,10 @@ class ScheduleImportService
             return $response->json();
         }
 
+        if ($response->status() === 401) {
+            throw new RuntimeException("Schedules API returned 401 Unauthorized. Please verify that 'SCHEDULES_API_KEY' is set in your .env or Docker environment.");
+        }
+
         Log::error('ScheduleImportService::querySchedules failed', [
             'status' => $response->status(),
             'body' => $response->body(),
@@ -169,6 +173,7 @@ class ScheduleImportService
 
         throw new RuntimeException("Schedule query failed with status {$response->status()}: " . $response->body());
     }
+
 
     /**
      * Stream schedules from the API page by page using a PHP Generator to minimize memory usage.
@@ -260,29 +265,24 @@ class ScheduleImportService
                         continue;
                     }
 
-                    // Resolve commercial flight number using tenant mapping rules or default dictionary
-                    $flightNumber = $tenantModel
-                        ? $tenantModel->resolveFlightNumber($rawCallsign, $operatorIcao)
-                        : $this->fallbackResolveFlightNumber($rawCallsign, $operatorIcao);
+                    // Extract numeric/alphanumeric suffix from incoming flight/callsign
+                    $suffix = $tenantModel
+                        ? $tenantModel->extractCallsignSuffix($rawCallsign, $stripPrefix)
+                        : $this->fallbackExtractSuffix($rawCallsign, $stripPrefix);
 
-                    // Determine suffix for ATC callsign
-                    $suffix = $rawCallsign;
-                    if (!empty($stripPrefix)) {
-                        $pfx = strtoupper(trim($stripPrefix));
-                        if (str_starts_with($rawCallsign, $pfx)) {
-                            $suffix = substr($rawCallsign, strlen($pfx));
-                        }
-                    } else {
-                        // Strip leading 2-3 letter prefix from callsign (e.g., EZY8412 -> 8412, BAW1420 -> 1420)
-                        $stripped = preg_replace('/^[A-Z0-9]{2,3}/', '', $rawCallsign);
-                        $suffix = !empty($stripped) ? $stripped : $rawCallsign;
-                    }
-
+                    // Target VA Call sign & Commercial Flight Number
                     $callsignIcao = $defaultTenantIcao;
                     $fullCallsign = $callsignIcao . $suffix;
 
+                    $flightNumber = $tenantModel
+                        ? $tenantModel->resolveFlightNumberForTarget($rawCallsign, $defaultTenantIcao, $stripPrefix)
+                        : $this->fallbackResolveTargetFlightNumber($defaultTenantIcao, $suffix);
+
+                    $operator = $defaultTenantIcao;
+
                     // Determine block time (HH:MM)
                     $durationMins = (int) ($item['duration_minutes'] ?? 0);
+
                     $blockTime = '02:00';
                     if ($durationMins > 0) {
                         $blockTime = sprintf('%02d:%02d', floor($durationMins / 60), $durationMins % 60);
@@ -481,5 +481,59 @@ class ScheduleImportService
 
         return $cleanCallsign;
     }
+
+    /**
+     * Fallback extraction of callsign suffix.
+     */
+    public function fallbackExtractSuffix(string $callsign, ?string $stripPrefix = null): string
+    {
+        $clean = strtoupper(trim($callsign));
+        if (empty($clean)) {
+            return '1001';
+        }
+
+        if (!empty($stripPrefix)) {
+            $pfx = strtoupper(trim($stripPrefix));
+            if (str_starts_with($clean, $pfx)) {
+                $suffix = substr($clean, strlen($pfx));
+                if (!empty($suffix)) {
+                    return $suffix;
+                }
+            }
+        }
+
+        $stripped = preg_replace('/^[A-Z]{2,4}/', '', $clean);
+        return !empty($stripped) ? $stripped : $clean;
+    }
+
+    /**
+     * Fallback resolution for target flight numbers.
+     */
+    public function fallbackResolveTargetFlightNumber(string $targetIcao, string $suffix): string
+    {
+        $defaultIcaoToIata = [
+            'EZY' => 'U2', 'EZS' => 'DS', 'EJU' => 'EC',
+            'RYR' => 'FR', 'RUK' => 'RK', 'MAY' => 'M4',
+            'BAW' => 'BA', 'KLM' => 'KL', 'DLH' => 'LH',
+            'AFR' => 'AF', 'WZZ' => 'W6', 'WUK' => 'W9',
+            'THY' => 'TK', 'SAS' => 'SK', 'FIN' => 'AY',
+            'IBE' => 'IB', 'TAP' => 'TP', 'SWR' => 'LX',
+            'AUA' => 'OS', 'BEL' => 'SN', 'UAE' => 'EK',
+            'QTR' => 'QR', 'ETD' => 'EY', 'QFA' => 'QF',
+            'ANZ' => 'NZ', 'SIA' => 'SQ', 'CPA' => 'CX',
+            'ANA' => 'NH', 'JAL' => 'JL', 'AAL' => 'AA',
+            'DAL' => 'DL', 'UAL' => 'UA', 'SWA' => 'WN',
+            'ACA' => 'AC', 'VLG' => 'VY', 'TRA' => 'HV',
+            'AZA' => 'AZ', 'EIN' => 'EI', 'NVR' => 'N9',
+            'GWI' => '4U', 'VOE' => 'V7', 'EXS' => 'LS',
+            'TOM' => 'BY', 'EWG' => 'EW', 'TUI' => 'X3',
+        ];
+
+        $targetUpper = strtoupper(trim($targetIcao));
+        $fnPrefix = $defaultIcaoToIata[$targetUpper] ?? $targetUpper;
+
+        return $fnPrefix . $suffix;
+    }
 }
+
 

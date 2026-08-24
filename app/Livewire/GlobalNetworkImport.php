@@ -28,6 +28,10 @@ class GlobalNetworkImport extends Component
     public $batchId = null;
     public $errorMessage = null;
 
+    // Real-time API Connection Status
+    public bool $apiConnected = false;
+    public ?string $apiStatusMessage = null;
+
     // Import Configuration Modal
     public $showImportModal = false;
     public $importMode = 'selected'; // 'selected' or 'all'
@@ -43,6 +47,29 @@ class GlobalNetworkImport extends Component
         $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
         $tenant = Tenant::find($tenantId);
         $this->targetIcao = $tenant && !empty($tenant->icao) ? strtoupper($tenant->icao) : 'VOPS';
+
+        $this->checkApiStatus();
+    }
+
+    /**
+     * Check real-time microservice status and authentication.
+     */
+    public function checkApiStatus()
+    {
+        try {
+            $service = app(ScheduleImportService::class);
+            $health = $service->healthCheck();
+            $this->apiConnected = true;
+            $this->apiStatusMessage = 'Connected (' . number_format($health['active_flights_count'] ?? 0) . ' schedules active)';
+        } catch (\Throwable $e) {
+            $this->apiConnected = false;
+            $msg = $e->getMessage();
+            if (str_contains($msg, '401')) {
+                $this->apiStatusMessage = 'API Key Missing / Invalid (401 Unauthorized)';
+            } else {
+                $this->apiStatusMessage = 'API Offline or Unreachable';
+            }
+        }
     }
 
     public function search()
@@ -51,7 +78,9 @@ class GlobalNetworkImport extends Component
         $this->selectedFlights = [];
         $this->selectAll = false;
         $this->errorMessage = null;
+        $this->checkApiStatus();
     }
+
 
     public function openImportModal(string $mode = 'selected')
     {
