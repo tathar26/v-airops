@@ -44,7 +44,7 @@
             </div>
         @endif
 
-        <!-- Active Callsign & Flight Number Conversion Rules -->
+        <!-- Active Callsign & Flight Number Conversion Rules Banner -->
         @php
             $tenantMappings = $tenant ? $tenant->getCallsignMappings() : [];
         @endphp
@@ -70,21 +70,6 @@
                         @endforelse
                     </div>
                 </div>
-
-                <div class="flex items-center gap-3 self-end md:self-center">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target VA ICAO</label>
-                        <select wire:model="targetIcao" class="rounded-xl py-1.5 px-3 text-xs font-mono font-bold bg-slate-900 border border-white/10 text-white">
-                            @foreach($availableIcaos as $icaoOpt)
-                                <option value="{{ $icaoOpt }}">{{ $icaoOpt }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Strip Prefix (Opt.)</label>
-                        <input type="text" wire:model="stripPrefix" placeholder="e.g. BA, U2" class="rounded-xl py-1.5 px-2.5 text-xs uppercase font-mono w-28 bg-slate-900 border border-white/10 text-white" />
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -102,11 +87,11 @@
                 <button wire:click="search" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-xl transition h-full flex items-center border border-white/10">
                     🔍 Search Live
                 </button>
-                <button wire:click="importSelected" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2 px-5 rounded-xl transition h-full flex items-center shadow-lg" {{ $currentBatch || empty($selectedFlights) ? 'disabled' : '' }}>
+                <button wire:click="openImportModal('selected')" class="bg-tenant-accent hover:opacity-90 text-white font-bold py-2 px-5 rounded-xl transition h-full flex items-center shadow-lg" {{ $currentBatch || empty($selectedFlights) ? 'disabled' : '' }}>
                     <span class="mr-1.5">📥</span> Import Selected ({{ count($selectedFlights) }})
                 </button>
                 @if($flights && $flights->total() > 0)
-                    <button wire:click="importAllMatching" wire:confirm="Are you sure you want to import ALL {{ number_format($flights->total()) }} matching schedules in the background?" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-xl transition h-full flex items-center shadow-lg" {{ $currentBatch ? 'disabled' : '' }}>
+                    <button wire:click="openImportModal('all')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-xl transition h-full flex items-center shadow-lg" {{ $currentBatch ? 'disabled' : '' }}>
                         <span class="mr-1.5">⚡</span> Import All ({{ number_format($flights->total()) }})
                     </button>
                 @endif
@@ -221,4 +206,81 @@
             </div>
         @endif
     </div>
+
+    <!-- Import Configuration Modal -->
+    <x-dialog-modal wire:model.live="showImportModal">
+        <x-slot name="title">
+            <div class="flex items-center gap-2 text-white">
+                <span class="text-xl">📥</span>
+                <span>Configure Route Import</span>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            @if($importMode === 'all')
+                <div class="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-sm text-emerald-200">Bulk Network Import</div>
+                        <div class="text-[11px] text-emerald-400/80 mt-0.5">Importing all schedules matching your active search filters in the background.</div>
+                    </div>
+                    <span class="font-mono font-bold px-3 py-1 bg-emerald-600 text-white rounded-lg text-sm shadow">
+                        {{ number_format($flights?->total() ?? 0) }} routes
+                    </span>
+                </div>
+            @else
+                <div class="mb-4 p-3.5 rounded-xl bg-tenant-accent/10 border border-tenant-accent/30 text-xs text-tenant-accent flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-sm text-white">Selected Schedules Import</div>
+                        <div class="text-[11px] text-gray-300 mt-0.5">Importing your specifically chosen route records into your VA network.</div>
+                    </div>
+                    <span class="font-mono font-bold px-3 py-1 bg-tenant-accent text-white rounded-lg text-sm shadow">
+                        {{ count($selectedFlights) }} routes
+                    </span>
+                </div>
+            @endif
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">Target VA ICAO Prefix</label>
+                    <select wire:model="targetIcao" class="w-full rounded-xl py-2.5 px-3 text-sm font-mono font-bold bg-[#1e2532] border border-gray-700 text-white focus:ring-tenant-accent focus:border-tenant-accent">
+                        @foreach($availableIcaos as $icaoOpt)
+                            <option value="{{ $icaoOpt }}">{{ $icaoOpt }} ({{ $icaoOpt === ($tenant?->icao ?? 'VOPS') ? 'Primary' : 'Secondary' }})</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">This ICAO code will prefix the ATC callsign for all imported routes in your Virtual Airline.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">Callsign Prefix to Strip (Optional)</label>
+                    <x-input type="text" wire:model="stripPrefix" placeholder="e.g. BA, KLM, U2, TOM (auto if blank)" class="w-full bg-[#1e2532] border-gray-700 text-white uppercase text-sm font-mono" />
+                    <p class="text-xs text-gray-400 mt-1">Leave blank to automatically strip standard airline prefixes and apply your VA's configured Callsign &rarr; Flight Number mapping rules.</p>
+                </div>
+
+                <!-- Preview Box -->
+                <div class="p-3.5 bg-black/40 rounded-xl border border-white/10 text-xs font-mono">
+                    <div class="text-gray-400 text-[10px] uppercase font-bold mb-1.5">Live Example Transformation:</div>
+                    <div class="flex items-center gap-2 flex-wrap text-slate-200">
+                        <span class="text-gray-400">Incoming:</span>
+                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">EZY8412</span>
+                        <span class="text-gray-500">&rarr;</span>
+                        <span>VA ATC Callsign:</span>
+                        <span class="text-amber-300 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">{{ strtoupper($targetIcao ?: 'VOPS') }}8412</span>
+                        <span class="text-gray-500">|</span>
+                        <span>Flight #:</span>
+                        <span class="text-tenant-accent font-bold bg-tenant-accent/10 px-1.5 py-0.5 rounded">{{ $tenant ? $tenant->resolveFlightNumber('EZY8412', 'EZY') : 'U28412' }}</span>
+                    </div>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="closeImportModal" class="bg-gray-700 hover:bg-gray-600 text-white border-none py-2 px-4 rounded-xl text-xs font-bold">
+                Cancel
+            </x-secondary-button>
+
+            <button wire:click="confirmImport" class="bg-tenant-accent hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-2">
+                <span>🚀 Confirm & Start Import</span>
+            </button>
+        </x-slot>
+    </x-dialog-modal>
 </div>

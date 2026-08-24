@@ -28,6 +28,10 @@ class GlobalNetworkImport extends Component
     public $batchId = null;
     public $errorMessage = null;
 
+    // Import Configuration Modal
+    public $showImportModal = false;
+    public $importMode = 'selected'; // 'selected' or 'all'
+
     protected $queryString = [
         'searchDeparture' => ['except' => ''],
         'searchArrival' => ['except' => ''],
@@ -48,6 +52,39 @@ class GlobalNetworkImport extends Component
         $this->selectAll = false;
         $this->errorMessage = null;
     }
+
+    public function openImportModal(string $mode = 'selected')
+    {
+        if ($mode === 'selected' && empty($this->selectedFlights)) {
+            session()->flash('error', 'Please select at least one flight checkbox to import.');
+            return;
+        }
+
+        if ($mode === 'all' && !$this->hasSearch()) {
+            session()->flash('error', 'Please apply at least one search filter before importing.');
+            return;
+        }
+
+        $this->importMode = $mode;
+        $this->showImportModal = true;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+    }
+
+    public function confirmImport()
+    {
+        $this->showImportModal = false;
+
+        if ($this->importMode === 'all') {
+            $this->executeImportAllMatching();
+        } else {
+            $this->executeImportSelected();
+        }
+    }
+
 
     public function hasSearch(): bool
     {
@@ -110,9 +147,25 @@ class GlobalNetworkImport extends Component
     }
 
     /**
-     * Import selected flights from the search results.
+     * Trigger modal for importing selected flights.
      */
     public function importSelected()
+    {
+        $this->openImportModal('selected');
+    }
+
+    /**
+     * Trigger modal for importing all matching flights.
+     */
+    public function importAllMatching()
+    {
+        $this->openImportModal('all');
+    }
+
+    /**
+     * Execute import for selected flights from the search results.
+     */
+    public function executeImportSelected()
     {
         $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
         if (!$tenantId) {
@@ -164,17 +217,17 @@ class GlobalNetworkImport extends Component
             $this->selectedFlights = [];
             $this->selectAll = false;
 
-            session()->flash('message', 'Import started! Please wait while it processes.');
+            session()->flash('message', 'Import started! Processing ' . count($selectedItems) . ' selected routes.');
         } catch (\Throwable $e) {
-            Log::error('GlobalNetworkImport::importSelected failed: ' . $e->getMessage());
+            Log::error('GlobalNetworkImport::executeImportSelected failed: ' . $e->getMessage());
             session()->flash('error', 'Import failed: ' . $e->getMessage());
         }
     }
 
     /**
-     * Import all matching schedules directly from the microservice.
+     * Execute import for all matching schedules directly from the microservice.
      */
-    public function importAllMatching()
+    public function executeImportAllMatching()
     {
         if (!$this->hasSearch()) {
             session()->flash('error', 'Please apply at least one filter before importing all.');
@@ -206,6 +259,7 @@ class GlobalNetworkImport extends Component
 
         session()->flash('message', 'Bulk import started! All matching schedules are being synced in the background.');
     }
+
 
     public function getBatchProperty()
     {

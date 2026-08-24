@@ -36,10 +36,9 @@ class ScheduleImportService
     {
         $client = Http::baseUrl($this->baseUrl)
             ->timeout($this->timeout)
-            ->retry($this->retryAttempts, $this->retrySleepMs, function ($exception, $request) {
+            ->retry($this->retryAttempts, $this->retrySleepMs, function ($exception) {
                 Log::warning('Schedules API request failed, retrying...', [
-                    'url' => (string) $request->url(),
-                    'error' => $exception->getMessage(),
+                    'error' => $exception instanceof \Throwable ? $exception->getMessage() : (string) $exception,
                 ]);
                 return true;
             }, throw: false)
@@ -51,6 +50,7 @@ class ScheduleImportService
 
         return $client;
     }
+
 
     /**
      * Perform a health check on the microservice.
