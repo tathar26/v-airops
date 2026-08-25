@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'airline.can' => \App\Http\Middleware\EnsureAirlinePermission::class,
+            'airline.notams' => \App\Http\Middleware\EnsureNotamsAcknowledged::class,
             'system_admin' => \App\Http\Middleware\EnsureSystemAdmin::class,
         ]);
     })

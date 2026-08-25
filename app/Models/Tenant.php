@@ -311,6 +311,14 @@ class Tenant extends Model
         return $this->hasMany(AirlineRole::class, 'tenant_id');
     }
 
+    /**
+     * NOTAMs issued for this airline.
+     */
+    public function notams()
+    {
+        return $this->hasMany(Notam::class, 'tenant_id');
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true)->where('status', 'active');

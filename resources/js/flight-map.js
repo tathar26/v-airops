@@ -404,6 +404,9 @@ document.addEventListener('alpine:init', () => {
                 
                 if (response.ok && data.booking_id) {
                     window.location.href = `/profile/dispatch/${data.booking_id}`;
+                } else if (data.redirect) {
+                    alert(data.error || 'You must read and acknowledge all active NOTAMs before booking a flight.');
+                    window.location.href = data.redirect;
                 } else {
                     this.isBooking = false;
                     alert('Error booking flight: ' + (data.message || data.error || 'Unknown error'));

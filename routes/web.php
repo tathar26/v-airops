@@ -143,6 +143,14 @@ Route::middleware([
         ->middleware('airline.can:view_pireps')
         ->name('admin.pireps.show');
 
+    // NOTAMs (Pilot View & Staff Operations)
+    Route::get('/notams', \App\Livewire\Pilot\NotamsList::class)
+        ->name('notams');
+
+    Route::get('/admin/notams', \App\Livewire\Admin\NotamManager::class)
+        ->middleware('airline.can:manage_notams')
+        ->name('admin.notams');
+
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Pilot\Dashboard::class)->name('dashboard');
         Route::get('/map', \App\Livewire\Pilot\Map::class)->name('map');
@@ -152,9 +160,10 @@ Route::middleware([
         Route::get('/pireps/{pirep}', \App\Livewire\Pilot\PirepDetail::class)->name('pireps.show');
         Route::get('/preferences', \App\Livewire\Pilot\Preferences::class)->name('preferences');
         Route::get('/account', \App\Livewire\Pilot\AccountSettings::class)->name('account');
-        Route::get('/dispatch/{booking}', \App\Livewire\Pilot\Dispatch::class)->name('dispatch');
+        Route::get('/dispatch/{booking}', \App\Livewire\Pilot\Dispatch::class)->middleware('airline.notams')->name('dispatch');
     });
-    Route::prefix('flight-centre')->name('flight-centre.')->middleware('role:Master Admin|VA Owner|Pilot')->group(function () {
+
+    Route::prefix('flight-centre')->name('flight-centre.')->middleware(['role:Master Admin|VA Owner|Pilot', 'airline.notams'])->group(function () {
         Route::get('/', [\App\Http\Controllers\FlightCentreController::class, 'index'])->name('index');
         Route::get('/book', [\App\Http\Controllers\FlightCentreController::class, 'bookFlightMap'])->name('book');
         Route::get('/flights', [\App\Http\Controllers\FlightCentreController::class, 'flightsTable'])->name('flights');
@@ -166,6 +175,6 @@ Route::middleware([
         Route::get('/network', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'network']);
         Route::get('/live-flights', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'liveFlights']);
         Route::post('/current-location', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'updateLocation']);
-        Route::post('/book', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'book']);
+        Route::post('/book', [\App\Http\Controllers\Api\FlightCentreApiController::class, 'book'])->middleware('airline.notams');
     });
 });

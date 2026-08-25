@@ -109,6 +109,17 @@ class FlightCentreApiController extends Controller
     {
         $request->validate(['route_id' => 'required|exists:routes,id']);
 
+        $tenantId = $request->user()->getActiveTenantId() ?? $request->user()->tenant_id;
+
+        // Block booking if pilot has unacknowledged active NOTAMs
+        if ($request->user()->hasUnreadNotams($tenantId)) {
+            return response()->json([
+                'error'         => 'You must read and acknowledge all active NOTAMs before booking a flight.',
+                'redirect'      => route('notams'),
+                'unread_notams' => true,
+            ], 403);
+        }
+
         // Check if user already has an active booking
         $existingBooking = \App\Models\Booking::where('user_id', $request->user()->id)
             ->whereIn('status', ['pending', 'dispatched'])

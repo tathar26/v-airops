@@ -55,6 +55,10 @@ class AirlinePermission extends Model
             ['name' => 'Review PIREPs', 'slug' => 'review_pireps', 'group' => 'PIREPs', 'description' => 'Accept, reject, or adjust pilot reports'],
             ['name' => 'Delete PIREPs', 'slug' => 'delete_pireps', 'group' => 'PIREPs', 'description' => 'Delete flight reports from the database'],
 
+            // NOTAMs & Flight Bulletins
+            ['name' => 'View NOTAMs', 'slug' => 'view_notams', 'group' => 'NOTAMs', 'description' => 'View airline notices and operational bulletins'],
+            ['name' => 'Manage NOTAMs', 'slug' => 'manage_notams', 'group' => 'NOTAMs', 'description' => 'Create, edit, publish, and delete airline NOTAMs'],
+
             // Operations & Settings
             ['name' => 'View VA Settings', 'slug' => 'view_settings', 'group' => 'Settings', 'description' => 'View virtual airline configuration and details'],
             ['name' => 'Manage Airline Settings', 'slug' => 'manage_airline_settings', 'group' => 'Settings', 'description' => 'Update branding, theme colors, and SimBrief defaults'],

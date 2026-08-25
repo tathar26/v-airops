@@ -110,22 +110,30 @@
         </li>
 
         <!-- NOTAMs -->
+        @php
+            $user = auth()->user();
+            $unreadNotamsCount = $user ? $user->getUnreadNotamsCount() : 0;
+        @endphp
         <li>
-            <a href="#" class="nav-link opacity-50 cursor-not-allowed">
+            <a href="{{ route('notams') }}" class="nav-link {{ request()->routeIs('notams') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 <span>NOTAMs</span>
-                <span class="ml-auto text-[9px] bg-black/30 px-1.5 py-0.5 rounded font-mono">Soon</span>
+                @if($unreadNotamsCount > 0)
+                    <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-black shadow-sm animate-pulse">
+                        {{ $unreadNotamsCount }}
+                    </span>
+                @endif
             </a>
         </li>
 
         @php
-            $user = auth()->user();
             $canViewFleet = $user && ($user->hasAirlinePermission('view_fleet') || $user->hasAirlinePermission('manage_fleet'));
             $canViewRoutes = $user && ($user->hasAirlinePermission('view_routes') || $user->hasAirlinePermission('create_routes') || $user->hasAirlinePermission('edit_routes'));
             $canViewAirports = $user && ($user->hasAirlinePermission('view_airports') || $user->hasAirlinePermission('manage_airports'));
             $canViewPireps = $user && ($user->hasAirlinePermission('view_pireps') || $user->hasAirlinePermission('review_pireps'));
+            $canManageNotams = $user && ($user->hasAirlinePermission('manage_notams') || $user->hasAirlinePermission('view_notams'));
             $canViewSettings = $user && ($user->hasAirlinePermission('view_settings') || $user->hasAirlinePermission('manage_airline_settings') || $user->hasAirlinePermission('manage_roles') || $user->hasAirlinePermission('manage_ranks') || $user->hasAirlinePermission('manage_pilots'));
-            $showAirlineManagement = $user && ($user->isSystemAdmin() || $user->hasRole('VA Owner') || $canViewFleet || $canViewRoutes || $canViewAirports || $canViewPireps || $canViewSettings);
+            $showAirlineManagement = $user && ($user->isSystemAdmin() || $user->hasRole('VA Owner') || $canViewFleet || $canViewRoutes || $canViewAirports || $canViewPireps || $canManageNotams || $canViewSettings);
         @endphp
 
         @if ($showAirlineManagement)
@@ -173,6 +181,15 @@
             <a href="{{ route('pireps') }}" class="nav-link {{ request()->routeIs('pireps') || request()->routeIs('pireps.show') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>PIREP Management</span>
+            </a>
+        </li>
+        @endif
+
+        @if ($user->isSystemAdmin() || $canManageNotams)
+        <li>
+            <a href="{{ route('admin.notams') }}" class="nav-link {{ request()->routeIs('admin.notams') ? 'active' : '' }}">
+                <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                <span>NOTAM Operations</span>
             </a>
         </li>
         @endif

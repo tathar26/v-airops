@@ -107,6 +107,9 @@
                         let data = await response.json();
                         if (response.ok && data.booking_id) {
                             window.location.href = '/profile/dispatch/' + data.booking_id;
+                        } else if (data.redirect) {
+                            alert(data.error || 'You must read and acknowledge all active NOTAMs before booking a flight.');
+                            window.location.href = data.redirect;
                         } else {
                             btn.disabled = false;
                             btn.innerText = 'Book';

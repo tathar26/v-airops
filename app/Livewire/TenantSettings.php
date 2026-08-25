@@ -221,6 +221,17 @@ class TenantSettings extends Component
                     'delete_pireps' => 'Delete Flight Reports',
                 ],
             ],
+            'notams' => [
+                'name' => 'NOTAMs & Flight Bulletins',
+                'description' => 'Pilot notices, operational bulletins, and flight restrictions',
+                'icon' => '📢',
+                'read' => ['view_notams'],
+                'write' => ['view_notams', 'manage_notams'],
+                'all' => [
+                    'view_notams' => 'View NOTAMs & Bulletins',
+                    'manage_notams' => 'Create, Edit & Delete NOTAMs',
+                ],
+            ],
             'settings' => [
                 'name' => 'VA Settings & Administration',
                 'description' => 'Branding, staff roles, pilot ranks, and airline configuration',

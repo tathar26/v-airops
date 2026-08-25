@@ -13,6 +13,15 @@ class FlightCentreController extends Controller
 
     public function bookFlightMap()
     {
+        $user = auth()->user();
+        $tenantId = $user->getActiveTenantId() ?? $user->tenant_id;
+
+        if ($user->hasUnreadNotams($tenantId)) {
+            session()->flash('warning', 'You must read and acknowledge all active NOTAMs before booking a flight.');
+            session()->flash('notam_block', true);
+            return redirect()->route('notams');
+        }
+
         $activeBooking = \App\Models\Booking::where('user_id', auth()->id())
             ->whereIn('status', ['pending', 'dispatched'])
             ->latest()

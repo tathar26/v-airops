@@ -148,6 +148,64 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserAirlineRole::class, 'user_id');
     }
 
+    /**
+     * User's acknowledged NOTAM reads.
+     */
+    public function notamReads(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(NotamUserRead::class, 'user_id');
+    }
+
+    /* =========================================================================
+     | NOTAM Tracking & Enforcement Helpers
+     |======================================================================== */
+
+    /**
+     * Check if the user has any unread, active, non-expired NOTAMs for an airline.
+     */
+    public function hasUnreadNotams(int|Tenant|null $airline = null): bool
+    {
+        return $this->getUnreadNotamsCount($airline) > 0;
+    }
+
+    /**
+     * Get count of unread, active, non-expired NOTAMs for an airline.
+     */
+    public function getUnreadNotamsCount(int|Tenant|null $airline = null): int
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return 0;
+        }
+
+        return Notam::forTenant($airlineId)
+            ->active()
+            ->whereDoesntHave('reads', function ($q) {
+                $q->where('user_id', $this->id);
+            })
+            ->count();
+    }
+
+    /**
+     * Get the unread, active, non-expired NOTAM models for an airline.
+     */
+    public function getUnreadNotams(int|Tenant|null $airline = null): \Illuminate\Database\Eloquent\Collection
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return Notam::forTenant($airlineId)
+            ->active()
+            ->whereDoesntHave('reads', function ($q) {
+                $q->where('user_id', $this->id);
+            })
+            ->orderByRaw("CASE priority WHEN 'High' THEN 1 WHEN 'Medium' THEN 2 WHEN 'Low' THEN 3 ELSE 4 END")
+            ->orderByDesc('posted_at')
+            ->get();
+    }
+
     /* =========================================================================
      | Global System Administrator Helpers
      |======================================================================== */
