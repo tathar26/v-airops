@@ -677,6 +677,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="hover:text-[#21A19D] transition">Terms of Service</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">Privacy Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="if(window.openCookieSettings) window.openCookieSettings();" class="hover:text-[#21A19D] transition">Cookie Preferences</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">Discord Support</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">Security Policy</a></li>
                     </ul>
@@ -692,6 +693,8 @@
             </div>
         </div>
     </footer>
+
+    <x-cookie-banner />
 
 </body>
 </html>
