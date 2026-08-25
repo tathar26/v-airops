@@ -62,12 +62,12 @@ foreach ($options as $key => $opt) {
     allText: '{{ $allLabel }}',
     get filteredOptions() {
         if (!this.query || !this.query.trim()) {
-            return this.rawOptions;
+            return this.rawOptions.slice(0, 50);
         }
         let q = this.query.toLowerCase().trim();
         return this.rawOptions.filter(item => {
             return (item.name || item.id || '').toLowerCase().includes(q);
-        });
+        }).slice(0, 50);
     },
     select(val) {
         this.selectedVal = val;

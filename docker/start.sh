@@ -9,6 +9,10 @@ mkdir -p /var/www/html/storage/logs
 mkdir -p /var/www/html/storage/app/public
 chown -R www-data:www-data /var/www/html/storage
 
+# Ensure Nginx temp directories exist and have proper permissions for www-data FastCGI buffering
+mkdir -p /var/lib/nginx/tmp/fastcgi /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/proxy /var/lib/nginx/tmp/uwsgi /var/lib/nginx/tmp/scgi
+chown -R www-data:www-data /var/lib/nginx
+
 # Wait for database if needed, then run migrations
 echo "Running database migrations..."
 php artisan migrate --force || echo "WARNING: Migrations failed (tables may already exist). Continuing boot process..."

@@ -570,18 +570,21 @@ class RouteManager extends Component
         $allDepIcaos = Route::where('tenant_id', $tenantId)->distinct()->orderBy('departure_icao')->pluck('departure_icao');
         $allArrIcaos = Route::where('tenant_id', $tenantId)->distinct()->orderBy('arrival_icao')->pluck('arrival_icao');
 
-        // Autocomplete suggestions list
-        $autocompleteRoutes = Route::where('tenant_id', $tenantId)->select('flight_number', 'callsign', 'callsign_icao', 'departure_icao', 'arrival_icao')->get();
-        $autocompleteList = $autocompleteRoutes->pluck('flight_number')
-            ->merge($autocompleteRoutes->pluck('callsign'))
-            ->merge($autocompleteRoutes->pluck('callsign_icao'))
-            ->merge($allDepIcaos)
-            ->merge($allArrIcaos)
+        // Fast lightweight autocomplete suggestions list limited directly at query level
+        $fltNums = Route::where('tenant_id', $tenantId)->orderBy('flight_number')->limit(40)->pluck('flight_number');
+        $callsigns = Route::where('tenant_id', $tenantId)->whereNotNull('callsign')->where('callsign', '!=', '')->limit(30)->pluck('callsign');
+        $callsignIcaos = Route::where('tenant_id', $tenantId)->whereNotNull('callsign_icao')->where('callsign_icao', '!=', '')->distinct()->limit(10)->pluck('callsign_icao');
+
+        $autocompleteList = $fltNums
+            ->merge($callsigns)
+            ->merge($callsignIcaos)
+            ->merge($allDepIcaos->take(20))
+            ->merge($allArrIcaos->take(20))
             ->merge($aircraftTypes->pluck('code'))
             ->filter()
             ->unique()
             ->values()
-            ->take(80)
+            ->take(60)
             ->toArray();
 
         return view('livewire.route-manager', [
