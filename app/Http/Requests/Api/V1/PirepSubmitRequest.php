@@ -21,6 +21,11 @@ class PirepSubmitRequest extends FormRequest
             'fuel_used_kg' => ['nullable', 'numeric', 'min:0'],
             'touchdown_fpm' => ['required', 'numeric'],
             'touchdown_gforce' => ['nullable', 'numeric'],
+            'aircraft_title' => ['nullable', 'string', 'max:255'],
+            'livery' => ['nullable', 'string', 'max:255'],
+            'atc_model' => ['nullable', 'string', 'max:50'],
+            'aircraft_type' => ['nullable', 'string', 'max:50'],
+            'simulator' => ['nullable', 'string', 'max:100'],
             'events' => ['nullable', 'array'],
         ];
     }

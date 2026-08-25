@@ -69,6 +69,19 @@ class PirepController extends Controller
 
         // 2. Atomically persist PIREP, update flight status, clean up booking, and update pilot stats
         $pirep = DB::transaction(function () use ($request, $flight, $user, $evalResult, $dbEvents) {
+            $aircraftTitle = $request->input('aircraft_title') 
+                ?? ($request->input('livery') 
+                ?? ($flight->aircraft_title ?? ($flight->aircraft_type ?? 'Aircraft')));
+
+            $livery = $request->input('livery') 
+                ?? ($request->input('aircraft_title') ?? 'Default');
+
+            $simulator = $request->input('simulator') 
+                ?? ($flight->simulator ?? 'MSFS');
+
+            $atcModel = $request->input('atc_model') 
+                ?? ($flight->atc_model ?? ($flight->aircraft_type ?? 'A320'));
+
             $newPirep = AcarsPirep::create([
                 'flight_id' => $flight->id,
                 'user_id' => $user->id,
@@ -81,7 +94,14 @@ class PirepController extends Controller
                 'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
                 'landing_grade' => $evalResult['landing_grade'],
                 'total_score' => $evalResult['points_awarded'],
-                'flight_log_json' => ['events_count' => $dbEvents->count(), 'failure_reasons' => $evalResult['failure_reasons']],
+                'flight_log_json' => [
+                    'events_count' => $dbEvents->count(),
+                    'failure_reasons' => $evalResult['failure_reasons'],
+                    'aircraft_title' => $aircraftTitle,
+                    'livery' => $livery,
+                    'simulator' => $simulator,
+                    'atc_model' => $atcModel,
+                ],
                 'penalties_json' => $evalResult['penalties'],
             ]);
 
@@ -122,6 +142,9 @@ class PirepController extends Controller
                     'route_id' => $booking?->route_id,
                     'airframe_id' => $booking?->airframe_id,
                     'status' => $evalResult['status'],
+                    'simulator' => $simulator,
+                    'aircraft_title' => $aircraftTitle,
+                    'atc_model' => $atcModel,
                     'flight_time' => $evalResult['hours_awarded'],
                     'fuel_used' => (float) $request->input('fuel_used_kg', 0.0),
                     'touchdown_rate_fpm' => (int) round($request->input('touchdown_fpm')),
@@ -134,7 +157,11 @@ class PirepController extends Controller
                         'origin' => strtoupper($flight->origin_icao),
                         'destination' => strtoupper($flight->destination_icao),
                         'route' => $routeString,
-                        'aircraft_type' => $flight->aircraft_type,
+                        'aircraft_type' => $flight->aircraft_type ?? $atcModel,
+                        'aircraft_title' => $aircraftTitle,
+                        'livery' => $livery,
+                        'simulator' => $simulator,
+                        'atc_model' => $atcModel,
                         'planned_altitude' => $flight->planned_altitude,
                         'planned_fuel_kg' => $flight->planned_fuel_kg,
                         'planned_zfw_kg' => $flight->planned_zfw_kg,

@@ -78,6 +78,11 @@
         
     $airframeRegVal = $pirep->airframe?->registration 
         ?? ($ofp['aircraft']['reg'] ?? 'HB-AYE');
+
+    // Simulator, Aircraft Title & Livery
+    $simVal = $pirep->simulator ?? ($fLog['simulator'] ?? 'MSFS');
+    $acftTitleVal = $pirep->aircraft_title ?? ($fLog['aircraft_title'] ?? ($fLog['livery'] ?? $aircraftTypeVal));
+    $liveryVal = $fLog['livery'] ?? ($pirep->aircraft_title ?? 'Default');
         
     // Timing calculations
     $blockMins = (int) ($fLog['block_time_minutes'] ?? ($pirep->flight_time ?? 0));
@@ -511,6 +516,16 @@
                         <div class="text-right">
                             <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Aircraft Type</span>
                             <span class="text-xs text-gray-200 font-bold">{{ $aircraftTypeVal }}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between border-t border-white/5 pt-3">
+                        <div>
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Simulator</span>
+                            <span class="text-xs text-cyan-400 font-mono font-bold">{{ $simVal }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-[10px] text-gray-500 uppercase font-bold mb-0.5">Livery / Model</span>
+                            <span class="text-xs text-gray-200 font-medium max-w-[200px] truncate block" title="{{ $acftTitleVal }}">{{ $acftTitleVal }}</span>
                         </div>
                     </div>
                     <div class="border-t border-white/5 pt-3">
