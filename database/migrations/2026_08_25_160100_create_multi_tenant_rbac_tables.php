@@ -71,12 +71,16 @@ return new class extends Migration
                 ['name' => 'Review PIREPs', 'slug' => 'review_pireps', 'group' => 'PIREPs', 'description' => 'Accept, reject, or adjust pilot reports'],
                 ['name' => 'Delete PIREPs', 'slug' => 'delete_pireps', 'group' => 'PIREPs', 'description' => 'Delete flight reports from the database'],
 
-                // Operations & Settings
+                // Airports
+                ['name' => 'View Airports', 'slug' => 'view_airports', 'group' => 'Airports', 'description' => 'View airline airport network and base hubs'],
                 ['name' => 'Manage Airports', 'slug' => 'manage_airports', 'group' => 'Airports', 'description' => 'Configure airline airport hubs and bases'],
+
+                // Operations & Settings
+                ['name' => 'View VA Settings', 'slug' => 'view_settings', 'group' => 'Settings', 'description' => 'View virtual airline configuration and details'],
+                ['name' => 'Manage Airline Settings', 'slug' => 'manage_airline_settings', 'group' => 'Settings', 'description' => 'Update branding, theme colors, and SimBrief defaults'],
                 ['name' => 'Manage Ranks', 'slug' => 'manage_ranks', 'group' => 'Ranks & Roles', 'description' => 'Configure flight-hour rank criteria and points'],
                 ['name' => 'Manage Roles & Staff', 'slug' => 'manage_roles', 'group' => 'Ranks & Roles', 'description' => 'Create custom roles, assign permissions and honorary ranks'],
                 ['name' => 'Manage Pilots', 'slug' => 'manage_pilots', 'group' => 'Pilots', 'description' => 'Manage enrolled pilots and callsign assignments'],
-                ['name' => 'Manage Airline Settings', 'slug' => 'manage_airline_settings', 'group' => 'Settings', 'description' => 'Update branding, theme colors, and SimBrief defaults'],
                 ['name' => 'View Finance & Stats', 'slug' => 'view_finance', 'group' => 'Analytics', 'description' => 'View operational financial breakdown and pilot stats'],
             ];
 

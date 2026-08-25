@@ -1,15 +1,18 @@
 <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
     <div class="glass-panel overflow-hidden">
         <!-- Tabs -->
-        <div class="border-b border-white/10 flex">
+        <div class="border-b border-white/10 flex flex-wrap">
             <button wire:click="$set('activeTab', 'general')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'general' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
                 General Settings
             </button>
+            <button wire:click="$set('activeTab', 'roles')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'roles' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+                Roles &amp; Permissions
+            </button>
             <button wire:click="$set('activeTab', 'users')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'users' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
-                User Management
+                User &amp; Staff Management
             </button>
             <button wire:click="$set('activeTab', 'hubs')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'hubs' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
-                Hubs & Bases
+                Hubs &amp; Bases
             </button>
             <button wire:click="$set('activeTab', 'ranks')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'ranks' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
                 Rank Management
@@ -364,57 +367,205 @@
                 </div>
             @endif
 
+            <!-- Roles & Permissions Tab -->
+            @if($activeTab === 'roles')
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span>🛡️</span> Roles &amp; Permissions Management
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Create custom staff and pilot roles with granular read or read-write permissions scoped strictly to this virtual airline.
+                            </p>
+                        </div>
+                        <button wire:click="openCreateRoleModal" class="bg-tenant-accent text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Create Role
+                        </button>
+                    </div>
+
+                    @if (session()->has('role_message'))
+                        <div class="mb-6 bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 px-4 py-3 rounded-xl flex items-center justify-between" role="alert">
+                            <span class="text-sm font-medium">{{ session('role_message') }}</span>
+                            <span class="text-emerald-400 text-lg">✓</span>
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @forelse($roles as $role)
+                            <div class="p-5 rounded-2xl bg-[#141a24] border border-white/10 hover:border-white/20 transition-all shadow-lg flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-start justify-between gap-3 mb-2">
+                                        <div>
+                                            <h4 class="text-base font-bold text-white flex items-center gap-2">
+                                                {{ $role->name }}
+                                                @if($role->is_default)
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Default</span>
+                                                @endif
+                                            </h4>
+                                            <p class="text-xs font-mono text-gray-400 mt-0.5">{{ $role->slug }}</p>
+                                        </div>
+                                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold {{ $role->is_staff ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-gray-700/50 text-gray-300 border border-white/10' }}">
+                                            {{ $role->is_staff ? 'Staff Role' : 'Pilot Role' }}
+                                        </span>
+                                    </div>
+
+                                    @if($role->description)
+                                        <p class="text-xs text-gray-400 mb-3">{{ $role->description }}</p>
+                                    @endif
+
+                                    <!-- Honorary Rank Info -->
+                                    <div class="p-2.5 rounded-xl bg-black/30 border border-white/5 mb-3 text-xs">
+                                        <span class="text-gray-400">Honorary Staff Rank:</span>
+                                        @if($role->honorary_rank_string)
+                                            <span class="font-bold text-tenant-accent ml-1 font-mono">⭐ {{ $role->honorary_rank_string }}</span>
+                                        @else
+                                            <span class="text-gray-500 ml-1 italic">None (Uses standard flight-hour rank)</span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Permissions Summary -->
+                                    <div class="mb-4">
+                                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Permissions Granted ({{ $role->permissions->count() }}):</p>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @forelse($role->permissions->take(6) as $perm)
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 text-gray-300 border border-white/5">
+                                                    {{ $perm->slug }}
+                                                </span>
+                                            @empty
+                                                <span class="text-xs text-gray-500 italic">No permissions assigned</span>
+                                            @endforelse
+                                            @if($role->permissions->count() > 6)
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-tenant-accent/20 text-tenant-accent">
+                                                    +{{ $role->permissions->count() - 6 }} more
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-white/5 flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">
+                                        <strong>{{ $role->users->count() }}</strong> assigned {{ Str::plural('pilot', $role->users->count()) }}
+                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <button wire:click="editRole({{ $role->id }})" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition">
+                                            Edit Role
+                                        </button>
+                                        <button wire:click="deleteRole({{ $role->id }})" 
+                                                wire:confirm="Are you sure you want to delete role '{{ $role->name }}'? Pilots assigned this role will lose its permissions." 
+                                                class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-600/20 hover:bg-red-600/40 text-red-300 transition">
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-full py-12 text-center rounded-2xl bg-[#141a24] border border-white/10">
+                                <span class="text-4xl">🛡️</span>
+                                <h4 class="text-white font-bold text-base mt-2">No Custom Roles Created Yet</h4>
+                                <p class="text-gray-400 text-xs mt-1 max-w-md mx-auto">Create custom roles like "Route Manager", "Fleet Director", or "Chief Pilot" with granular read or read-write permissions.</p>
+                                <button wire:click="openCreateRoleModal" class="mt-4 bg-tenant-accent text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition">
+                                    + Create First Role
+                                </button>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
+
+            <!-- User Management Tab -->
             @if($activeTab === 'users')
                 <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-white">User Management</h3>
-                        <button wire:click="openUserModal" class="bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition flex items-center gap-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span>👥</span> User &amp; Staff Role Management
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Manage pilots enrolled in this airline, assign custom airline roles, and view calculated ranks.
+                            </p>
+                        </div>
+                        <button wire:click="openUserModal" class="bg-tenant-accent text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:opacity-90 transition flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             Add User
                         </button>
                     </div>
 
                     @if (session()->has('user_message'))
-                        <div class="mb-4 bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded relative" role="alert">
-                            <span class="block sm:inline">{{ session('user_message') }}</span>
+                        <div class="mb-6 bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 px-4 py-3 rounded-xl flex items-center justify-between" role="alert">
+                            <span class="text-sm font-medium">{{ session('user_message') }}</span>
+                            <span class="text-emerald-400 text-lg">✓</span>
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto -mx-6">
+                    <div class="overflow-x-auto -mx-6 rounded-xl border border-white/5">
                         <table class="min-w-full divide-y divide-white/5">
                             <thead class="bg-white/5">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Pilot</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Callsign</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Active Display Rank</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Assigned Airline Roles</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-white/5">
+                            <tbody class="divide-y divide-white/5 bg-[#0f141e]/50">
                                 @forelse($users as $user)
                                 <tr class="hover:bg-white/5 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                                        {{ $user->name }}
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-bold text-white">{{ $user->full_name }}</div>
+                                        <div class="text-xs text-gray-400 font-mono">{{ $user->email }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                        {{ $user->email }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-tenant-accent/20 text-tenant-accent">
-                                            {{ $user->roles->first()->name ?? 'None' }}
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                            {{ $user->activeCallsign() }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button wire:click="editUser({{ $user->id }})" class="text-tenant-accent hover:opacity-80 transition-colors mr-3">Edit</button>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-tenant-accent/20 text-tenant-accent border border-tenant-accent/30">
+                                                {{ $user->getDisplayRank() }}
+                                            </span>
+                                            @if($user->prefer_honorary_rank && $user->getHonoraryRankString())
+                                                <span class="text-[10px] text-purple-300 font-mono" title="Displaying honorary staff rank">(Staff)</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-normal">
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            @php
+                                                $assignedRoles = $user->getRolesForAirline();
+                                            @endphp
+                                            @forelse($assignedRoles as $r)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                                    <span>{{ $r->name }}</span>
+                                                    <button wire:click="removeQuickRole({{ $user->id }}, {{ $r->id }})" class="hover:text-red-400 text-[10px] ml-0.5" title="Remove role">✕</button>
+                                                </span>
+                                            @empty
+                                                <span class="text-xs text-gray-500 italic">No custom roles assigned</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                        <button wire:click="openManageUserRolesModal({{ $user->id }})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 transition">
+                                            🛡️ Roles
+                                        </button>
+                                        <button wire:click="editUser({{ $user->id }})" class="text-tenant-accent hover:opacity-80 transition-colors text-xs font-semibold">
+                                            Edit
+                                        </button>
                                         @if(auth()->id() !== $user->id)
-                                            <button wire:click="deleteUser({{ $user->id }})" wire:confirm="Are you sure you want to delete this user?" class="text-red-400 hover:text-red-300 transition-colors">Delete</button>
+                                            <button wire:click="deleteUser({{ $user->id }})" wire:confirm="Are you sure you want to remove this user from the airline?" class="text-red-400 hover:text-red-300 transition-colors text-xs font-semibold">
+                                                Remove
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-8 text-center text-gray-400">
-                                        No users found.
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                                        No users found for this virtual airline.
                                     </td>
                                 </tr>
                                 @endforelse
@@ -430,7 +581,195 @@
         </div>
     </div>
 
-    <!-- User Modal -->
+    <!-- Role Creation & Edit Modal with Granular Permission Matrix -->
+    <x-dialog-modal wire:model.live="showRoleModal" maxWidth="3xl">
+        <x-slot name="title">
+            <div class="flex items-center gap-2">
+                <span>🛡️</span>
+                <span>{{ $editingRoleId ? __('Edit Airline Role') : __('Create New Airline Role') }}</span>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <div class="space-y-6">
+                <!-- Basic Role Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <x-label for="roleName" value="{{ __('Role Name') }}" class="text-white" />
+                        <x-input id="roleName" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model.live="roleName" placeholder="e.g. Flight Operations Manager" />
+                        <x-input-error for="roleName" class="mt-1 text-red-400 text-xs" />
+                    </div>
+
+                    <div>
+                        <x-label for="roleSlug" value="{{ __('Role Slug (Identifier)') }}" class="text-white" />
+                        <x-input id="roleSlug" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white font-mono" wire:model="roleSlug" placeholder="e.g. flight-ops-manager" />
+                        <x-input-error for="roleSlug" class="mt-1 text-red-400 text-xs" />
+                    </div>
+
+                    <div>
+                        <x-label for="roleHonoraryRank" value="{{ __('Honorary Staff Rank Title (Optional)') }}" class="text-white" />
+                        <x-input id="roleHonoraryRank" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="roleHonoraryRank" placeholder="e.g. Chief Pilot / VP Operations" />
+                        <p class="text-[11px] text-gray-400 mt-1">Displayed when the user has "Prefer Honorary Rank" enabled in preferences.</p>
+                        <x-input-error for="roleHonoraryRank" class="mt-1 text-red-400 text-xs" />
+                    </div>
+
+                    <div>
+                        <x-label for="roleDescription" value="{{ __('Description (Optional)') }}" class="text-white" />
+                        <x-input id="roleDescription" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="roleDescription" placeholder="Short description of responsibilities" />
+                        <x-input-error for="roleDescription" class="mt-1 text-red-400 text-xs" />
+                    </div>
+                </div>
+
+                <!-- Role Toggles -->
+                <div class="flex flex-wrap gap-6 p-4 rounded-xl bg-black/30 border border-white/5">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" wire:model="roleIsStaff" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                        <span class="text-sm font-semibold text-white">Staff Role</span>
+                        <span class="text-xs text-gray-400">(Designates managerial/administrative staff)</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" wire:model="roleIsDefault" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                        <span class="text-sm font-semibold text-white">Default Role</span>
+                        <span class="text-xs text-gray-400">(Automatically assigned to new joining pilots)</span>
+                    </label>
+                </div>
+
+                <!-- Granular Permissions Matrix -->
+                <div class="space-y-4 pt-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/10 pb-3">
+                        <div>
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                <span>🔑</span> Granular Permissions Matrix
+                            </h4>
+                            <p class="text-xs text-gray-400">Configure Read vs. Read-Write access across each core module for this role.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" wire:click="selectAllPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white transition">
+                                Select All
+                            </button>
+                            <button type="button" wire:click="selectAllReadPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-sky-300 transition">
+                                Read-Only All
+                            </button>
+                            <button type="button" wire:click="clearPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-red-300 transition">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        @foreach($categories as $key => $category)
+                            @php
+                                $level = $this->getCategoryCurrentLevel($key);
+                            @endphp
+                            <div class="p-4 rounded-xl bg-[#141a24] border border-white/10 space-y-3">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="text-lg">{{ $category['icon'] }}</span>
+                                        <div>
+                                            <h5 class="text-sm font-bold text-white">{{ $category['name'] }}</h5>
+                                            <p class="text-[11px] text-gray-400">{{ $category['description'] }}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Level Selector -->
+                                    <div class="inline-flex rounded-lg bg-black/40 p-1 border border-white/10 text-xs">
+                                        <button type="button" wire:click="setCategoryPermissionLevel('{{ $key }}', 'none')" 
+                                                class="px-2.5 py-1 rounded-md transition font-medium {{ $level === 'none' ? 'bg-red-500/20 text-red-300 font-bold' : 'text-gray-400 hover:text-white' }}">
+                                            None
+                                        </button>
+                                        <button type="button" wire:click="setCategoryPermissionLevel('{{ $key }}', 'read')" 
+                                                class="px-2.5 py-1 rounded-md transition font-medium {{ $level === 'read' ? 'bg-sky-500/20 text-sky-300 font-bold' : 'text-gray-400 hover:text-white' }}">
+                                            Read
+                                        </button>
+                                        <button type="button" wire:click="setCategoryPermissionLevel('{{ $key }}', 'write')" 
+                                                class="px-2.5 py-1 rounded-md transition font-medium {{ $level === 'write' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-gray-400 hover:text-white' }}">
+                                            Read-Write
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Individual Checkboxes -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                                    @foreach($category['all'] as $slug => $label)
+                                        <label class="flex items-center gap-2 p-2 rounded-lg bg-black/20 hover:bg-black/40 cursor-pointer border border-transparent hover:border-white/5 transition">
+                                            <input type="checkbox" value="{{ $slug }}" wire:model="selectedPermissions" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                                            <div class="text-xs">
+                                                <span class="text-white font-medium">{{ $label }}</span>
+                                                <span class="text-[10px] text-gray-500 block font-mono">{{ $slug }}</span>
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showRoleModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+                {{ __('Cancel') }}
+            </x-secondary-button>
+
+            <button wire:click="saveRole" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition">
+                {{ $editingRoleId ? __('Save Role Changes') : __('Create Role') }}
+            </button>
+        </x-slot>
+    </x-dialog-modal>
+
+    <!-- User Role Assignment Modal -->
+    <x-dialog-modal wire:model.live="showUserRolesModal">
+        <x-slot name="title">
+            <div class="flex items-center gap-2">
+                <span>🛡️</span>
+                <span>Assign Roles - <strong class="text-tenant-accent">{{ $managingUserName }}</strong></span>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            <p class="text-xs text-gray-400 mb-4">
+                Select the custom roles to grant to this pilot for this specific virtual airline. Permissions will be aggregated automatically.
+            </p>
+
+            <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                @forelse($roles as $role)
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl bg-[#141a24] border border-white/10 hover:border-white/20 cursor-pointer transition">
+                        <input type="checkbox" value="{{ $role->id }}" wire:model="userAssignedRoleIds" class="mt-1 rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-white">{{ $role->name }}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold {{ $role->is_staff ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-700 text-gray-300' }}">
+                                    {{ $role->is_staff ? 'Staff' : 'Pilot' }}
+                                </span>
+                            </div>
+                            @if($role->honorary_rank_string)
+                                <p class="text-xs font-mono text-tenant-accent mt-0.5">⭐ Honorary Rank: {{ $role->honorary_rank_string }}</p>
+                            @endif
+                            <p class="text-xs text-gray-400 mt-1">{{ $role->description ?: 'No description provided.' }}</p>
+                        </div>
+                    </label>
+                @empty
+                    <div class="p-4 text-center text-gray-400 text-xs bg-black/20 rounded-xl">
+                        No custom airline roles created yet. Create roles in the "Roles &amp; Permissions" tab first.
+                    </div>
+                @endforelse
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="$set('showUserRolesModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+                {{ __('Cancel') }}
+            </x-secondary-button>
+
+            <button wire:click="saveUserRoles" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition">
+                {{ __('Update Roles') }}
+            </button>
+        </x-slot>
+    </x-dialog-modal>
+
+    <!-- User Modal (Create/Edit user account) -->
     <x-dialog-modal wire:model.live="showUserModal">
         <x-slot name="title">
             {{ $editingUserId ? __('Edit User') : __('Add New User') }}
