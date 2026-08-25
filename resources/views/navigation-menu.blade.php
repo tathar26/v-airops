@@ -118,11 +118,22 @@
             </a>
         </li>
 
-        @if (auth()->check() && (auth()->user()->hasRole('Master Admin') || auth()->user()->hasRole('VA Owner')))
+        @php
+            $user = auth()->user();
+            $canViewFleet = $user && ($user->hasAirlinePermission('view_fleet') || $user->hasAirlinePermission('manage_fleet'));
+            $canViewRoutes = $user && ($user->hasAirlinePermission('view_routes') || $user->hasAirlinePermission('create_routes') || $user->hasAirlinePermission('edit_routes'));
+            $canViewAirports = $user && ($user->hasAirlinePermission('view_airports') || $user->hasAirlinePermission('manage_airports'));
+            $canViewPireps = $user && ($user->hasAirlinePermission('view_pireps') || $user->hasAirlinePermission('review_pireps'));
+            $canViewSettings = $user && ($user->hasAirlinePermission('view_settings') || $user->hasAirlinePermission('manage_airline_settings') || $user->hasAirlinePermission('manage_roles') || $user->hasAirlinePermission('manage_ranks') || $user->hasAirlinePermission('manage_pilots'));
+            $showAirlineManagement = $user && ($user->isSystemAdmin() || $user->hasRole('VA Owner') || $canViewFleet || $canViewRoutes || $canViewAirports || $canViewPireps || $canViewSettings);
+        @endphp
+
+        @if ($showAirlineManagement)
         <!-- Airline Management -->
         <li class="nav-section-label">Airline Management</li>
 
         <!-- Fleet Dropdown -->
+        @if ($user->isSystemAdmin() || $canViewFleet)
         <li x-data="{ open: {{ request()->routeIs('fleet') || request()->routeIs('aircraft-types') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                 class="nav-link w-full justify-between {{ request()->routeIs('fleet') || request()->routeIs('aircraft-types') ? 'active' : '' }}">
@@ -137,34 +148,43 @@
                 <li><a href="{{ route('fleet') }}" class="block px-2.5 py-1.5 rounded text-xs font-medium transition-colors {{ request()->routeIs('fleet') ? 'bg-black/25 font-bold' : 'opacity-80 hover:opacity-100 hover:bg-black/10' }}">Airframes</a></li>
             </ul>
         </li>
+        @endif
 
+        @if ($user->isSystemAdmin() || $canViewRoutes)
         <li>
             <a href="{{ route('routes') }}" class="nav-link {{ request()->routeIs('routes') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                 <span>Route Management</span>
             </a>
         </li>
+        @endif
 
+        @if ($user->isSystemAdmin() || $canViewAirports)
         <li>
             <a href="{{ route('airports') }}" class="nav-link {{ request()->routeIs('airports') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Airport Management</span>
             </a>
         </li>
+        @endif
 
+        @if ($user->isSystemAdmin() || $canViewPireps)
         <li>
             <a href="{{ route('pireps') }}" class="nav-link {{ request()->routeIs('pireps') || request()->routeIs('pireps.show') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>PIREP Management</span>
             </a>
         </li>
+        @endif
 
+        @if ($user->isSystemAdmin() || $canViewSettings)
         <li>
             <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span>VA Settings</span>
             </a>
         </li>
+        @endif
         @endif
     </ul>
 

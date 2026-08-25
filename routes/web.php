@@ -104,43 +104,43 @@ Route::middleware([
         ->name('admin.email-queue');
 
     Route::get('/fleet', \App\Livewire\FleetManager::class)
-        ->middleware('role:Master Admin|VA Owner|Pilot')
+        ->middleware('airline.can:view_fleet')
         ->name('fleet');
 
     Route::get('/routes', \App\Livewire\RouteManager::class)
-        ->middleware('role:Master Admin|VA Owner|Pilot')
+        ->middleware('airline.can:view_routes')
         ->name('routes');
 
     Route::get('/airports', \App\Livewire\AirportManager::class)
-        ->middleware('role:Master Admin|VA Owner|Pilot')
+        ->middleware('airline.can:view_airports')
         ->name('airports');
 
     Route::get('/global-network', \App\Livewire\GlobalNetworkImport::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:create_routes|view_routes')
         ->name('global-network');
 
     Route::get('/aircraft-types', \App\Livewire\AircraftTypeManager::class)
-        ->middleware('role:Master Admin|VA Owner|Pilot')
+        ->middleware('airline.can:view_fleet')
         ->name('aircraft-types');
 
     Route::get('/settings', \App\Livewire\TenantSettings::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:view_settings|manage_airline_settings|manage_roles|manage_ranks|manage_pilots')
         ->name('settings');
 
     Route::get('/pireps', \App\Livewire\Admin\PirepsList::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:view_pireps')
         ->name('pireps');
 
     Route::get('/admin/pireps', \App\Livewire\Admin\PirepsList::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:view_pireps')
         ->name('admin.pireps');
 
     Route::get('/pireps/{pirep}', \App\Livewire\Admin\PirepDetail::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:view_pireps')
         ->name('pireps.show');
 
     Route::get('/admin/pireps/{pirep}', \App\Livewire\Admin\PirepDetail::class)
-        ->middleware('role:Master Admin|VA Owner')
+        ->middleware('airline.can:view_pireps')
         ->name('admin.pireps.show');
 
     Route::prefix('profile')->name('profile.')->group(function () {

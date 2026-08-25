@@ -1,20 +1,21 @@
 <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-    <div class="glass-panel overflow-hidden">
+    <div class="va-card rounded-2xl overflow-hidden shadow-2xl border"
+        style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.1)); color: var(--tenant-card-text, #ffffff);">
         <!-- Tabs -->
-        <div class="border-b border-white/10 flex flex-wrap">
-            <button wire:click="$set('activeTab', 'general')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'general' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+        <div class="border-b flex flex-wrap" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.1)); background-color: var(--tenant-card-bg, #181D29);">
+            <button wire:click="$set('activeTab', 'general')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'general' ? 'border-tenant-accent text-tenant-accent font-bold' : 'border-transparent text-gray-400 hover:text-white' }}">
                 General Settings
             </button>
-            <button wire:click="$set('activeTab', 'roles')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'roles' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+            <button wire:click="$set('activeTab', 'roles')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'roles' ? 'border-tenant-accent text-tenant-accent font-bold' : 'border-transparent text-gray-400 hover:text-white' }}">
                 Roles &amp; Permissions
             </button>
-            <button wire:click="$set('activeTab', 'users')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'users' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+            <button wire:click="$set('activeTab', 'users')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'users' ? 'border-tenant-accent text-tenant-accent font-bold' : 'border-transparent text-gray-400 hover:text-white' }}">
                 User &amp; Staff Management
             </button>
-            <button wire:click="$set('activeTab', 'hubs')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'hubs' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+            <button wire:click="$set('activeTab', 'hubs')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'hubs' ? 'border-tenant-accent text-tenant-accent font-bold' : 'border-transparent text-gray-400 hover:text-white' }}">
                 Hubs &amp; Bases
             </button>
-            <button wire:click="$set('activeTab', 'ranks')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'ranks' ? 'border-tenant-accent text-tenant-accent' : 'border-transparent text-gray-400 hover:text-white' }}">
+            <button wire:click="$set('activeTab', 'ranks')" class="px-6 py-4 text-sm font-medium transition-colors border-b-2 {{ $activeTab === 'ranks' ? 'border-tenant-accent text-tenant-accent font-bold' : 'border-transparent text-gray-400 hover:text-white' }}">
                 Rank Management
             </button>
         </div>
@@ -372,10 +373,10 @@
                 <div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <div>
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <h3 class="text-lg font-bold flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                                 <span>🛡️</span> Roles &amp; Permissions Management
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">
+                            <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">
                                 Create custom staff and pilot roles with granular read or read-write permissions scoped strictly to this virtual airline.
                             </p>
                         </div>
@@ -394,17 +395,18 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @forelse($roles as $role)
-                            <div class="p-5 rounded-2xl bg-[#141a24] border border-white/10 hover:border-white/20 transition-all shadow-lg flex flex-col justify-between">
+                            <div class="va-card p-5 rounded-2xl border transition-all shadow-lg flex flex-col justify-between"
+                                style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.1)); color: var(--tenant-card-text, #ffffff);">
                                 <div>
                                     <div class="flex items-start justify-between gap-3 mb-2">
                                         <div>
-                                            <h4 class="text-base font-bold text-white flex items-center gap-2">
+                                            <h4 class="text-base font-bold flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                                                 {{ $role->name }}
                                                 @if($role->is_default)
                                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Default</span>
                                                 @endif
                                             </h4>
-                                            <p class="text-xs font-mono text-gray-400 mt-0.5">{{ $role->slug }}</p>
+                                            <p class="text-xs font-mono mt-0.5" style="color: var(--tenant-card-muted, #94a3b8);">{{ $role->slug }}</p>
                                         </div>
                                         <span class="px-2.5 py-1 rounded-lg text-xs font-semibold {{ $role->is_staff ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-gray-700/50 text-gray-300 border border-white/10' }}">
                                             {{ $role->is_staff ? 'Staff Role' : 'Pilot Role' }}
@@ -412,32 +414,32 @@
                                     </div>
 
                                     @if($role->description)
-                                        <p class="text-xs text-gray-400 mb-3">{{ $role->description }}</p>
+                                        <p class="text-xs mb-3" style="color: var(--tenant-card-muted, #94a3b8);">{{ $role->description }}</p>
                                     @endif
 
                                     <!-- Honorary Rank Info -->
-                                    <div class="p-2.5 rounded-xl bg-black/30 border border-white/5 mb-3 text-xs">
-                                        <span class="text-gray-400">Honorary Staff Rank:</span>
+                                    <div class="p-2.5 rounded-xl border mb-3 text-xs" style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.3)); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
+                                        <span style="color: var(--tenant-card-muted, #94a3b8);">Honorary Staff Rank:</span>
                                         @if($role->honorary_rank_string)
                                             <span class="font-bold text-tenant-accent ml-1 font-mono">⭐ {{ $role->honorary_rank_string }}</span>
                                         @else
-                                            <span class="text-gray-500 ml-1 italic">None (Uses standard flight-hour rank)</span>
+                                            <span class="ml-1 italic" style="color: var(--tenant-card-muted, #64748b);">None (Uses standard flight-hour rank)</span>
                                         @endif
                                     </div>
 
                                     <!-- Permissions Summary -->
                                     <div class="mb-4">
-                                        <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Permissions Granted ({{ $role->permissions->count() }}):</p>
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style="color: var(--tenant-card-muted, #94a3b8);">Permissions Granted ({{ $role->permissions->count() }}):</p>
                                         <div class="flex flex-wrap gap-1.5">
                                             @forelse($role->permissions->take(6) as $perm)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 text-gray-300 border border-white/5">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-mono border" style="background-color: var(--tenant-input-bg, rgba(255,255,255,0.05)); color: var(--tenant-card-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
                                                     {{ $perm->slug }}
                                                 </span>
                                             @empty
-                                                <span class="text-xs text-gray-500 italic">No permissions assigned</span>
+                                                <span class="text-xs italic" style="color: var(--tenant-card-muted, #64748b);">No permissions assigned</span>
                                             @endforelse
                                             @if($role->permissions->count() > 6)
-                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-tenant-accent/20 text-tenant-accent">
+                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-tenant-accent/20 text-tenant-accent border border-tenant-accent/30">
                                                     +{{ $role->permissions->count() - 6 }} more
                                                 </span>
                                             @endif
@@ -445,12 +447,13 @@
                                     </div>
                                 </div>
 
-                                <div class="pt-3 border-t border-white/5 flex items-center justify-between">
-                                    <span class="text-xs text-gray-400">
+                                <div class="pt-3 border-t flex items-center justify-between" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
+                                    <span class="text-xs" style="color: var(--tenant-card-muted, #94a3b8);">
                                         <strong>{{ $role->users->count() }}</strong> assigned {{ Str::plural('pilot', $role->users->count()) }}
                                     </span>
                                     <div class="flex items-center gap-2">
-                                        <button wire:click="editRole({{ $role->id }})" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition">
+                                        <button wire:click="editRole({{ $role->id }})" class="px-3 py-1 rounded-lg text-xs font-semibold transition border hover:opacity-80"
+                                            style="background-color: var(--tenant-button-secondary-bg, rgba(255,255,255,0.1)); color: var(--tenant-button-secondary-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                                             Edit Role
                                         </button>
                                         <button wire:click="deleteRole({{ $role->id }})" 
@@ -462,10 +465,10 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="col-span-full py-12 text-center rounded-2xl bg-[#141a24] border border-white/10">
+                            <div class="col-span-full py-12 text-center rounded-2xl border" style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
                                 <span class="text-4xl">🛡️</span>
-                                <h4 class="text-white font-bold text-base mt-2">No Custom Roles Created Yet</h4>
-                                <p class="text-gray-400 text-xs mt-1 max-w-md mx-auto">Create custom roles like "Route Manager", "Fleet Director", or "Chief Pilot" with granular read or read-write permissions.</p>
+                                <h4 class="font-bold text-base mt-2" style="color: var(--tenant-card-text, #ffffff);">No Custom Roles Created Yet</h4>
+                                <p class="text-xs mt-1 max-w-md mx-auto" style="color: var(--tenant-card-muted, #94a3b8);">Create custom roles like "Route Manager", "Fleet Director", or "Chief Pilot" with granular read or read-write permissions.</p>
                                 <button wire:click="openCreateRoleModal" class="mt-4 bg-tenant-accent text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition">
                                     + Create First Role
                                 </button>
@@ -480,10 +483,10 @@
                 <div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <div>
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <h3 class="text-lg font-bold flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                                 <span>👥</span> User &amp; Staff Role Management
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">
+                            <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">
                                 Manage pilots enrolled in this airline, assign custom airline roles, and view calculated ranks.
                             </p>
                         </div>
@@ -500,23 +503,23 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto -mx-6 rounded-xl border border-white/5">
-                        <table class="min-w-full divide-y divide-white/5">
-                            <thead class="bg-white/5">
+                    <div class="overflow-x-auto -mx-6">
+                        <table class="min-w-full divide-y" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
+                            <thead style="background-color: var(--tenant-card-bg, #181D29); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Pilot</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Callsign</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Active Display Rank</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Assigned Airline Roles</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Pilot</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Callsign</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Active Display Rank</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Assigned Airline Roles</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style="color: var(--tenant-card-muted, #94a3b8);">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-white/5 bg-[#0f141e]/50">
+                            <tbody class="divide-y" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.05));">
                                 @forelse($users as $user)
                                 <tr class="hover:bg-white/5 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-bold text-white">{{ $user->full_name }}</div>
-                                        <div class="text-xs text-gray-400 font-mono">{{ $user->email }}</div>
+                                        <div class="text-sm font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $user->full_name }}</div>
+                                        <div class="text-xs font-mono" style="color: var(--tenant-card-muted, #94a3b8);">{{ $user->email }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
@@ -544,7 +547,7 @@
                                                     <button wire:click="removeQuickRole({{ $user->id }}, {{ $r->id }})" class="hover:text-red-400 text-[10px] ml-0.5" title="Remove role">✕</button>
                                                 </span>
                                             @empty
-                                                <span class="text-xs text-gray-500 italic">No custom roles assigned</span>
+                                                <span class="text-xs italic" style="color: var(--tenant-card-muted, #64748b);">No custom roles assigned</span>
                                             @endforelse
                                         </div>
                                     </td>
@@ -564,7 +567,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                                    <td colspan="5" class="px-6 py-8 text-center" style="color: var(--tenant-card-muted, #94a3b8);">
                                         No users found for this virtual airline.
                                     </td>
                                 </tr>
@@ -595,63 +598,66 @@
                 <!-- Basic Role Info -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <x-label for="roleName" value="{{ __('Role Name') }}" class="text-white" />
-                        <x-input id="roleName" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model.live="roleName" placeholder="e.g. Flight Operations Manager" />
+                        <x-label for="roleName" value="{{ __('Role Name') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                        <x-input id="roleName" type="text" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model.live="roleName" placeholder="e.g. Flight Operations Manager" />
                         <x-input-error for="roleName" class="mt-1 text-red-400 text-xs" />
                     </div>
 
                     <div>
-                        <x-label for="roleSlug" value="{{ __('Role Slug (Identifier)') }}" class="text-white" />
-                        <x-input id="roleSlug" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white font-mono" wire:model="roleSlug" placeholder="e.g. flight-ops-manager" />
+                        <x-label for="roleSlug" value="{{ __('Role Slug (Identifier)') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                        <x-input id="roleSlug" type="text" class="mt-1 block w-full font-mono" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="roleSlug" placeholder="e.g. flight-ops-manager" />
                         <x-input-error for="roleSlug" class="mt-1 text-red-400 text-xs" />
                     </div>
 
                     <div>
-                        <x-label for="roleHonoraryRank" value="{{ __('Honorary Staff Rank Title (Optional)') }}" class="text-white" />
-                        <x-input id="roleHonoraryRank" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="roleHonoraryRank" placeholder="e.g. Chief Pilot / VP Operations" />
-                        <p class="text-[11px] text-gray-400 mt-1">Displayed when the user has "Prefer Honorary Rank" enabled in preferences.</p>
+                        <x-label for="roleHonoraryRank" value="{{ __('Honorary Staff Rank Title (Optional)') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                        <x-input id="roleHonoraryRank" type="text" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="roleHonoraryRank" placeholder="e.g. Chief Pilot / VP Operations" />
+                        <p class="text-[11px] mt-1" style="color: var(--tenant-card-muted, #94a3b8);">Displayed when the user has "Prefer Honorary Rank" enabled in preferences.</p>
                         <x-input-error for="roleHonoraryRank" class="mt-1 text-red-400 text-xs" />
                     </div>
 
                     <div>
-                        <x-label for="roleDescription" value="{{ __('Description (Optional)') }}" class="text-white" />
-                        <x-input id="roleDescription" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="roleDescription" placeholder="Short description of responsibilities" />
+                        <x-label for="roleDescription" value="{{ __('Description (Optional)') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                        <x-input id="roleDescription" type="text" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="roleDescription" placeholder="Short description of responsibilities" />
                         <x-input-error for="roleDescription" class="mt-1 text-red-400 text-xs" />
                     </div>
                 </div>
 
                 <!-- Role Toggles -->
-                <div class="flex flex-wrap gap-6 p-4 rounded-xl bg-black/30 border border-white/5">
+                <div class="flex flex-wrap gap-6 p-4 rounded-xl border" style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.3)); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" wire:model="roleIsStaff" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
-                        <span class="text-sm font-semibold text-white">Staff Role</span>
-                        <span class="text-xs text-gray-400">(Designates managerial/administrative staff)</span>
+                        <input type="checkbox" wire:model="roleIsStaff" class="rounded border-gray-600 text-tenant-accent focus:ring-tenant-accent" style="background-color: var(--tenant-input-bg, #111827);">
+                        <span class="text-sm font-semibold" style="color: var(--tenant-card-text, #ffffff);">Staff Role</span>
+                        <span class="text-xs" style="color: var(--tenant-card-muted, #94a3b8);">(Designates managerial/administrative staff)</span>
                     </label>
 
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" wire:model="roleIsDefault" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
-                        <span class="text-sm font-semibold text-white">Default Role</span>
-                        <span class="text-xs text-gray-400">(Automatically assigned to new joining pilots)</span>
+                        <input type="checkbox" wire:model="roleIsDefault" class="rounded border-gray-600 text-tenant-accent focus:ring-tenant-accent" style="background-color: var(--tenant-input-bg, #111827);">
+                        <span class="text-sm font-semibold" style="color: var(--tenant-card-text, #ffffff);">Default Role</span>
+                        <span class="text-xs" style="color: var(--tenant-card-muted, #94a3b8);">(Automatically assigned to new joining pilots)</span>
                     </label>
                 </div>
 
                 <!-- Granular Permissions Matrix -->
                 <div class="space-y-4 pt-2">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/10 pb-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
                         <div>
-                            <h4 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <h4 class="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                                 <span>🔑</span> Granular Permissions Matrix
                             </h4>
-                            <p class="text-xs text-gray-400">Configure Read vs. Read-Write access across each core module for this role.</p>
+                            <p class="text-xs" style="color: var(--tenant-card-muted, #94a3b8);">Configure Read vs. Read-Write access across each core module for this role.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button type="button" wire:click="selectAllPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-white transition">
+                            <button type="button" wire:click="selectAllPermissions" class="px-2.5 py-1 rounded text-xs transition border hover:opacity-80"
+                                style="background-color: var(--tenant-button-secondary-bg, rgba(255,255,255,0.1)); color: var(--tenant-button-secondary-text, #ffffff); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                                 Select All
                             </button>
-                            <button type="button" wire:click="selectAllReadPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-sky-300 transition">
+                            <button type="button" wire:click="selectAllReadPermissions" class="px-2.5 py-1 rounded text-xs transition border hover:opacity-80 text-sky-300"
+                                style="background-color: var(--tenant-button-secondary-bg, rgba(255,255,255,0.1)); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                                 Read-Only All
                             </button>
-                            <button type="button" wire:click="clearPermissions" class="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-xs text-red-300 transition">
+                            <button type="button" wire:click="clearPermissions" class="px-2.5 py-1 rounded text-xs transition border hover:opacity-80 text-red-300"
+                                style="background-color: var(--tenant-button-secondary-bg, rgba(255,255,255,0.1)); border-color: var(--tenant-input-border, rgba(255,255,255,0.15));">
                                 Clear
                             </button>
                         </div>
@@ -662,18 +668,18 @@
                             @php
                                 $level = $this->getCategoryCurrentLevel($key);
                             @endphp
-                            <div class="p-4 rounded-xl bg-[#141a24] border border-white/10 space-y-3">
+                            <div class="p-4 rounded-xl space-y-3 border" style="background-color: var(--tenant-card-bg, #141a24); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
                                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                                     <div class="flex items-center gap-2.5">
                                         <span class="text-lg">{{ $category['icon'] }}</span>
                                         <div>
-                                            <h5 class="text-sm font-bold text-white">{{ $category['name'] }}</h5>
-                                            <p class="text-[11px] text-gray-400">{{ $category['description'] }}</p>
+                                            <h5 class="text-sm font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $category['name'] }}</h5>
+                                            <p class="text-[11px]" style="color: var(--tenant-card-muted, #94a3b8);">{{ $category['description'] }}</p>
                                         </div>
                                     </div>
 
                                     <!-- Quick Level Selector -->
-                                    <div class="inline-flex rounded-lg bg-black/40 p-1 border border-white/10 text-xs">
+                                    <div class="inline-flex rounded-lg p-1 border text-xs" style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.4)); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
                                         <button type="button" wire:click="setCategoryPermissionLevel('{{ $key }}', 'none')" 
                                                 class="px-2.5 py-1 rounded-md transition font-medium {{ $level === 'none' ? 'bg-red-500/20 text-red-300 font-bold' : 'text-gray-400 hover:text-white' }}">
                                             None
@@ -690,13 +696,14 @@
                                 </div>
 
                                 <!-- Individual Checkboxes -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.05));">
                                     @foreach($category['all'] as $slug => $label)
-                                        <label class="flex items-center gap-2 p-2 rounded-lg bg-black/20 hover:bg-black/40 cursor-pointer border border-transparent hover:border-white/5 transition">
-                                            <input type="checkbox" value="{{ $slug }}" wire:model="selectedPermissions" class="rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                                        <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer border transition hover:border-white/10"
+                                            style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.2)); border-color: var(--tenant-input-border, rgba(255,255,255,0.05));">
+                                            <input type="checkbox" value="{{ $slug }}" wire:model="selectedPermissions" class="rounded border-gray-600 text-tenant-accent focus:ring-tenant-accent" style="background-color: var(--tenant-input-bg, #111827);">
                                             <div class="text-xs">
-                                                <span class="text-white font-medium">{{ $label }}</span>
-                                                <span class="text-[10px] text-gray-500 block font-mono">{{ $slug }}</span>
+                                                <span class="font-medium" style="color: var(--tenant-card-text, #ffffff);">{{ $label }}</span>
+                                                <span class="text-[10px] block font-mono" style="color: var(--tenant-card-muted, #64748b);">{{ $slug }}</span>
                                             </div>
                                         </label>
                                     @endforeach
@@ -709,11 +716,13 @@
         </x-slot>
 
         <x-slot name="footer">
-            <x-secondary-button wire:click="$set('showRoleModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+            <x-secondary-button wire:click="$set('showRoleModal', false)" wire:loading.attr="disabled" class="border-none"
+                style="background-color: var(--tenant-button-secondary-bg, #374151); color: var(--tenant-button-secondary-text, #ffffff);">
                 {{ __('Cancel') }}
             </x-secondary-button>
 
-            <button wire:click="saveRole" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition">
+            <button wire:click="saveRole" wire:loading.attr="disabled" class="ml-3 px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition"
+                style="background-color: var(--tenant-button-bg, var(--tenant-accent)); color: var(--tenant-button-text, #ffffff);">
                 {{ $editingRoleId ? __('Save Role Changes') : __('Create Role') }}
             </button>
         </x-slot>
@@ -722,24 +731,25 @@
     <!-- User Role Assignment Modal -->
     <x-dialog-modal wire:model.live="showUserRolesModal">
         <x-slot name="title">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" style="color: var(--tenant-card-text, #ffffff);">
                 <span>🛡️</span>
                 <span>Assign Roles - <strong class="text-tenant-accent">{{ $managingUserName }}</strong></span>
             </div>
         </x-slot>
 
         <x-slot name="content">
-            <p class="text-xs text-gray-400 mb-4">
+            <p class="text-xs mb-4" style="color: var(--tenant-card-muted, #94a3b8);">
                 Select the custom roles to grant to this pilot for this specific virtual airline. Permissions will be aggregated automatically.
             </p>
 
             <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
                 @forelse($roles as $role)
-                    <label class="flex items-start gap-3 p-3.5 rounded-xl bg-[#141a24] border border-white/10 hover:border-white/20 cursor-pointer transition">
-                        <input type="checkbox" value="{{ $role->id }}" wire:model="userAssignedRoleIds" class="mt-1 rounded bg-gray-900 border-gray-600 text-tenant-accent focus:ring-tenant-accent">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition hover:border-white/20"
+                        style="background-color: var(--tenant-card-bg, #141a24); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
+                        <input type="checkbox" value="{{ $role->id }}" wire:model="userAssignedRoleIds" class="mt-1 rounded border-gray-600 text-tenant-accent focus:ring-tenant-accent" style="background-color: var(--tenant-input-bg, #111827);">
                         <div class="flex-1">
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-bold text-white">{{ $role->name }}</span>
+                                <span class="text-sm font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $role->name }}</span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold {{ $role->is_staff ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-700 text-gray-300' }}">
                                     {{ $role->is_staff ? 'Staff' : 'Pilot' }}
                                 </span>
@@ -747,11 +757,11 @@
                             @if($role->honorary_rank_string)
                                 <p class="text-xs font-mono text-tenant-accent mt-0.5">⭐ Honorary Rank: {{ $role->honorary_rank_string }}</p>
                             @endif
-                            <p class="text-xs text-gray-400 mt-1">{{ $role->description ?: 'No description provided.' }}</p>
+                            <p class="text-xs mt-1" style="color: var(--tenant-card-muted, #94a3b8);">{{ $role->description ?: 'No description provided.' }}</p>
                         </div>
                     </label>
                 @empty
-                    <div class="p-4 text-center text-gray-400 text-xs bg-black/20 rounded-xl">
+                    <div class="p-4 text-center text-xs rounded-xl border" style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.2)); color: var(--tenant-card-muted, #94a3b8); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
                         No custom airline roles created yet. Create roles in the "Roles &amp; Permissions" tab first.
                     </div>
                 @endforelse
@@ -759,11 +769,13 @@
         </x-slot>
 
         <x-slot name="footer">
-            <x-secondary-button wire:click="$set('showUserRolesModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+            <x-secondary-button wire:click="$set('showUserRolesModal', false)" wire:loading.attr="disabled" class="border-none"
+                style="background-color: var(--tenant-button-secondary-bg, #374151); color: var(--tenant-button-secondary-text, #ffffff);">
                 {{ __('Cancel') }}
             </x-secondary-button>
 
-            <button wire:click="saveUserRoles" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition">
+            <button wire:click="saveUserRoles" wire:loading.attr="disabled" class="ml-3 px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition"
+                style="background-color: var(--tenant-button-bg, var(--tenant-accent)); color: var(--tenant-button-text, #ffffff);">
                 {{ __('Update Roles') }}
             </button>
         </x-slot>
@@ -772,44 +784,80 @@
     <!-- User Modal (Create/Edit user account) -->
     <x-dialog-modal wire:model.live="showUserModal">
         <x-slot name="title">
-            {{ $editingUserId ? __('Edit User') : __('Add New User') }}
+            <span style="color: var(--tenant-card-text, #ffffff);">{{ $editingUserId ? __('Edit User') : __('Add New User') }}</span>
         </x-slot>
 
         <x-slot name="content">
             <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="userName" value="{{ __('Name') }}" />
-                <x-input id="userName" type="text" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="userName" />
-                <x-input-error for="userName" class="mt-2" />
+                <x-label for="userName" value="{{ __('Name') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                <x-input id="userName" type="text" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="userName" />
+                <x-input-error for="userName" class="mt-2 text-red-400 text-xs" />
             </div>
 
             <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="userEmail" value="{{ __('Email') }}" />
-                <x-input id="userEmail" type="email" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="userEmail" />
-                <x-input-error for="userEmail" class="mt-2" />
+                <x-label for="userEmail" value="{{ __('Email') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                <x-input id="userEmail" type="email" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="userEmail" />
+                <x-input-error for="userEmail" class="mt-2 text-red-400 text-xs" />
             </div>
 
             <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="userPassword" value="{{ $editingUserId ? __('Password (leave blank to keep current)') : __('Password') }}" />
-                <x-input id="userPassword" type="password" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white" wire:model="userPassword" />
-                <x-input-error for="userPassword" class="mt-2" />
+                <x-label for="userPassword" value="{{ $editingUserId ? __('Password (leave blank to keep current)') : __('Password') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                <x-input id="userPassword" type="password" class="mt-1 block w-full" style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);" wire:model="userPassword" />
+                <x-input-error for="userPassword" class="mt-2 text-red-400 text-xs" />
             </div>
 
+            <!-- Base System Role -->
             <div class="col-span-6 sm:col-span-4 mb-4">
-                <x-label for="userRole" value="{{ __('Role') }}" />
-                <select id="userRole" wire:model="userRole" class="mt-1 block w-full bg-[#212631] border-gray-600 text-white rounded-md shadow-sm focus:border-tenant-accent focus:ring focus:ring-tenant-accent focus:ring-opacity-50">
-                    <option value="Pilot">Pilot</option>
-                    <option value="VA Owner">VA Owner</option>
+                <x-label for="userRole" value="{{ __('Account Base Role') }}" style="color: var(--tenant-card-text, #ffffff);" />
+                <select id="userRole" wire:model="userRole" class="mt-1 block w-full rounded-md shadow-sm"
+                    style="background-color: var(--tenant-input-bg, #212631); border-color: var(--tenant-input-border, #374151); color: var(--tenant-input-text, #ffffff);">
+                    <option value="Pilot">Pilot (Standard Account)</option>
+                    <option value="VA Owner">VA Owner (Airline Administrator)</option>
                 </select>
-                <x-input-error for="userRole" class="mt-2" />
+                <p class="text-[11px] mt-1" style="color: var(--tenant-card-muted, #94a3b8);">Default role hierarchy. VA Owners have full administrative control.</p>
+                <x-input-error for="userRole" class="mt-1 text-red-400 text-xs" />
+            </div>
+
+            <!-- Custom Airline Roles -->
+            <div class="col-span-6 sm:col-span-4 mb-4">
+                <x-label value="{{ __('Assigned Airline Staff & Pilot Roles') }}" class="mb-1.5" style="color: var(--tenant-card-text, #ffffff);" />
+                @if($roles->isNotEmpty())
+                    <div class="space-y-2 max-h-48 overflow-y-auto p-3 rounded-xl border" style="background-color: var(--tenant-card-bg, #141a24); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
+                        @foreach($roles as $role)
+                            <label class="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer border transition hover:border-white/10"
+                                style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.2)); border-color: var(--tenant-input-border, rgba(255,255,255,0.05));">
+                                <input type="checkbox" value="{{ $role->id }}" wire:model="userAssignedRoleIds" class="mt-0.5 rounded border-gray-600 text-tenant-accent focus:ring-tenant-accent" style="background-color: var(--tenant-input-bg, #111827);">
+                                <div class="flex-1 text-xs">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $role->name }}</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] {{ $role->is_staff ? 'bg-purple-500/20 text-purple-300' : 'bg-gray-700 text-gray-300' }}">
+                                            {{ $role->is_staff ? 'Staff' : 'Pilot' }}
+                                        </span>
+                                    </div>
+                                    @if($role->honorary_rank_string)
+                                        <span class="text-[11px] text-tenant-accent font-mono block mt-0.5">⭐ {{ $role->honorary_rank_string }}</span>
+                                    @endif
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-[11px] mt-1" style="color: var(--tenant-card-muted, #94a3b8);">Select any custom roles (e.g. Route Manager, Chief Pilot) to grant to this user.</p>
+                @else
+                    <div class="p-3 rounded-xl text-xs border" style="background-color: var(--tenant-input-bg, rgba(0,0,0,0.2)); color: var(--tenant-card-muted, #94a3b8); border-color: var(--tenant-input-border, rgba(255,255,255,0.08));">
+                        No custom airline roles created yet. You can create them in the <strong>Roles &amp; Permissions</strong> tab.
+                    </div>
+                @endif
             </div>
         </x-slot>
 
         <x-slot name="footer">
-            <x-secondary-button wire:click="$set('showUserModal', false)" wire:loading.attr="disabled" class="bg-gray-600 text-white hover:bg-gray-500 border-none">
+            <x-secondary-button wire:click="$set('showUserModal', false)" wire:loading.attr="disabled" class="border-none"
+                style="background-color: var(--tenant-button-secondary-bg, #374151); color: var(--tenant-button-secondary-text, #ffffff);">
                 {{ __('Cancel') }}
             </x-secondary-button>
 
-            <button wire:click="saveUser" wire:loading.attr="disabled" class="ml-3 bg-tenant-accent text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition">
+            <button wire:click="saveUser" wire:loading.attr="disabled" class="ml-3 px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:opacity-90 transition"
+                style="background-color: var(--tenant-button-bg, var(--tenant-accent)); color: var(--tenant-button-text, #ffffff);">
                 {{ $editingUserId ? __('Save Changes') : __('Create User') }}
             </button>
         </x-slot>

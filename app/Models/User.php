@@ -180,7 +180,13 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        // 2. Evaluate permissions across user's assigned roles for this airline
+        // 2. VA Creator / Owner automatic full access for their airline
+        $tenant = Tenant::find($airlineId);
+        if ($tenant && ($tenant->created_by === $this->id || $this->hasRole('VA Owner'))) {
+            return true;
+        }
+
+        // 3. Evaluate permissions across user's assigned roles for this airline
         $roles = $this->getRolesForAirline($airlineId);
         foreach ($roles as $role) {
             if ($role->hasPermission($permission)) {

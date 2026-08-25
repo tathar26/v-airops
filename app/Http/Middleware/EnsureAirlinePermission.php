@@ -42,8 +42,17 @@ class EnsureAirlinePermission
             abort(400, 'Virtual airline context is missing.');
         }
 
-        // 3. Evaluate Granular Permission
-        if (!$user->hasAirlinePermission($permission, $airlineId)) {
+        // 3. Evaluate Granular Permission(s)
+        $perms = explode('|', $permission);
+        $allowed = false;
+        foreach ($perms as $perm) {
+            if ($user->hasAirlinePermission(trim($perm), $airlineId)) {
+                $allowed = true;
+                break;
+            }
+        }
+
+        if (!$allowed) {
             abort(403, "Forbidden. You do not have the required [{$permission}] permission for this virtual airline.");
         }
 

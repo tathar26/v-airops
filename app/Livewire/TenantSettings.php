@@ -626,7 +626,9 @@ class TenantSettings extends Component
 
     public function openUserModal()
     {
-        $this->reset(['editingUserId', 'userName', 'userEmail', 'userPassword', 'userRole']);
+        $this->reset(['editingUserId', 'userName', 'userEmail', 'userPassword', 'userAssignedRoleIds']);
+        $this->userRole = 'Pilot';
+        $this->resetErrorBag();
         $this->showUserModal = true;
     }
 
@@ -642,7 +644,9 @@ class TenantSettings extends Component
         $this->userName = $user->name;
         $this->userEmail = $user->email;
         $this->userPassword = '';
-        $this->userRole = $user->roles->first()->name ?? 'Pilot';
+        $this->userRole = $user->hasRole('VA Owner') ? 'VA Owner' : 'Pilot';
+        $this->userAssignedRoleIds = $user->getRolesForAirline($tenantId)->pluck('id')->map(fn($id) => (int)$id)->toArray();
+        $this->resetErrorBag();
         $this->showUserModal = true;
     }
 
@@ -692,8 +696,23 @@ class TenantSettings extends Component
             ]);
         }
 
+        // Sync custom airline roles
+        UserAirlineRole::where('user_id', $user->id)
+            ->where('tenant_id', $tenantId)
+            ->delete();
+
+        foreach ($this->userAssignedRoleIds as $roleId) {
+            if ($roleId) {
+                UserAirlineRole::create([
+                    'user_id'   => $user->id,
+                    'tenant_id' => $tenantId,
+                    'role_id'   => (int) $roleId,
+                ]);
+            }
+        }
+
         $this->showUserModal = false;
-        session()->flash('user_message', 'User saved successfully.');
+        session()->flash('user_message', 'User saved successfully with assigned roles.');
     }
 
     public function deleteUser($id)
