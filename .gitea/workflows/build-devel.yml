@@ -10,6 +10,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Version
+        run: |
+          GIT_VER=$(git describe --tags --always 2>/dev/null || echo "devel")
+          echo "Resolved Git Version: $GIT_VER"
+          echo "GIT_VER=$GIT_VER" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -26,6 +34,8 @@ jobs:
           context: .
           push: true
           tags: tathar26/v-ops:devel
+          build-args: |
+            APP_VERSION=${{ env.GIT_VER }}
           cache-from: type=registry,ref=tathar26/v-ops:buildcache
           cache-to: type=registry,ref=tathar26/v-ops:buildcache,mode=max
 

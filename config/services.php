@@ -52,5 +52,9 @@ return [
         'turnstile_secret_key' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY'),
     ],
 
+    'acars' => [
+        'live_flight_retention_hours' => (int) env('LIVE_FLIGHT_RETENTION_HOURS', 8),
+    ],
+
 ];
 

@@ -210,7 +210,7 @@
                                           'bg-purple-500/15 text-purple-300 border border-purple-500/30': ['Climbing', 'Takeoff'].includes(flight.status),
                                           'bg-orange-500/15 text-orange-300 border border-orange-500/30': ['Descending', 'Approach', 'Final Approach'].includes(flight.status),
                                           'bg-amber-500/15 text-amber-300 border border-amber-500/30': ['Preflight', 'Boarding', 'Pushback', 'Taxiing'].includes(flight.status),
-                                          'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30': ['Landed', 'Parked'].includes(flight.status)
+                                          'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30': ['Landed', 'Parked', 'Arrived', 'Completed'].includes(flight.status)
                                       }"
                                       x-text="flight.status">
                                 </span>

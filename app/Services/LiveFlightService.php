@@ -26,25 +26,30 @@ class LiveFlightService
         $tenant = Tenant::find($tenantId);
         $liveFlights = collect();
 
-        $cutoff = \Carbon\Carbon::now()->subHours(24);
+        $retentionHours = (int) config('services.acars.live_flight_retention_hours', (int) env('LIVE_FLIGHT_RETENTION_HOURS', 8));
+        if ($retentionHours <= 0) {
+            $retentionHours = 8;
+        }
 
-        // Auto-archive stale active flights older than 24h
+        $cutoff = \Carbon\Carbon::now()->subHours($retentionHours);
+
+        // Auto-archive stale active flights older than the retention window
         AcarsActiveFlight::where('status', 'active')
             ->where('updated_at', '<', $cutoff)
             ->update(['status' => 'archived']);
 
-        // 1. Query active bookings strictly for this tenant within the last 24h (status: pending, dispatched, in_flight)
+        // 1. Query active & recently completed bookings strictly for this tenant within the retention window
         $activeBookings = Booking::withoutGlobalScopes()
             ->where('tenant_id', $tenantId)
-            ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+            ->whereIn('status', ['pending', 'dispatched', 'in_flight', 'completed'])
             ->where('updated_at', '>=', $cutoff)
             ->with(['user', 'route', 'airframe.aircraftType'])
             ->latest('updated_at')
             ->get()
             ->keyBy('user_id');
 
-        // 2. Query active ACARS flights strictly for this tenant (or matching active bookings for this tenant)
-        $activeAcarsFlights = AcarsActiveFlight::where('status', 'active')
+        // 2. Query active & recently completed ACARS flights strictly for this tenant within the retention window
+        $activeAcarsFlights = AcarsActiveFlight::whereIn('status', ['active', 'completed'])
             ->where('updated_at', '>=', $cutoff)
             ->where(function ($q) use ($tenantId, $activeBookings) {
                 $q->where('tenant_id', $tenantId);
@@ -147,7 +152,8 @@ class LiveFlightService
 
             // ── TELEMETRY & LIVE POSITION FROM acars_positions TABLE ──
             $userFlightIds = AcarsActiveFlight::where('user_id', $userId)
-                ->where('status', 'active')
+                ->whereIn('status', ['active', 'completed'])
+                ->where('updated_at', '>=', $cutoff)
                 ->pluck('id');
             if ($booking?->id) {
                 $userFlightIds->push($booking->id);
@@ -157,7 +163,7 @@ class LiveFlightService
 
             if ($userFlightIds->isNotEmpty()) {
                 $latestPos = AcarsPosition::whereIn('flight_id', $userFlightIds)
-                    ->where('created_at', '>=', \Carbon\Carbon::now()->subHours(6))
+                    ->where('created_at', '>=', $cutoff)
                     ->latest('id')
                     ->first();
             }
@@ -173,7 +179,12 @@ class LiveFlightService
             $alt = (int) $latestPos->altitude_ft;
             $speed = (int) $latestPos->ground_speed_kt;
             $heading = (int) $latestPos->heading_deg;
-            $status = $this->formatFlightPhase($latestPos->flight_phase);
+
+            if ($acars?->status === 'completed' || $booking?->status === 'completed' || in_array(strtoupper(trim($latestPos->flight_phase)), ['ARRIVED', 'PARKED', 'GATE_ARRIVAL', 'COMPLETED', 'SHUTDOWN'])) {
+                $status = 'Arrived';
+            } else {
+                $status = $this->formatFlightPhase($latestPos->flight_phase);
+            }
 
             // ── FLIGHT LEVEL ─────────────────────────────────────
             if ($status === 'Preflight' || $status === 'Pushback' || $status === 'Taxiing') {
@@ -257,7 +268,7 @@ class LiveFlightService
             'DESCENT', 'DESCENDING' => 'Descending',
             'APPROACH', 'APPROACHING', 'FINAL', 'FINAL_APPROACH' => 'Approach',
             'LANDING', 'TOUCHDOWN', 'LANDED' => 'Landed',
-            'PARKED', 'GATE_ARRIVAL', 'COMPLETED', 'SHUTDOWN' => 'Parked',
+            'ARRIVED', 'PARKED', 'GATE_ARRIVAL', 'COMPLETED', 'SHUTDOWN' => 'Arrived',
             default => ucwords(str_replace('_', ' ', strtolower($phase))),
         };
     }

@@ -17,7 +17,16 @@ class VersionService
                 return $envVer;
             }
 
-            // 2. Query Git tag directly from the repository
+            // 2. Static version.txt created during build/deploy
+            $verFile = base_path('version.txt');
+            if (file_exists($verFile)) {
+                $content = trim((string) @file_get_contents($verFile));
+                if (!empty($content)) {
+                    return $content;
+                }
+            }
+
+            // 3. Query Git tag directly from the repository
             try {
                 $basePath = base_path();
                 $output = @shell_exec("git -C \"{$basePath}\" describe --tags --always 2>/dev/null");
@@ -31,8 +40,8 @@ class VersionService
                 // Silently fallback if shell_exec is disabled on host
             }
 
-            // 3. Fallback
-            return config('app.version', 'v1.0.60');
+            // 4. Fallback
+            return config('app.version', 'v1.1.4');
         });
     }
 }

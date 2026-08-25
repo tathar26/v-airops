@@ -20,6 +20,7 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
             CLOUDFLARE_TURNSTILE_SITE_KEY: '${CLOUDFLARE_TURNSTILE_SITE_KEY}'
             CLOUDFLARE_TURNSTILE_SECRET_KEY: '${CLOUDFLARE_TURNSTILE_SECRET_KEY}'
+            LIVE_FLIGHT_RETENTION_HOURS: '${LIVE_FLIGHT_RETENTION_HOURS:-8}'
         volumes:
             - '.:/var/www/html'
         networks:

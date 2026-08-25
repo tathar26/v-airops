@@ -27,6 +27,7 @@ services:
       - CLOUDFLARE_TURNSTILE_SECRET_KEY=${CLOUDFLARE_TURNSTILE_SECRET_KEY}
       - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
       - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
+      - LIVE_FLIGHT_RETENTION_HOURS=${LIVE_FLIGHT_RETENTION_HOURS:-8}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -58,6 +59,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
       - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
       - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
+      - LIVE_FLIGHT_RETENTION_HOURS=${LIVE_FLIGHT_RETENTION_HOURS:-8}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -89,6 +91,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
       - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
       - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
+      - LIVE_FLIGHT_RETENTION_HOURS=${LIVE_FLIGHT_RETENTION_HOURS:-8}
     depends_on:
       mariadb:
         condition: service_healthy

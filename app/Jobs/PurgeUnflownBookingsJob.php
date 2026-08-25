@@ -26,9 +26,9 @@ class PurgeUnflownBookingsJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(int $hours = 24)
+    public function __construct(?int $hours = null)
     {
-        $this->hours = $hours;
+        $this->hours = $hours ?? (int) config('services.acars.live_flight_retention_hours', (int) env('LIVE_FLIGHT_RETENTION_HOURS', 8));
     }
 
     /**

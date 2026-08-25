@@ -38,5 +38,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
           cache-from: type=registry,ref=tathar26/v-ops:buildcache
           cache-to: type=registry,ref=tathar26/v-ops:buildcache,mode=max

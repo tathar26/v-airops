@@ -52,8 +52,15 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Setup working directory
 WORKDIR /var/www/html
 
+# Application version build arg
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 # Copy application files
 COPY . .
+
+# Embed dynamic build version
+RUN echo -n "${APP_VERSION}" > /var/www/html/version.txt
 
 # Copy built frontend assets
 COPY --from=frontend /app/public/build ./public/build
