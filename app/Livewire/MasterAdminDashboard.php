@@ -8,21 +8,12 @@ use App\Jobs\SendVirtualAirlineApprovedEmailJob;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Pirep;
-use App\Models\SystemGlobalFlight;
-use App\Models\SystemGlobalAirline;
-use App\Models\SystemGlobalAirport;
-use App\Models\SystemGlobalAircraft;
-use App\Models\SystemGlobalAirframe;
+use App\Services\ScheduleImportService;
 use App\Services\VirtualAirlineCreationService;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Bus;
 
 class MasterAdminDashboard extends Component
 {
     use WithFileUploads;
-
-    public $batchId = null;
 
     // Create New VA Modal Properties
     public $showCreateVaModal = false;
@@ -122,63 +113,6 @@ class MasterAdminDashboard extends Component
         session()->flash('message', "Virtual Airline '{$tenant->name}' ({$tenant->icao}) has been marked as rejected.");
     }
 
-    public function clearGlobalNetwork()
-    {
-        try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::table('system_global_flights')->truncate();
-            DB::table('system_global_airlines')->truncate();
-            DB::table('system_global_airports')->truncate();
-            DB::table('system_global_aircraft')->truncate();
-            DB::table('system_global_airframes')->truncate();
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-            session()->flash('message', 'Global network database has been completely cleared.');
-        } catch (\Throwable $e) {
-            session()->flash('error', 'Failed to clear global network database: ' . $e->getMessage());
-        }
-    }
-
-    public function rebuildGlobalNetwork()
-    {
-        try {
-            Artisan::call('system:aggregate-airline-data');
-            
-            // Look for the latest batch dispatched with name 'Aggregate Global Network Data'
-            $batchRecord = DB::table('job_batches')
-                ->where('name', 'Aggregate Global Network Data')
-                ->orderBy('created_at', 'desc')
-                ->first();
-
-            if ($batchRecord) {
-                $this->batchId = $batchRecord->id;
-            }
-
-            session()->flash('message', 'Global network build job dispatched successfully!');
-        } catch (\Throwable $e) {
-            session()->flash('error', 'Failed to start rebuild job: ' . $e->getMessage());
-        }
-    }
-
-    public function getBatchProperty()
-    {
-        if (!$this->batchId) {
-            return null;
-        }
-
-        return Bus::findBatch($this->batchId);
-    }
-
-    public function updateBatchProgress()
-    {
-        $batch = $this->batch;
-        
-        if ($batch && $batch->finished()) {
-            $this->batchId = null;
-            session()->flash('message', 'Global network build completed successfully!');
-        }
-    }
-
     public function render()
     {
         $pendingTenants = Tenant::with(['creator', 'hubs.airport'])
@@ -193,8 +127,27 @@ class MasterAdminDashboard extends Component
         $totalUsers = User::count();
         $totalFlights = Pirep::count();
 
-        $totalGlobalFlights  = SystemGlobalFlight::count();
-        $totalGlobalAirlines = SystemGlobalAirline::count();
+        // Query Live Global Network API Health & Statistics
+        $globalNetworkStats = [
+            'connected' => false,
+            'active_schedules' => 0,
+            'airports_count' => 0,
+            'database_status' => 'Unknown',
+            'api_url' => config('services.schedules_api.base_url', 'https://schedules.artmex-hosting.com'),
+            'error' => null,
+        ];
+
+        try {
+            $service = app(ScheduleImportService::class);
+            $health = $service->healthCheck();
+            $globalNetworkStats['connected'] = true;
+            $globalNetworkStats['active_schedules'] = $health['active_flights_count'] ?? 0;
+            $globalNetworkStats['airports_count'] = $health['airports_seeded'] ?? 0;
+            $globalNetworkStats['database_status'] = $health['database'] ?? 'Connected';
+        } catch (\Throwable $e) {
+            $globalNetworkStats['connected'] = false;
+            $globalNetworkStats['error'] = $e->getMessage();
+        }
 
         $simbriefFormats = [
             'lido' => 'LIDO - SimBrief Default',
@@ -213,9 +166,7 @@ class MasterAdminDashboard extends Component
             'tenants'             => $activeTenants,
             'totalUsers'          => $totalUsers,
             'totalFlights'        => $totalFlights,
-            'totalGlobalFlights'  => $totalGlobalFlights,
-            'totalGlobalAirlines' => $totalGlobalAirlines,
-            'currentBatch'        => $this->batch,
+            'globalNetworkStats'  => $globalNetworkStats,
             'simbriefFormats'     => $simbriefFormats,
         ])->layout('layouts.app');
     }

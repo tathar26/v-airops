@@ -18,19 +18,6 @@
         </div>
     @endif
 
-    @if($currentBatch)
-        <div wire:poll.2s="updateBatchProgress" class="mb-6 p-4 bg-black/40 rounded-lg border border-white/10">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-white font-bold text-sm">Global Network Aggregation Progress</h3>
-                <span class="text-vops-primary text-sm font-bold">{{ $currentBatch->progress() }}%</span>
-            </div>
-            <div class="w-full bg-gray-700 rounded-full h-2.5">
-                <div class="bg-vops-primary h-2.5 rounded-full transition-all duration-500" style="width: {{ $currentBatch->progress() }}%"></div>
-            </div>
-            <p class="text-xs text-gray-400 mt-2">Processed {{ $currentBatch->processedJobs() }} of {{ $currentBatch->totalJobs }} jobs. {{ $currentBatch->failedJobs }} failed.</p>
-        </div>
-    @endif
-
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Stat Card 1 -->
@@ -152,28 +139,43 @@
     </div>
     @endif
 
-    <!-- Global Network Repository Management Card -->
+    <!-- Global Network Live API Status Card -->
     <div class="glass-panel p-6 mb-8">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <span>🌍</span> Global Network Database
-                </h3>
-                <p class="text-sm text-gray-400 mt-1">
-                    Central route repository containing <strong class="text-white">{{ number_format($totalGlobalFlights) }}</strong> global routes across <strong class="text-white">{{ number_format($totalGlobalAirlines) }}</strong> airlines.
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <span>🌍</span> Global Network &amp; Schedules API
+                    </h3>
+                    @if($globalNetworkStats['connected'])
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Live Connected
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-300 border border-red-500/30 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                            API Offline
+                        </span>
+                    @endif
+                </div>
+                <p class="text-sm text-gray-400">
+                    Live worldwide airline schedules microservice containing 
+                    <strong class="text-white font-mono">{{ number_format($globalNetworkStats['active_schedules']) }}</strong> active routes across global airports.
                 </p>
+                <div class="flex items-center gap-4 text-xs text-gray-500 pt-1 font-mono flex-wrap">
+                    <span>Endpoint: <span class="text-gray-300">{{ preg_replace('#^https?://#', '', $globalNetworkStats['api_url']) }}</span></span>
+                    <span>&bull;</span>
+                    <span>Airports Seeded: <span class="text-gray-300">{{ number_format($globalNetworkStats['airports_count']) }}</span></span>
+                    <span>&bull;</span>
+                    <span>Database: <span class="{{ $globalNetworkStats['connected'] ? 'text-emerald-400' : 'text-red-400' }}">{{ $globalNetworkStats['database_status'] }}</span></span>
+                </div>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button wire:click="clearGlobalNetwork" 
-                        wire:confirm="Are you sure you want to completely empty the global network database? All cached routes, airlines, and airports will be deleted." 
-                        class="bg-red-600/80 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2 text-sm">
-                    <span>🗑️</span> Empty Database
-                </button>
-                <button wire:click="rebuildGlobalNetwork" 
-                        {{ $currentBatch ? 'disabled' : '' }}
-                        class="bg-vops-primary hover:opacity-80 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2 text-sm disabled:opacity-50">
-                    <span>🔄</span> Rebuild Network
-                </button>
+                <a href="{{ route('global-network') }}" 
+                   class="glass-button text-sm flex items-center gap-2 cursor-pointer font-semibold">
+                    <span>✈️</span> Open Global Network &rarr;
+                </a>
             </div>
         </div>
     </div>
