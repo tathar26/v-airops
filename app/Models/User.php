@@ -29,6 +29,11 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array<int, string>
      */
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
         'first_name',
@@ -38,6 +43,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'acars_password_hash',
         'tenant_id',
+        'is_system_admin',
+        'prefer_honorary_rank',
         'vatsim_id',
         'ivao_id',
         'poscon_id',
@@ -81,6 +88,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'verification_token_expires_at' => 'datetime',
             'verification_email_sent_at' => 'datetime',
+            'is_system_admin' => 'boolean',
+            'prefer_honorary_rank' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -129,6 +138,254 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Tenant::class, 'user_airlines', 'user_id', 'tenant_id')
                     ->withPivot(['callsign', 'join_date', 'rank', 'is_active'])
                     ->withTimestamps();
+    }
+
+    /**
+     * User's assigned roles across all virtual airlines.
+     */
+    public function airlineRoles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserAirlineRole::class, 'user_id');
+    }
+
+    /* =========================================================================
+     | Global System Administrator Helpers
+     |======================================================================== */
+
+    /**
+     * Check if the user is a Global System Administrator.
+     */
+    public function isSystemAdmin(): bool
+    {
+        return (bool) $this->is_system_admin || $this->hasRole('Master Admin');
+    }
+
+    /* =========================================================================
+     | Multi-Tenant Permission & Role Methods
+     |======================================================================== */
+
+    /**
+     * Check if the user has a specific permission within an airline context.
+     * GLOBAL SYSTEM ADMINISTRATORS AUTOMATICALLY BYPASS THIS CHECK.
+     */
+    public function hasAirlinePermission(string $permission, int|Tenant|null $airline = null): bool
+    {
+        // 1. Global System Administrator Override: Always allow
+        if ($this->isSystemAdmin()) {
+            return true;
+        }
+
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return false;
+        }
+
+        // 2. Evaluate permissions across user's assigned roles for this airline
+        $roles = $this->getRolesForAirline($airlineId);
+        foreach ($roles as $role) {
+            if ($role->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the user holds a specific role in an airline context.
+     */
+    public function hasAirlineRole(string|array $roleSlug, int|Tenant|null $airline = null): bool
+    {
+        if ($this->isSystemAdmin()) {
+            return true;
+        }
+
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return false;
+        }
+
+        $slugs = is_array($roleSlug) ? $roleSlug : [$roleSlug];
+        $userRoles = $this->getRolesForAirline($airlineId);
+
+        return $userRoles->whereIn('slug', $slugs)->isNotEmpty();
+    }
+
+    /**
+     * Retrieve all active roles assigned to this user within a specific airline.
+     */
+    public function getRolesForAirline(int|Tenant|null $airline = null): \Illuminate\Support\Collection
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return collect();
+        }
+
+        return AirlineRole::with('permissions')
+            ->where('tenant_id', $airlineId)
+            ->whereIn('id', function ($query) use ($airlineId) {
+                $query->select('role_id')
+                    ->from('user_airline_roles')
+                    ->where('user_id', $this->id)
+                    ->where('tenant_id', $airlineId);
+            })
+            ->get();
+    }
+
+    /**
+     * Assign an airline-scoped role to this user.
+     */
+    public function assignAirlineRole(AirlineRole|int $role, int|Tenant|null $airline = null): void
+    {
+        $roleModel = is_numeric($role) ? AirlineRole::findOrFail($role) : $role;
+        $airlineId = $this->resolveAirlineId($airline) ?? $roleModel->tenant_id;
+
+        UserAirlineRole::firstOrCreate([
+            'user_id'   => $this->id,
+            'tenant_id' => $airlineId,
+            'role_id'   => $roleModel->id,
+        ]);
+    }
+
+    /**
+     * Remove an airline-scoped role from this user.
+     */
+    public function removeAirlineRole(AirlineRole|int $role, int|Tenant|null $airline = null): void
+    {
+        $roleId = is_object($role) ? $role->id : (int) $role;
+        $airlineId = $this->resolveAirlineId($airline) ?? ($role instanceof AirlineRole ? $role->tenant_id : null);
+
+        $query = UserAirlineRole::where('user_id', $this->id)->where('role_id', $roleId);
+        if ($airlineId) {
+            $query->where('tenant_id', $airlineId);
+        }
+        $query->delete();
+    }
+
+    /* =========================================================================
+     | The Pilot Rank vs. Honorary Staff Rank System
+     |======================================================================== */
+
+    /**
+     * Auto-calculate the pilot's standard rank based on total flight hours for this airline.
+     */
+    public function getAutoCalculatedRank(int|Tenant|null $airline = null): ?Rank
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return null;
+        }
+
+        // Get total flight time for this airline in minutes -> hours
+        $profile = $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
+        $totalHours = $profile ? floor($profile->flight_time / 60) : 0;
+        $totalPoints = $profile ? $profile->points : 0;
+
+        // 1. Check if profile has an explicitly locked rank_id
+        if ($profile && $profile->rank_id) {
+            $explicitRank = Rank::where('tenant_id', $airlineId)->find($profile->rank_id);
+            if ($explicitRank) {
+                return $explicitRank;
+            }
+        }
+
+        // 2. Highest matching rank meeting min_hours & min_points
+        $calculatedRank = Rank::where('tenant_id', $airlineId)
+            ->where('min_hours', '<=', $totalHours)
+            ->where('min_points', '<=', $totalPoints)
+            ->orderBy('min_hours', 'desc')
+            ->orderBy('min_points', 'desc')
+            ->first();
+
+        if ($calculatedRank) {
+            return $calculatedRank;
+        }
+
+        // 3. Fallback: Base rank with the lowest hours
+        return Rank::where('tenant_id', $airlineId)
+            ->orderBy('min_hours', 'asc')
+            ->orderBy('min_points', 'asc')
+            ->first();
+    }
+
+    /**
+     * Get the honorary staff rank string if user holds a staff role with one in this airline.
+     */
+    public function getHonoraryRankString(int|Tenant|null $airline = null): ?string
+    {
+        $roles = $this->getRolesForAirline($airline);
+
+        foreach ($roles as $role) {
+            if ($role->is_staff && !empty($role->honorary_rank_string)) {
+                return $role->honorary_rank_string;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Master Display Rank Logic:
+     * - Returns the Honorary Staff Rank if prefer_honorary_rank is TRUE and the user holds a staff role with an honorary rank in this airline.
+     * - Otherwise, returns the standard flight-hour auto-calculated rank name.
+     */
+    public function getDisplayRank(int|Tenant|null $airline = null): string
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+
+        // 1. If user prefers honorary rank and has an assigned staff role with an honorary rank in this airline
+        if ($this->prefer_honorary_rank) {
+            $honorary = $this->getHonoraryRankString($airlineId);
+            if (!empty($honorary)) {
+                return $honorary;
+            }
+        }
+
+        // 2. Fallback to auto-calculated rank based on flight hours
+        $autoRank = $this->getAutoCalculatedRank($airlineId);
+        if ($autoRank) {
+            return $autoRank->name;
+        }
+
+        // 3. Final default
+        $userAirline = $this->activeUserAirline();
+        if ($userAirline && $userAirline->rank) {
+            return $userAirline->rank;
+        }
+
+        return 'Cadet';
+    }
+
+    /**
+     * Get the pilot's active rank name string (uses display rank logic).
+     */
+    public function getActiveRankNameAttribute(): string
+    {
+        return $this->getDisplayRank();
+    }
+
+    /**
+     * Dynamic display rank accessor.
+     */
+    public function getDisplayRankAttribute(): string
+    {
+        return $this->getDisplayRank();
+    }
+
+    /**
+     * Helper to resolve active tenant/airline ID.
+     */
+    public function resolveAirlineId(int|Tenant|null $airline = null): ?int
+    {
+        if ($airline instanceof Tenant) {
+            return (int) $airline->id;
+        }
+
+        if (is_numeric($airline)) {
+            return (int) $airline;
+        }
+
+        return session('active_airline_id') ?? $this->tenant_id;
     }
 
     public function getTenantIdAttribute($value)
@@ -191,56 +448,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the pilot's active rank model for the current virtual airline.
-     * If unassigned, defaults to the rank with the lowest required hours.
      */
     public function getActiveRankAttribute(): ?Rank
     {
-        $tenantId = $this->getActiveTenantId() ?? $this->tenant_id;
-        if (!$tenantId) {
-            return null;
-        }
-
-        // 1. Check pilot profile rank_id
-        $profile = $this->pilotProfiles()->where('tenant_id', $tenantId)->first();
-        if ($profile && $profile->rank_id) {
-            $rank = Rank::where('tenant_id', $tenantId)->find($profile->rank_id);
-            if ($rank) {
-                return $rank;
-            }
-        }
-
-        // 2. Check user_airlines rank name
-        $userAirline = $this->activeUserAirline();
-        if ($userAirline && $userAirline->rank) {
-            $rank = Rank::where('tenant_id', $tenantId)->where('name', $userAirline->rank)->first();
-            if ($rank) {
-                return $rank;
-            }
-        }
-
-        // 3. Fallback: Rank with the lowest minimum hours required for this airline
-        return Rank::where('tenant_id', $tenantId)
-            ->orderBy('min_hours', 'asc')
-            ->orderBy('min_points', 'asc')
-            ->first();
-    }
-
-    /**
-     * Get the pilot's active rank name string.
-     */
-    public function getActiveRankNameAttribute(): string
-    {
-        $rank = $this->active_rank;
-        if ($rank) {
-            return $rank->name;
-        }
-
-        $userAirline = $this->activeUserAirline();
-        if ($userAirline && $userAirline->rank) {
-            return $userAirline->rank;
-        }
-
-        return 'Cadet';
+        return $this->getAutoCalculatedRank();
     }
 
     /**

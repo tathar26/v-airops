@@ -303,6 +303,14 @@ class Tenant extends Model
         return $this->hasMany(TenantHub::class);
     }
 
+    /**
+     * Custom roles defined for this airline.
+     */
+    public function roles()
+    {
+        return $this->hasMany(AirlineRole::class, 'tenant_id');
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true)->where('status', 'active');
