@@ -50,6 +50,57 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Two-Factor Authentication (MFA) Verification for Fortify-enabled accounts
+        $has2FA = !empty($user->two_factor_secret) && !empty($user->two_factor_confirmed_at);
+        if ($has2FA) {
+            $mfaCode = trim((string) (
+                $request->input('code')
+                ?: ($request->input('totp')
+                ?: ($request->input('mfa_code')
+                ?: $request->input('otp')))
+            ));
+
+            if (empty($mfaCode)) {
+                return response()->json([
+                    'mfa_required' => true,
+                    'detail' => 'Two-factor authentication code required',
+                    'message' => 'Two-factor authentication code required',
+                ], 401);
+            }
+
+            $validMfa = false;
+            try {
+                $twoFactorProvider = app(\Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider::class);
+                $validMfa = $twoFactorProvider->verify(decrypt($user->two_factor_secret), $mfaCode);
+            } catch (\Throwable $e) {
+                $validMfa = false;
+            }
+
+            // Fallback check for emergency recovery codes
+            if (!$validMfa && !empty($user->two_factor_recovery_codes)) {
+                try {
+                    $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
+                    if (is_array($recoveryCodes) && in_array($mfaCode, $recoveryCodes)) {
+                        $validMfa = true;
+                        // Invalidate the used recovery code
+                        $user->forceFill([
+                            'two_factor_recovery_codes' => encrypt(json_encode(array_values(array_diff($recoveryCodes, [$mfaCode])))),
+                        ])->save();
+                    }
+                } catch (\Throwable $e) {
+                    $validMfa = false;
+                }
+            }
+
+            if (!$validMfa) {
+                return response()->json([
+                    'mfa_required' => true,
+                    'detail' => 'Invalid two-factor authentication code. Please try again.',
+                    'message' => 'Invalid two-factor authentication code. Please try again.',
+                ], 401);
+            }
+        }
+
         // Revoke previous tokens for clean session management
         $user->tokens()->where('name', 'vPilot-ACARS-Token')->delete();
         $token = $user->createToken('vPilot-ACARS-Token')->plainTextToken;

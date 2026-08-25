@@ -16,7 +16,12 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['nullable', 'string', 'max:255'],
             'callsign' => ['nullable', 'string', 'max:50'],
+            'username' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'string'],
+            'code' => ['nullable', 'string', 'max:50'],
+            'totp' => ['nullable', 'string', 'max:50'],
+            'mfa_code' => ['nullable', 'string', 'max:50'],
+            'otp' => ['nullable', 'string', 'max:50'],
         ];
     }
 
