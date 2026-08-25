@@ -35,6 +35,11 @@ services:
         condition: service_started
     volumes:
       - staging-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   scheduler:
     image: tathar26/v-ops:devel
@@ -67,6 +72,11 @@ services:
         condition: service_started
     volumes:
       - staging-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   queue:
     image: tathar26/v-ops:devel
@@ -97,15 +107,24 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-
     volumes:
       - staging-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
       - staging-redis:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mariadb:
     image: mariadb:11
@@ -127,6 +146,11 @@ services:
       - --key_buffer_size=32M
     volumes:
       - staging-mariadb:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       retries: 3

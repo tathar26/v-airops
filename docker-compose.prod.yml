@@ -35,6 +35,11 @@ services:
         condition: service_started
     volumes:
       - prod-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   scheduler:
     image: tathar26/v-ops:latest
@@ -67,6 +72,11 @@ services:
         condition: service_started
     volumes:
       - prod-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   queue:
     image: tathar26/v-ops:latest
@@ -97,24 +107,33 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-
     volumes:
       - prod-storage:/var/www/html/storage
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
       - prod-redis:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mariadb:
-    image: mariadb:11
+    image: mariadb:11.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: vops_prod
-      MYSQL_USER: vops
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=vops_prod
+      - MYSQL_USER=vops
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     command: 
       - --innodb_buffer_pool_size=4G
       - --innodb_log_file_size=512M
@@ -127,6 +146,11 @@ services:
       - --key_buffer_size=32M
     volumes:
       - prod-mariadb:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       retries: 3

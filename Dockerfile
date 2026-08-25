@@ -40,7 +40,7 @@ RUN apk add --no-cache \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd xml \
     && apk del $PHPIZE_DEPS linux-headers \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* /tmp/pear /tmp/* /var/tmp/* /root/.cache
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/nginx.conf

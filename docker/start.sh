@@ -27,10 +27,16 @@ if [ "$APP_ENV" = "staging" ]; then
     php artisan db:seed --force || echo "WARNING: Seeding failed (data may already exist)."
 fi
 
+# Clean temporary files from /tmp to keep container filesystem minimal
+rm -rf /tmp/* /var/tmp/* /var/lib/nginx/tmp/fastcgi/* 2>/dev/null || true
+
 echo "Discovering packages..."
 php artisan package:discover --ansi
 
-echo "Caching configurations..."
+echo "Optimizing and caching configurations..."
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
