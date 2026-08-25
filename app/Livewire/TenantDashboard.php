@@ -34,9 +34,18 @@ class TenantDashboard extends Component
             ->where('tenant_id', $tenantId)
             ->get();
 
-        $userAcceptedPireps = $userPireps->where('status', 'Accepted')->count();
-        $userPendingPireps = $userPireps->where('status', 'Pending')->count();
-        $userRejectedPireps = $userPireps->whereIn('status', ['Rejected', 'Invalidated'])->count();
+        $userAcceptedPireps = $userPireps->filter(function($p) {
+            return in_array(strtolower($p->status), ['accepted', 'complete', 'approved']);
+        })->count();
+
+        $userPendingPireps = $userPireps->filter(function($p) {
+            return in_array(strtolower($p->status), ['pending', 'awaiting_review', 'filed']);
+        })->count();
+
+        $userRejectedPireps = $userPireps->filter(function($p) {
+            return in_array(strtolower($p->status), ['rejected', 'invalidated']);
+        })->count();
+
         $userTotalPireps = $userPireps->count();
 
         $flightTimeHours = floor($profile->flight_time / 60);

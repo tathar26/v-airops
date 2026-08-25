@@ -30,12 +30,12 @@ class Dashboard extends Component
 
         $acceptedPireps = Pirep::where('user_id', $user->id)
             ->where('tenant_id', $tenantId)
-            ->where('status', 'Accepted')
+            ->whereIn('status', ['accepted', 'Accepted', 'complete', 'Complete', 'approved', 'Approved'])
             ->count();
 
         $rejectedPireps = Pirep::where('user_id', $user->id)
             ->where('tenant_id', $tenantId)
-            ->whereIn('status', ['Rejected', 'Invalidated'])
+            ->whereIn('status', ['rejected', 'Rejected', 'invalidated', 'Invalidated'])
             ->count();
 
         $nextRank = Rank::where('tenant_id', $tenantId)

@@ -23,7 +23,7 @@ class Map extends Component
     {
         // Base query for accepted PIREPs for this user
         $query = \App\Models\Pirep::where('user_id', auth()->id())
-            ->where('status', 'Accepted')
+            ->whereIn('status', ['accepted', 'Accepted', 'complete', 'Complete', 'approved', 'Approved'])
             ->with(['route', 'airframe.aircraftType']);
 
         // Filter by Aircraft (Airframe ID)
@@ -46,7 +46,7 @@ class Map extends Component
         // Get unique airframes ever flown by this pilot (for the dropdown)
         // We do this without the filters applied so the dropdown doesn't shrink.
         $allFlownPireps = \App\Models\Pirep::where('user_id', auth()->id())
-            ->where('status', 'Accepted')
+            ->whereIn('status', ['accepted', 'Accepted', 'complete', 'Complete', 'approved', 'Approved'])
             ->with('airframe.aircraftType')
             ->get();
             
