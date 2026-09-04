@@ -2,6 +2,15 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.9] - 2026-09-04
+
+### ✈️ Live Airline Fleet & Airframe API Import
+- **Central Worldwide Fleet Database Integration:** Connected V-Ops directly to the microservice fleet endpoints (`/api/fleet/{operator_icao}`, `/api/aircraft/{registration}`, `/api/hex/{icao24}`, `/api/fleet-stats`) utilizing existing microservice authentication (`SCHEDULES_API_KEY`).
+- **Fleet Manager Livewire Interface:** Upgraded the Import Airframes modal with a dedicated *Live Airline Fleet API (OpenSky)* tab. Supports querying by airline 3-letter ICAO, real-time in-memory filtering, multi-selection, and automatic detection of airframes already in the fleet (`In Fleet` vs `New`).
+- **Automatic Aircraft Type Resolution:** Importing airframes automatically resolves or creates missing `AircraftType` records based on the airframe's ICAO type designator (e.g. `A20N`, `B738`) and manufacturer/model metadata.
+- **Artisan Console Command:** Added `php artisan fleet:import {--tenant=} {--operator=} {--limit=2000}` for command-line and automated background synchronization of airline fleets.
+- **Navigation & Cross-Links:** Added quick navigation between Global Airline Schedules and Fleet & Airframe Import.
+
 ---
 
 ## [v1.1.8] - 2026-09-04

@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Airframe;
 use App\Models\AircraftType;
+use App\Services\ScheduleImportService;
 use Livewire\WithFileUploads;
 
 class FleetManager extends Component
@@ -28,11 +29,21 @@ class FleetManager extends Component
 
     // Global import modal state
     public $showGlobalImportModal = false;
-    public $importMode = 'real_world';
+    public $importMode = 'api';
     public $filterAircraftCode = '';
     public $searchRealWorld = '';
     public $selectedRealWorldAirframes = [];
     public $selectAllRealWorld = false;
+
+    // Live Fleet API state
+    public $apiOperatorIcao = '';
+    public $apiFleetResults = [];
+    public $selectedApiAirframes = [];
+    public $selectAllApiAirframes = false;
+    public $searchApiFleet = '';
+    public $apiErrorMessage = null;
+    public $apiSuccessMessage = null;
+    public $apiLimit = 500;
 
     public $globalAircraftCode = '';
     public $quantityToGenerate = 1;
@@ -219,11 +230,170 @@ class FleetManager extends Component
 
     public function openGlobalImportModal()
     {
-        $this->reset(['importMode', 'searchRealWorld', 'filterAircraftCode', 'selectedRealWorldAirframes', 'selectAllRealWorld', 'globalAircraftCode', 'registrationPrefix', 'quantityToGenerate', 'customRegistrationsText']);
-        $this->importMode = 'real_world';
+        $tenantId = $this->getActiveTenantId();
+        $tenant = \App\Models\Tenant::find($tenantId);
+        $defaultIcao = $tenant && !empty($tenant->icao) ? strtoupper($tenant->icao) : '';
+
+        $this->reset([
+            'importMode',
+            'searchRealWorld',
+            'filterAircraftCode',
+            'selectedRealWorldAirframes',
+            'selectAllRealWorld',
+            'globalAircraftCode',
+            'registrationPrefix',
+            'quantityToGenerate',
+            'customRegistrationsText',
+            'apiFleetResults',
+            'selectedApiAirframes',
+            'selectAllApiAirframes',
+            'searchApiFleet',
+            'apiErrorMessage',
+            'apiSuccessMessage',
+        ]);
+
+        $this->apiOperatorIcao = $defaultIcao;
+        $this->importMode = 'api';
         $this->registrationPrefix = 'G-';
         $this->quantityToGenerate = 5;
         $this->showGlobalImportModal = true;
+    }
+
+    public function fetchApiFleet()
+    {
+        $this->apiErrorMessage = null;
+        $this->apiSuccessMessage = null;
+        $this->selectedApiAirframes = [];
+        $this->selectAllApiAirframes = false;
+
+        $operator = strtoupper(trim($this->apiOperatorIcao));
+        if (empty($operator)) {
+            $this->apiErrorMessage = 'Please enter an airline / operator ICAO code (e.g. DLH, KLM, BAW).';
+            return;
+        }
+
+        try {
+            $service = app(ScheduleImportService::class);
+            $limit = max(1, min(5000, (int) $this->apiLimit));
+            $results = $service->getFleetByOperator($operator, $limit);
+
+            if (empty($results)) {
+                $this->apiFleetResults = [];
+                $this->apiErrorMessage = "No aircraft found in the fleet database for operator '{$operator}'.";
+                return;
+            }
+
+            $this->apiFleetResults = $results;
+            $this->apiSuccessMessage = "Discovered " . count($results) . " aircraft for operator '{$operator}'.";
+        } catch (\Throwable $e) {
+            $this->apiFleetResults = [];
+            $this->apiErrorMessage = 'Failed to fetch fleet from API: ' . $e->getMessage();
+        }
+    }
+
+    public function getFilteredApiFleetProperty(): array
+    {
+        if (empty($this->apiFleetResults)) {
+            return [];
+        }
+
+        $s = strtoupper(trim($this->searchApiFleet));
+        if (empty($s)) {
+            return $this->apiFleetResults;
+        }
+
+        return array_values(array_filter($this->apiFleetResults, function ($item) use ($s) {
+            $reg = strtoupper($item['registration'] ?? '');
+            $type = strtoupper($item['typecode'] ?? '');
+            $model = strtoupper($item['model'] ?? '');
+            $mfg = strtoupper($item['manufacturername'] ?? '');
+            $hex = strtoupper($item['icao24'] ?? '');
+
+            return str_contains($reg, $s) || str_contains($type, $s) || str_contains($model, $s) || str_contains($mfg, $s) || str_contains($hex, $s);
+        }));
+    }
+
+    public function updatedSelectAllApiAirframes($value)
+    {
+        if ($value) {
+            $visibleRegistrations = collect($this->filtered_api_fleet)
+                ->pluck('registration')
+                ->filter()
+                ->map(fn($r) => strtoupper($r))
+                ->toArray();
+            $this->selectedApiAirframes = array_values(array_unique(array_merge($this->selectedApiAirframes, $visibleRegistrations)));
+        } else {
+            $this->selectedApiAirframes = [];
+        }
+    }
+
+    public function importSelectedApiAirframes()
+    {
+        if (empty($this->selectedApiAirframes)) {
+            $this->apiErrorMessage = 'Please select at least one airframe to import.';
+            return;
+        }
+
+        $tenantId = $this->getActiveTenantId();
+        $selectedSet = array_flip(array_map('strtoupper', $this->selectedApiAirframes));
+
+        $aircraftToImport = array_filter($this->apiFleetResults, function ($item) use ($selectedSet) {
+            $reg = strtoupper(trim($item['registration'] ?? ''));
+            return isset($selectedSet[$reg]);
+        });
+
+        if (empty($aircraftToImport)) {
+            $this->apiErrorMessage = 'No valid matching airframes found to import.';
+            return;
+        }
+
+        try {
+            $service = app(ScheduleImportService::class);
+            $result = $service->importAirframesToTenant($tenantId, $aircraftToImport);
+
+            $this->reset([
+                'showGlobalImportModal',
+                'apiFleetResults',
+                'selectedApiAirframes',
+                'selectAllApiAirframes',
+                'searchApiFleet',
+                'apiErrorMessage',
+                'apiSuccessMessage',
+            ]);
+
+            session()->flash('message', "Successfully imported {$result['airframes_imported']} airframe(s) into your fleet ({$result['aircraft_types_created']} new aircraft types created).");
+        } catch (\Throwable $e) {
+            $this->apiErrorMessage = 'Import failed: ' . $e->getMessage();
+        }
+    }
+
+    public function importAllApiAirframes()
+    {
+        if (empty($this->apiFleetResults)) {
+            $this->apiErrorMessage = 'No airframes available to import. Please fetch a fleet first.';
+            return;
+        }
+
+        $tenantId = $this->getActiveTenantId();
+
+        try {
+            $service = app(ScheduleImportService::class);
+            $result = $service->importAirframesToTenant($tenantId, $this->apiFleetResults);
+
+            $this->reset([
+                'showGlobalImportModal',
+                'apiFleetResults',
+                'selectedApiAirframes',
+                'selectAllApiAirframes',
+                'searchApiFleet',
+                'apiErrorMessage',
+                'apiSuccessMessage',
+            ]);
+
+            session()->flash('message', "Successfully imported all {$result['airframes_imported']} airframe(s) into your fleet ({$result['aircraft_types_created']} new aircraft types created).");
+        } catch (\Throwable $e) {
+            $this->apiErrorMessage = 'Import failed: ' . $e->getMessage();
+        }
     }
 
     public function updatedSelectAllRealWorld($value)
@@ -383,6 +553,12 @@ class FleetManager extends Component
             $realWorldAirframes = $realQuery->orderBy('registration')->paginate(15, ['*'], 'realWorldPage');
         }
 
+        $existingRegistrations = Airframe::where('tenant_id', $tenantId)
+            ->pluck('registration')
+            ->map(fn($r) => strtoupper($r))
+            ->flip()
+            ->toArray();
+
         return view('livewire.fleet-manager', [
             'airframes' => $airframes,
             'totalAirframesCount' => $totalAirframesCount,
@@ -390,6 +566,8 @@ class FleetManager extends Component
             'autocompleteList' => $autocompleteList,
             'globalAircraftTypes' => $globalAircraftTypes,
             'realWorldAirframes' => $realWorldAirframes,
+            'filteredApiFleet' => $this->filtered_api_fleet,
+            'existingRegistrations' => $existingRegistrations,
         ])->layout('layouts.app');
     }
 }

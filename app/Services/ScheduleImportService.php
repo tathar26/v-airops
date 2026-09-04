@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\AircraftType;
+use App\Models\Airframe;
 use App\Models\Airport;
 use App\Models\Route;
 use App\Models\Tenant;
@@ -533,6 +535,219 @@ class ScheduleImportService
         $fnPrefix = $defaultIcaoToIata[$targetUpper] ?? $targetUpper;
 
         return $fnPrefix . $suffix;
+    }
+
+    /**
+     * Query the fleet for a specific airline / operator by its 3-letter ICAO code.
+     *
+     * @param string $operatorIcao e.g. DLH, KLM, BAW
+     * @param int $limit Max results (1 to 10000)
+     * @param int $offset Offset index
+     * @return array Array of aircraft items
+     */
+    public function getFleetByOperator(string $operatorIcao, int $limit = 2000, int $offset = 0): array
+    {
+        $operator = strtoupper(trim($operatorIcao));
+        $response = $this->client()->get("/api/fleet/{$operator}", [
+            'limit' => min(10000, max(1, $limit)),
+            'offset' => max(0, $offset),
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 401) {
+            throw new RuntimeException("Fleet API returned 401 Unauthorized. Please verify that 'SCHEDULES_API_KEY' is set in your environment.");
+        }
+
+        if ($response->status() === 404) {
+            return [];
+        }
+
+        Log::error('ScheduleImportService::getFleetByOperator failed', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+            'operator' => $operator,
+        ]);
+
+        throw new RuntimeException("Fleet query failed for operator {$operator} with status {$response->status()}: " . $response->body());
+    }
+
+    /**
+     * Lookup a single aircraft by its registration / tail number.
+     *
+     * @param string $registration
+     * @return array|null
+     */
+    public function getAircraftByRegistration(string $registration): ?array
+    {
+        $reg = strtoupper(trim($registration));
+        $response = $this->client()->get("/api/aircraft/{$reg}");
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        throw new RuntimeException("Aircraft lookup failed for {$reg} with status {$response->status()}: " . $response->body());
+    }
+
+    /**
+     * Lookup a single aircraft by its 24-bit ICAO hex code.
+     *
+     * @param string $icao24
+     * @return array|null
+     */
+    public function getAircraftByHex(string $icao24): ?array
+    {
+        $hex = strtolower(trim($icao24));
+        $response = $this->client()->get("/api/hex/{$hex}");
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        throw new RuntimeException("Aircraft lookup failed for hex {$hex} with status {$response->status()}: " . $response->body());
+    }
+
+    /**
+     * Fetch summary statistics from the Fleet Database.
+     *
+     * @return array
+     */
+    public function getFleetStats(): array
+    {
+        $response = $this->client()->get('/api/fleet-stats');
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        throw new RuntimeException("Fleet stats request failed with status {$response->status()}: " . $response->body());
+    }
+
+    /**
+     * Import an array of aircraft items (from the Fleet API) into a specific Tenant's local fleet.
+     * Resolves or creates AircraftType records, then creates or updates Airframe records.
+     *
+     * @param int|Tenant $tenant
+     * @param array $aircraftList
+     * @return array{airframes_imported: int, aircraft_types_created: int, skipped: int}
+     */
+    public function importAirframesToTenant(int|Tenant $tenant, array $aircraftList): array
+    {
+        if (empty($aircraftList)) {
+            return ['airframes_imported' => 0, 'aircraft_types_created' => 0, 'skipped' => 0];
+        }
+
+        $tenantModel = is_int($tenant) ? Tenant::find($tenant) : $tenant;
+        $tenantId = $tenantModel ? $tenantModel->id : (int) $tenant;
+
+        $airframesImported = 0;
+        $typesCreated = 0;
+        $skipped = 0;
+
+        // Cache existing aircraft types for this tenant: [code => id]
+        $existingTypes = AircraftType::where('tenant_id', $tenantId)
+            ->pluck('id', 'code')
+            ->mapWithKeys(fn($id, $code) => [strtoupper($code) => $id])
+            ->toArray();
+
+        // Process in chunks within a transaction
+        $chunks = array_chunk($aircraftList, 100);
+
+        foreach ($chunks as $chunk) {
+            DB::transaction(function () use ($chunk, $tenantId, &$existingTypes, &$airframesImported, &$typesCreated, &$skipped) {
+                foreach ($chunk as $item) {
+                    $reg = strtoupper(trim($item['registration'] ?? ''));
+                    if (empty($reg)) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    // Resolve ICAO Type Code (e.g. A20N, B738)
+                    $typeCode = strtoupper(trim($item['typecode'] ?? ''));
+                    if (empty($typeCode)) {
+                        // Attempt fallback from model or manufacturericao
+                        $model = trim($item['model'] ?? '');
+                        if (preg_match('/\b(A3[0-8]\d|B7[0-8]\d|E\d{3}|CRJ\d|AT\d{2}|DH8[A-D])\b/i', $model, $m)) {
+                            $typeCode = strtoupper($m[1]);
+                        } else {
+                            $typeCode = 'A320';
+                        }
+                    }
+
+                    // Ensure AircraftType exists
+                    if (!isset($existingTypes[$typeCode])) {
+                        $manufacturer = trim($item['manufacturername'] ?? '');
+                        $model = trim($item['model'] ?? '');
+                        $typeName = trim($manufacturer . ' ' . $model);
+                        if (empty($typeName)) {
+                            $typeName = $typeCode . ' Aircraft';
+                        }
+
+                        $aircraftType = AircraftType::firstOrCreate(
+                            ['tenant_id' => $tenantId, 'code' => $typeCode],
+                            ['name' => $typeName]
+                        );
+
+                        $existingTypes[$typeCode] = $aircraftType->id;
+                        $typesCreated++;
+                    }
+
+                    $typeId = $existingTypes[$typeCode];
+
+                    // Resolve airframe friendly name (e.g., "Airbus A320-271N" or model)
+                    $airframeName = trim(($item['manufacturername'] ?? '') . ' ' . ($item['model'] ?? ''));
+                    if (empty($airframeName)) {
+                        $airframeName = trim($item['model'] ?? '') ?: ($typeCode . ' Airframe');
+                    }
+
+                    Airframe::updateOrCreate(
+                        [
+                            'tenant_id' => $tenantId,
+                            'registration' => $reg,
+                        ],
+                        [
+                            'aircraft_type_id' => $typeId,
+                            'name' => $airframeName,
+                        ]
+                    );
+
+                    $airframesImported++;
+                }
+            });
+        }
+
+        return [
+            'airframes_imported' => $airframesImported,
+            'aircraft_types_created' => $typesCreated,
+            'skipped' => $skipped,
+        ];
+    }
+
+    /**
+     * Convenience method to fetch and import the entire fleet of an operator directly into a Tenant.
+     *
+     * @param int|Tenant $tenant
+     * @param string $operatorIcao
+     * @param int $limit
+     * @return array{airframes_imported: int, aircraft_types_created: int, skipped: int, total_fetched: int}
+     */
+    public function importOperatorFleetToTenant(int|Tenant $tenant, string $operatorIcao, int $limit = 2000): array
+    {
+        $fleet = $this->getFleetByOperator($operatorIcao, $limit);
+        $result = $this->importAirframesToTenant($tenant, $fleet);
+        $result['total_fetched'] = count($fleet);
+        return $result;
     }
 }
 

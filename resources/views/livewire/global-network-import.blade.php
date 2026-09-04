@@ -5,7 +5,11 @@
                 <h2 class="text-2xl font-bold text-white">Global Airline Schedules Import</h2>
                 <p class="text-gray-400 text-sm mt-1">Search real-world worldwide airline schedules live from the central microservice and import them into your Virtual Airline network.</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="{{ route('fleet') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-tenant-accent border border-tenant-accent/40 shadow-sm transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    Fleet &amp; Airframe Import
+                </a>
                 @if($apiConnected)
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm" title="{{ $apiStatusMessage }}">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
