@@ -283,6 +283,15 @@ class FleetManager extends Component
                 return;
             }
 
+            foreach ($results as &$item) {
+                $item['resolved_typecode'] = $service->resolveAircraftTypeCode(
+                    $item['typecode'] ?? null,
+                    $item['model'] ?? null,
+                    $item['manufacturername'] ?? null
+                );
+            }
+            unset($item);
+
             $this->apiFleetResults = $results;
             $this->apiSuccessMessage = "Discovered " . count($results) . " aircraft for operator '{$operator}'.";
         } catch (\Throwable $e) {
@@ -304,12 +313,13 @@ class FleetManager extends Component
 
         return array_values(array_filter($this->apiFleetResults, function ($item) use ($s) {
             $reg = strtoupper($item['registration'] ?? '');
-            $type = strtoupper($item['typecode'] ?? '');
+            $type = strtoupper($item['resolved_typecode'] ?? ($item['typecode'] ?? ''));
+            $rawType = strtoupper($item['typecode'] ?? '');
             $model = strtoupper($item['model'] ?? '');
             $mfg = strtoupper($item['manufacturername'] ?? '');
             $hex = strtoupper($item['icao24'] ?? '');
 
-            return str_contains($reg, $s) || str_contains($type, $s) || str_contains($model, $s) || str_contains($mfg, $s) || str_contains($hex, $s);
+            return str_contains($reg, $s) || str_contains($type, $s) || str_contains($rawType, $s) || str_contains($model, $s) || str_contains($mfg, $s) || str_contains($hex, $s);
         }));
     }
 

@@ -2,6 +2,15 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.10] - 2026-09-04
+
+### 🛠️ Bug Fixes & Improvements
+- **Aircraft Type Code Resolution & Truncation Protection:** Implemented `resolveAircraftTypeCode()` in `ScheduleImportService` to automatically sanitize and map verbose fleet database airframe descriptions (such as `AIRBUS A320-214 (SL)`) down to authentic 2-4 character ICAO type codes (`A320`, `A20N`, `B738`, etc.).
+- **Database Schema Column Safety:** Strictly bounded aircraft type code to $\le 10$ characters, airframe registration to $\le 20$ characters, and names to $\le 255$ characters, preventing MySQL `String data, right truncated: 1406 Data too long for column 'code'` errors.
+- **Fleet Manager Table Badges:** Updated the preview table to display normalized ICAO type badges for clean presentation.
+
+---
+
 ## [v1.1.9] - 2026-09-04
 
 ### ✈️ Live Airline Fleet & Airframe API Import

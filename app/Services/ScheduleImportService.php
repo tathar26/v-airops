@@ -673,26 +673,23 @@ class ScheduleImportService
                         continue;
                     }
 
-                    // Resolve ICAO Type Code (e.g. A20N, B738)
-                    $typeCode = strtoupper(trim($item['typecode'] ?? ''));
-                    if (empty($typeCode)) {
-                        // Attempt fallback from model or manufacturericao
-                        $model = trim($item['model'] ?? '');
-                        if (preg_match('/\b(A3[0-8]\d|B7[0-8]\d|E\d{3}|CRJ\d|AT\d{2}|DH8[A-D])\b/i', $model, $m)) {
-                            $typeCode = strtoupper($m[1]);
-                        } else {
-                            $typeCode = 'A320';
-                        }
-                    }
+                    // Resolve clean 2-4 char ICAO Type Code (e.g. A20N, B738, A320)
+                    $typeCode = $this->resolveAircraftTypeCode(
+                        $item['typecode'] ?? null,
+                        $item['model'] ?? null,
+                        $item['manufacturername'] ?? null
+                    );
+                    $typeCode = strtoupper(substr(trim($typeCode), 0, 10));
 
                     // Ensure AircraftType exists
                     if (!isset($existingTypes[$typeCode])) {
-                        $manufacturer = trim($item['manufacturername'] ?? '');
-                        $model = trim($item['model'] ?? '');
+                        $manufacturer = trim((string)($item['manufacturername'] ?? ''));
+                        $model = trim((string)($item['model'] ?? ''));
                         $typeName = trim($manufacturer . ' ' . $model);
                         if (empty($typeName)) {
                             $typeName = $typeCode . ' Aircraft';
                         }
+                        $typeName = substr($typeName, 0, 255);
 
                         $aircraftType = AircraftType::firstOrCreate(
                             ['tenant_id' => $tenantId, 'code' => $typeCode],
@@ -705,16 +702,17 @@ class ScheduleImportService
 
                     $typeId = $existingTypes[$typeCode];
 
-                    // Resolve airframe friendly name (e.g., "Airbus A320-271N" or model)
+                    // Resolve airframe friendly name (e.g., "Airbus A320-214 (SL)" or model)
                     $airframeName = trim(($item['manufacturername'] ?? '') . ' ' . ($item['model'] ?? ''));
                     if (empty($airframeName)) {
-                        $airframeName = trim($item['model'] ?? '') ?: ($typeCode . ' Airframe');
+                        $airframeName = trim((string)($item['model'] ?? '')) ?: ($typeCode . ' Airframe');
                     }
+                    $airframeName = substr($airframeName, 0, 255);
 
                     Airframe::updateOrCreate(
                         [
                             'tenant_id' => $tenantId,
-                            'registration' => $reg,
+                            'registration' => substr($reg, 0, 20),
                         ],
                         [
                             'aircraft_type_id' => $typeId,
@@ -748,6 +746,178 @@ class ScheduleImportService
         $result = $this->importAirframesToTenant($tenant, $fleet);
         $result['total_fetched'] = count($fleet);
         return $result;
+    }
+
+    /**
+     * Resolve a clean, valid 2-4 character ICAO aircraft type designator (e.g. A320, A20N, B738).
+     * Strictly bounded to max 10 characters to prevent database column truncation.
+     *
+     * @param string|null $rawTypeCode
+     * @param string|null $model
+     * @param string|null $manufacturer
+     * @return string
+     */
+    public function resolveAircraftTypeCode(?string $rawTypeCode, ?string $model = null, ?string $manufacturer = null): string
+    {
+        $candidate = strtoupper(trim((string) $rawTypeCode));
+
+        // 1. If candidate is already a clean 2-4 character alphanumeric ICAO designator
+        if (preg_match('/^[A-Z0-9]{2,4}$/', $candidate)) {
+            return $candidate;
+        }
+
+        // 2. Build search pool from raw typecode, model, and manufacturer
+        $pool = strtoupper($candidate . ' ' . ($model ?? '') . ' ' . ($manufacturer ?? ''));
+
+        // Airbus A320neo / ceo family
+        if (str_contains($pool, 'A320')) {
+            if (str_contains($pool, 'NEO') || str_contains($pool, '271N') || str_contains($pool, '251N') || str_contains($pool, 'A20N')) {
+                return 'A20N';
+            }
+            return 'A320';
+        }
+        if (str_contains($pool, 'A321')) {
+            if (str_contains($pool, 'NEO') || str_contains($pool, '271NX') || str_contains($pool, '272N') || str_contains($pool, '251NX') || str_contains($pool, 'A21N')) {
+                return 'A21N';
+            }
+            return 'A321';
+        }
+        if (str_contains($pool, 'A319')) {
+            if (str_contains($pool, 'NEO') || str_contains($pool, 'A19N')) {
+                return 'A19N';
+            }
+            return 'A319';
+        }
+        if (str_contains($pool, 'A318')) {
+            return 'A318';
+        }
+
+        // Airbus Widebodies
+        if (str_contains($pool, 'A330')) {
+            if (str_contains($pool, 'NEO') || str_contains($pool, '900') || str_contains($pool, 'A339')) {
+                return 'A339';
+            }
+            if (str_contains($pool, '800') || str_contains($pool, 'A338')) {
+                return 'A338';
+            }
+            if (str_contains($pool, '200') || str_contains($pool, 'A332')) {
+                return 'A332';
+            }
+            return 'A333';
+        }
+        if (str_contains($pool, 'A350')) {
+            if (str_contains($pool, '1000') || str_contains($pool, 'A35K')) {
+                return 'A35K';
+            }
+            return 'A359';
+        }
+        if (str_contains($pool, 'A380') || str_contains($pool, 'A388')) {
+            return 'A388';
+        }
+        if (str_contains($pool, 'A340')) {
+            if (str_contains($pool, '600')) return 'A346';
+            if (str_contains($pool, '500')) return 'A345';
+            if (str_contains($pool, '200')) return 'A342';
+            return 'A343';
+        }
+        if (str_contains($pool, 'A220') || str_contains($pool, 'CS100') || str_contains($pool, 'CS300')) {
+            if (str_contains($pool, '300') || str_contains($pool, 'BCS3')) return 'BCS3';
+            return 'BCS1';
+        }
+
+        // Boeing 737 / MAX
+        if (str_contains($pool, '737') || str_contains($pool, 'B73')) {
+            if (str_contains($pool, 'MAX 8') || str_contains($pool, 'B38M')) return 'B38M';
+            if (str_contains($pool, 'MAX 9') || str_contains($pool, 'B39M')) return 'B39M';
+            if (str_contains($pool, 'MAX 10') || str_contains($pool, 'B3XM')) return 'B3XM';
+            if (str_contains($pool, 'MAX 7') || str_contains($pool, 'B37M')) return 'B37M';
+            if (str_contains($pool, '800') || str_contains($pool, '-8') || str_contains($pool, 'B738')) return 'B738';
+            if (str_contains($pool, '700') || str_contains($pool, '-7') || str_contains($pool, 'B737')) return 'B737';
+            if (str_contains($pool, '900') || str_contains($pool, '-9') || str_contains($pool, 'B739')) return 'B739';
+            if (str_contains($pool, '600') || str_contains($pool, 'B736')) return 'B736';
+            return 'B738';
+        }
+
+        // Boeing 787 Dreamliner
+        if (str_contains($pool, '787') || str_contains($pool, 'B78')) {
+            if (str_contains($pool, '10') || str_contains($pool, 'B78X')) return 'B78X';
+            if (str_contains($pool, '9') || str_contains($pool, 'B789')) return 'B789';
+            return 'B788';
+        }
+
+        // Boeing 777
+        if (str_contains($pool, '777') || str_contains($pool, 'B77')) {
+            if (str_contains($pool, '300') || str_contains($pool, '3ER') || str_contains($pool, 'B77W')) return 'B77W';
+            if (str_contains($pool, '200') || str_contains($pool, '2ER') || str_contains($pool, '2LR') || str_contains($pool, 'B772')) return 'B772';
+            if (str_contains($pool, 'F') || str_contains($pool, 'B77F')) return 'B77F';
+            return 'B77W';
+        }
+
+        // Boeing 747
+        if (str_contains($pool, '747') || str_contains($pool, 'B74')) {
+            if (str_contains($pool, '8') || str_contains($pool, 'B748')) return 'B748';
+            return 'B744';
+        }
+
+        // Boeing 757 & 767
+        if (str_contains($pool, '757') || str_contains($pool, 'B75')) {
+            if (str_contains($pool, '300') || str_contains($pool, 'B753')) return 'B753';
+            return 'B752';
+        }
+        if (str_contains($pool, '767') || str_contains($pool, 'B76')) {
+            if (str_contains($pool, '400') || str_contains($pool, 'B764')) return 'B764';
+            if (str_contains($pool, '200') || str_contains($pool, 'B762')) return 'B762';
+            return 'B763';
+        }
+
+        // Embraer E-Jets
+        if (str_contains($pool, 'E190') || str_contains($pool, '190') || str_contains($pool, 'ERJ-190')) {
+            if (str_contains($pool, 'E2') || str_contains($pool, 'E290')) return 'E290';
+            return 'E190';
+        }
+        if (str_contains($pool, 'E195') || str_contains($pool, '195') || str_contains($pool, 'ERJ-195')) {
+            if (str_contains($pool, 'E2') || str_contains($pool, 'E295')) return 'E295';
+            return 'E195';
+        }
+        if (str_contains($pool, 'E175') || str_contains($pool, '175')) return 'E175';
+        if (str_contains($pool, 'E170') || str_contains($pool, '170')) return 'E170';
+
+        // Bombardier / Mitsubishi CRJ
+        if (str_contains($pool, 'CRJ')) {
+            if (str_contains($pool, '900') || str_contains($pool, 'CRJ9')) return 'CRJ9';
+            if (str_contains($pool, '700') || str_contains($pool, 'CRJ7')) return 'CRJ7';
+            if (str_contains($pool, '1000') || str_contains($pool, 'CRJX')) return 'CRJX';
+            if (str_contains($pool, '200') || str_contains($pool, 'CRJ2')) return 'CRJ2';
+            return 'CRJ9';
+        }
+
+        // Turboprops (ATR, Dash 8)
+        if (str_contains($pool, 'ATR')) {
+            if (str_contains($pool, '72') || str_contains($pool, 'AT7')) return 'AT76';
+            if (str_contains($pool, '42') || str_contains($pool, 'AT4')) return 'AT45';
+            return 'AT76';
+        }
+        if (str_contains($pool, 'DASH 8') || str_contains($pool, 'Q400') || str_contains($pool, 'DH8D')) {
+            return 'DH8D';
+        }
+
+        // Generic regex extraction for ICAO-like tokens (e.g. A320, B738, E190, AT72)
+        if (preg_match('/\b(A3[0-8]\d|B7[0-8]\d|E1[79][05]|E2[9][05]|CRJ\d|AT[47]\d|DH8[A-D])\b/i', $pool, $m)) {
+            return strtoupper($m[1]);
+        }
+
+        // Generic Boeing 7xx extraction
+        if (preg_match('/\b(7[3-8]\d)\b/i', $pool, $m)) {
+            return 'B' . $m[1];
+        }
+
+        // Sanitize candidate to alphanumeric and clamp to max 4 chars
+        $clean = preg_replace('/[^A-Z0-9]/', '', $candidate);
+        if (strlen($clean) >= 2) {
+            return substr($clean, 0, 4);
+        }
+
+        return 'A320';
     }
 }
 

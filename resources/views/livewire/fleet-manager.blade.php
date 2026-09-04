@@ -302,7 +302,7 @@
                                             </td>
                                             <td class="p-3">
                                                 <span class="px-2 py-0.5 inline-flex text-xs font-bold font-mono rounded bg-white/10 text-slate-200">
-                                                    {{ $item['typecode'] ?: 'N/A' }}
+                                                    {{ $item['resolved_typecode'] ?? ($item['typecode'] ?: 'N/A') }}
                                                 </span>
                                             </td>
                                             <td class="p-3 text-slate-300">
