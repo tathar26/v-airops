@@ -157,7 +157,12 @@
             }
             
             const map = L.map(this.$refs.mapContainer).setView([50.0, 10.0], 4);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CARTO_API_KEY) || '';
+            const tileUrl = cartoKey
+                ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+            L.tileLayer(tileUrl, {
                 attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 20

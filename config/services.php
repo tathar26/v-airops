@@ -56,5 +56,9 @@ return [
         'live_flight_retention_hours' => (int) env('LIVE_FLIGHT_RETENTION_HOURS', 8),
     ],
 
+    'carto' => [
+        'api_key' => env('CARTO_API_KEY'),
+    ],
+
 ];
 

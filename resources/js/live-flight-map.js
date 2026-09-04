@@ -51,7 +51,13 @@ document.addEventListener('alpine:init', () => {
             }).setView([48.5, 4.0], 4);
 
             // CartoDB Dark Matter base layer
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CARTO_API_KEY) || '';
+            const tileUrl = cartoKey
+                ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+            L.tileLayer(tileUrl, {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(this.map);

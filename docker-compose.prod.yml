@@ -28,6 +28,7 @@ services:
       - SCHEDULES_API_BASE_URL=${SCHEDULES_API_BASE_URL:-https://schedules.artmex-hosting.com}
       - SCHEDULES_API_KEY=${SCHEDULES_API_KEY}
       - LIVE_FLIGHT_RETENTION_HOURS=${LIVE_FLIGHT_RETENTION_HOURS:-8}
+      - CARTO_API_KEY=${CARTO_API_KEY}
     depends_on:
       mariadb:
         condition: service_healthy

@@ -21,6 +21,7 @@ services:
             CLOUDFLARE_TURNSTILE_SITE_KEY: '${CLOUDFLARE_TURNSTILE_SITE_KEY}'
             CLOUDFLARE_TURNSTILE_SECRET_KEY: '${CLOUDFLARE_TURNSTILE_SECRET_KEY}'
             LIVE_FLIGHT_RETENTION_HOURS: '${LIVE_FLIGHT_RETENTION_HOURS:-8}'
+            CARTO_API_KEY: '${CARTO_API_KEY}'
         volumes:
             - '.:/var/www/html'
         networks:

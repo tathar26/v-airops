@@ -4,6 +4,15 @@ All notable changes to the Virtual Airline Operations (**V-Ops**) platform are d
 
 ---
 
+## [v1.1.8] - 2026-09-04
+
+### 🗺️ CARTO Basemaps API Key Support
+- **CARTO API Key Integration:** Added `CARTO_API_KEY` configuration across `.env`, `config/services.php`, and Docker Compose files (`docker-compose.prod.yml`, `docker-compose.staging.yml`, `docker-compose.local.yml`).
+- **Leaflet Map Integration:** Updated live operations radar (`live-flight-map.js`), flight booking/network routes (`flight-map.js`), and PIREP review telemetry map (`pirep-detail-view.blade.php`) to dynamically append `?key=...` to CARTO Dark Matter raster tiles to remove the API key requirement watermark.
+- **Runtime Metadata Delivery:** Injected the key via `<meta name="carto-api-key">` and `window.CARTO_API_KEY` in `app.blade.php` and `guest.blade.php` to allow runtime configuration without rebuilding Docker images.
+
+---
+
 ## [v1.1.7] - 2026-09-04
 
 ### 📦 Maintenance & Version Synchronization

@@ -70,6 +70,7 @@ An exhaustive guide to all configuration options and environment variables used 
 |---|---|---|---|
 | `AIRLABS_API_KEY` | *None* | String | Optional API key from [AirLabs.co](https://airlabs.co). Enables automatic real-world flight number lookups during global network route imports. |
 | `SIMBRIEF_API_URL` | `https://www.simbrief.com/api/xml.fetcher.php` | URL | Endpoint for SimBrief OFP and XML flight data fetching. |
+| `CARTO_API_KEY` | *None* | String | CARTO Basemaps API key from [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey/). Removes the "API KEY REQUIRED" watermark on Leaflet flight radar, network, and PIREP review maps. |
 
 ---
 

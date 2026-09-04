@@ -4,6 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="carto-api-key" content="{{ config('services.carto.api_key', '') }}">
+        <script>
+            window.CARTO_API_KEY = @json(config('services.carto.api_key', ''));
+        </script>
 
         <title>{{ config('app.name', 'V-Air Ops') }}</title>
 
