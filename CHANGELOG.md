@@ -4,6 +4,14 @@ All notable changes to the Virtual Airline Operations (**V-Ops**) platform are d
 
 ---
 
+## [v1.1.7] - 2026-09-04
+
+### 📦 Maintenance & Version Synchronization
+- **Version Alignment:** Synchronized default application configuration and `VersionService` fallback to `v1.1.7`.
+- **Production Build:** Triggered production container build pipeline and release image tagging.
+
+---
+
 ## [v1.0.9] - 2026-08-19
 
 ### 🚀 New Features & Enhancements

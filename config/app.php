@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'V-Air Ops'),
 
-    'version' => env('APP_VERSION', 'v1.1.4'),
+    'version' => env('APP_VERSION', 'v1.1.7'),
 
     /*
     |--------------------------------------------------------------------------

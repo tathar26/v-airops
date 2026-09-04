@@ -41,7 +41,7 @@ class VersionService
             }
 
             // 4. Fallback
-            return config('app.version', 'v1.1.4');
+            return config('app.version', 'v1.1.7');
         });
     }
 }
