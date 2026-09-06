@@ -7,6 +7,8 @@ use App\Models\AcarsPosition;
 use App\Models\Booking;
 use App\Models\Airport;
 use App\Models\Tenant;
+use App\Models\Pirep;
+use App\Models\AircraftType;
 use Illuminate\Support\Collection;
 
 class LiveFlightService
@@ -43,7 +45,7 @@ class LiveFlightService
             ->where('tenant_id', $tenantId)
             ->whereIn('status', ['pending', 'dispatched', 'in_flight', 'completed'])
             ->where('updated_at', '>=', $cutoff)
-            ->with(['user', 'route', 'airframe.aircraftType'])
+            ->with(['user', 'route.aircraftTypes', 'airframe.aircraftType'])
             ->latest('updated_at')
             ->get()
             ->keyBy('user_id');
@@ -62,8 +64,19 @@ class LiveFlightService
             ->get()
             ->keyBy('user_id');
 
+        // 3. Query recently submitted PIREPs strictly for this tenant within the retention window
+        $recentPireps = Pirep::where('tenant_id', $tenantId)
+            ->where('created_at', '>=', $cutoff)
+            ->with(['airframe.aircraftType', 'route.aircraftTypes'])
+            ->latest('id')
+            ->get()
+            ->groupBy('user_id');
+
         // Get all unique user IDs with active activity strictly within this tenant
-        $activeUserIds = $activeBookings->keys()->merge($activeAcarsFlights->keys())->unique();
+        $activeUserIds = $activeBookings->keys()
+            ->merge($activeAcarsFlights->keys())
+            ->merge($recentPireps->keys())
+            ->unique();
 
         if ($activeUserIds->isEmpty()) {
             return [];
@@ -82,6 +95,12 @@ class LiveFlightService
             if ($a->origin_icao) $neededIcaos->push(strtoupper($a->origin_icao));
             if ($a->destination_icao) $neededIcaos->push(strtoupper($a->destination_icao));
         }
+        foreach ($recentPireps as $uPireps) {
+            $p = $uPireps->first();
+            $pLog = is_array($p->flight_log) ? $p->flight_log : (json_decode($p->flight_log ?? '', true) ?? []);
+            if (!empty($pLog['origin'])) $neededIcaos->push(strtoupper($pLog['origin']));
+            if (!empty($pLog['destination'])) $neededIcaos->push(strtoupper($pLog['destination']));
+        }
 
         $airports = Airport::whereIn('icao', $neededIcaos->unique()->filter())->get()->keyBy('icao');
 
@@ -89,13 +108,22 @@ class LiveFlightService
         foreach ($activeUserIds as $userId) {
             $booking = $activeBookings->get($userId);
             $acars = $activeAcarsFlights->get($userId);
+            $pirep = $recentPireps->get($userId)?->first();
 
-            $user = $booking?->user ?? $acars?->user;
+            $user = $booking?->user ?? ($acars?->user ?? $pirep?->user);
             if (!$user) continue;
 
             $sb = $booking?->simbrief_data ?? [];
-            $route = $booking?->route;
-            $airframe = $booking?->airframe;
+            $route = $booking?->route ?? $pirep?->route;
+            $airframe = $booking?->airframe ?? $pirep?->airframe;
+
+            $pirepLog = is_array($pirep?->flight_log) 
+                ? $pirep->flight_log 
+                : (json_decode($pirep?->flight_log ?? '', true) ?? []);
+
+            if (empty($sb) && !empty($pirepLog['simbrief_data'])) {
+                $sb = $pirepLog['simbrief_data'];
+            }
 
             // ── CALLSIGN & FLIGHT NUMBER ─────────────────────────
             $callsign = $sb['params']['callsign'] 
@@ -103,24 +131,29 @@ class LiveFlightService
                 ?? ($sb['general']['callsign'] 
                 ?? ($sb['general']['flight_number'] 
                 ?? ($acars?->flight_number 
+                ?? ($pirepLog['callsign']
+                ?? ($pirepLog['flight_number']
                 ?? ($route?->callsign 
-                ?? ($route?->flight_number ?? 'FL101'))))));
+                ?? ($route?->flight_number ?? 'FL101'))))))));
 
             $flightNum = $sb['general']['flight_number'] 
                 ?? ($sb['params']['flight_number'] 
                 ?? ($acars?->flight_number 
-                ?? ($route?->flight_number ?? $callsign)));
+                ?? ($pirepLog['flight_number']
+                ?? ($route?->flight_number ?? $callsign))));
 
             // ── ORIGIN & DESTINATION ─────────────────────────────
             $depIcao = strtoupper($sb['origin']['icao_code'] 
                 ?? ($sb['general']['origin'] 
                 ?? ($acars?->origin_icao 
-                ?? ($route?->departure_icao ?? 'EGLL'))));
+                ?? ($pirepLog['origin']
+                ?? ($route?->departure_icao ?? 'EGLL')))));
 
             $arrIcao = strtoupper($sb['destination']['icao_code'] 
                 ?? ($sb['general']['destination'] 
                 ?? ($acars?->destination_icao 
-                ?? ($route?->arrival_icao ?? 'LFPG'))));
+                ?? ($pirepLog['destination']
+                ?? ($route?->arrival_icao ?? 'LFPG')))));
 
             $depAirport = $airports->get($depIcao);
             $arrAirport = $airports->get($arrIcao);
@@ -133,17 +166,49 @@ class LiveFlightService
             // ── AIRCRAFT & REGISTRATION ──────────────────────────
             $aircraftReg = $airframe?->registration 
                 ?? ($sb['aircraft']['reg'] 
-                ?? ($sb['aircraft']['registration'] ?? 'G-DEMO'));
+                ?? ($sb['aircraft']['registration'] ?? ''));
 
             $aircraftCode = $airframe?->aircraftType?->code 
                 ?? ($sb['aircraft']['icao_code'] 
+                ?? ($sb['aircraft']['icaocode']
                 ?? ($acars?->aircraft_type 
-                ?? ($route?->aircraftTypes?->first()?->code ?? 'B738')));
+                ?? ($pirep?->atc_model
+                ?? ($pirepLog['aircraft_type'] ?? null)))));
+
+            if (!$aircraftCode && $route) {
+                $aircraftCode = $route->aircraftTypes?->first()?->code;
+            }
 
             $aircraftName = $airframe?->aircraftType?->name 
-                ?? ($sb['aircraft']['name'] ?? 'Boeing 737-800');
+                ?? ($sb['aircraft']['name'] ?? null);
 
-            $aircraftDisplay = $aircraftName . ($aircraftReg ? ' - ' . $aircraftReg : '');
+            if (!$aircraftName && $aircraftCode) {
+                $dbAircraftType = AircraftType::where('tenant_id', $tenantId)
+                    ->where('code', $aircraftCode)
+                    ->first() 
+                    ?? AircraftType::where('code', $aircraftCode)->first();
+                $aircraftName = $dbAircraftType?->name;
+            }
+
+            if (!$aircraftName) {
+                $aircraftName = $pirep?->aircraft_title 
+                    ?? ($pirepLog['aircraft_title'] 
+                    ?? ($acars?->aircraft_type ?? ($aircraftCode ?? '')));
+            }
+
+            if (!empty($aircraftName) && !empty($aircraftReg)) {
+                $aircraftDisplay = ($aircraftName === $aircraftReg) ? $aircraftName : ($aircraftName . ' - ' . $aircraftReg);
+            } elseif (!empty($aircraftName)) {
+                $aircraftDisplay = $aircraftName;
+            } elseif (!empty($aircraftCode) && !empty($aircraftReg)) {
+                $aircraftDisplay = $aircraftCode . ' - ' . $aircraftReg;
+            } elseif (!empty($aircraftCode)) {
+                $aircraftDisplay = $aircraftCode;
+            } elseif (!empty($aircraftReg)) {
+                $aircraftDisplay = $aircraftReg;
+            } else {
+                $aircraftDisplay = 'N/A';
+            }
 
             // ── NETWORK ──────────────────────────────────────────
             $network = $sb['general']['network'] 

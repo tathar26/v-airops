@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.11] - 2026-09-06
+
+### 🛠️ Bug Fixes & Improvements
+- **Arrived Flight Aircraft Resolution:** Fixed an issue in `LiveFlightService` where completed/arrived flights defaulted to `Boeing 737-800 - G-DEMO` due to the booking record being deleted upon PIREP filing. Added automatic resolution from recent tenant `Pirep` records, airframe registrations, and dynamic database `AircraftType` lookups.
+- **PIREP Details View Script & Map Fix:** Resolved a blade template escaping issue where inline JavaScript attributes caused unescaped quotes to break HTML parsing and render raw JavaScript code onto the PIREP review page. Extracted component logic into a dedicated `Alpine.data('pirepDetailDashboard')` definition to ensure reliable Leaflet map and Chart.js profile rendering.
+
+---
+
 ## [v1.1.10] - 2026-09-04
 
 ### 🛠️ Bug Fixes & Improvements
