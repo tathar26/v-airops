@@ -152,325 +152,11 @@
 @endphp
 
 <div class="max-w-[1600px] mx-auto w-full space-y-6"
-    x-data="{
+    x-data="pirepDetailDashboard({
         telemetry: {{ json_encode($telemetryData) }},
         depIcao: '{{ $depIcao }}',
-        arrIcao: '{{ $arrIcao }}',
-        mapInstance: null,
-        chartInstance: null,
-        
-        loadScript(src, globalName) {
-            return new Promise((resolve, reject) => {
-                if (globalName && typeof window[globalName] !== 'undefined') {
-                    return resolve(window[globalName]);
-                }
-                let existing = document.querySelector(`script[src='${src}']`);
-                if (existing) {
-                    if (globalName && typeof window[globalName] !== 'undefined') {
-                        return resolve(window[globalName]);
-                    }
-                    existing.addEventListener('load', () => resolve(globalName ? window[globalName] : true));
-                    existing.addEventListener('error', (e) => reject(e));
-                    return;
-                }
-                const s = document.createElement('script');
-                s.src = src;
-                s.onload = () => resolve(globalName ? window[globalName] : true);
-                s.onerror = (e) => reject(e);
-                document.head.appendChild(s);
-            });
-        },
-        
-        loadStylesheet(href) {
-            return new Promise((resolve) => {
-                if (document.querySelector(`link[href*='${href}']`)) return resolve();
-                const l = document.createElement('link');
-                l.rel = 'stylesheet';
-                l.href = href;
-                l.onload = () => resolve();
-                l.onerror = () => resolve();
-                document.head.appendChild(l);
-            });
-        },
-
-        async ensureDependencies() {
-            const promises = [];
-            if (typeof L === 'undefined') {
-                this.loadStylesheet('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-                promises.push(this.loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'L'));
-            }
-            if (typeof Chart === 'undefined') {
-                promises.push(this.loadScript('https://cdn.jsdelivr.net/npm/chart.js', 'Chart'));
-            }
-            if (promises.length > 0) {
-                await Promise.all(promises);
-            }
-        },
-
-        async init() {
-            await this.ensureDependencies();
-            this.$nextTick(() => {
-                this.renderDashboard();
-            });
-        },
-
-        renderDashboard() {
-            this.renderMap();
-            this.renderChart();
-        },
-
-        async renderMap() {
-            try {
-                const container = this.$refs.mapContainer;
-                if (!container || typeof L === 'undefined') return;
-
-                if (this.mapInstance) {
-                    this.mapInstance.remove();
-                    this.mapInstance = null;
-                } else if (container._leaflet_id) {
-                    container._leaflet_id = null;
-                }
-
-                const map = L.map(container, {
-                    zoomControl: true,
-                    attributionControl: true
-                }).setView([50.0, 10.0], 4);
-                this.mapInstance = map;
-
-                const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CARTO_API_KEY) || '';
-                const tileUrl = cartoKey
-                    ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
-                    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-                L.tileLayer(tileUrl, {
-                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 20
-                }).addTo(map);
-
-                const getPhaseColor = (phase, alt) => {
-                    const p = (phase || '').toUpperCase();
-                    if (p.includes('CLIMB') || p.includes('TAKEOFF')) return '#38bdf8';
-                    if (p.includes('CRUISE') || p.includes('ENROUTE') || p.includes('LEVEL')) return '#a855f7';
-                    if (p.includes('DESCENT')) return '#f97316';
-                    if (p.includes('APPROACH') || p.includes('LANDING') || p.includes('TOUCHDOWN') || p.includes('FINAL')) return '#22c55e';
-                    if (p.includes('TAXI') || p.includes('BOARD') || p.includes('PREFLIGHT') || p.includes('PARKED')) return '#eab308';
-                    
-                    if (alt >= 28000) return '#a855f7';
-                    if (alt >= 18000) return '#818cf8';
-                    if (alt >= 8000) return '#38bdf8';
-                    if (alt >= 2000) return '#f97316';
-                    return '#22c55e';
-                };
-
-                const validTelemetry = Array.isArray(this.telemetry) 
-                    ? this.telemetry.filter(p => p && typeof p.lat === 'number' && typeof p.lon === 'number' && !isNaN(p.lat) && !isNaN(p.lon) && (p.lat !== 0 || p.lon !== 0))
-                    : [];
-
-                if (validTelemetry.length > 1) {
-                    const bounds = [];
-                    for (let i = 0; i < validTelemetry.length - 1; i++) {
-                        const p1 = validTelemetry[i];
-                        const p2 = validTelemetry[i + 1];
-                        const seg = [[p1.lat, p1.lon], [p2.lat, p2.lon]];
-                        bounds.push([p1.lat, p1.lon]);
-                        const color = getPhaseColor(p1.phase, p1.alt);
-                        
-                        L.polyline(seg, {
-                            color: color,
-                            weight: 4,
-                            opacity: 0.95,
-                            smoothFactor: 1
-                        }).bindPopup(`<strong>Phase:</strong> ${p1.phase || 'Enroute'}<br><strong>Altitude:</strong> ${p1.alt} ft<br><strong>Speed:</strong> ${p1.spd} kts<br><strong>Time:</strong> ${p1.time}`).addTo(map);
-                    }
-                    const lastPt = validTelemetry[validTelemetry.length - 1];
-                    bounds.push([lastPt.lat, lastPt.lon]);
-
-                    if (bounds.length > 0) {
-                        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-
-                        L.circleMarker(bounds[0], { 
-                            radius: 7, 
-                            color: '#38bdf8', 
-                            fillColor: '#0284c7', 
-                            fillOpacity: 1, 
-                            weight: 2 
-                        }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
-
-                        L.circleMarker(bounds[bounds.length - 1], { 
-                            radius: 7, 
-                            color: '#22c55e', 
-                            fillColor: '#16a34a', 
-                            fillOpacity: 1, 
-                            weight: 2 
-                        }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
-                    }
-                } else {
-                    const getCoords = async (icao) => {
-                        if (!icao) return null;
-                        try {
-                            const res = await fetch(`/api/airport/${encodeURIComponent(icao)}`);
-                            if (res.ok) {
-                                const data = await res.json();
-                                if (data && !isNaN(data.lat) && !isNaN(data.lon)) {
-                                    return [parseFloat(data.lat), parseFloat(data.lon)];
-                                }
-                            }
-                        } catch(e) {
-                            console.warn('Airport lookup failed for ' + icao, e);
-                        }
-                        return null;
-                    };
-
-                    let [depCoords, arrCoords] = await Promise.all([
-                        getCoords(this.depIcao),
-                        getCoords(this.arrIcao)
-                    ]);
-
-                    let pathCoordinates = [];
-                    if (depCoords && arrCoords) {
-                        pathCoordinates = [depCoords, arrCoords];
-                    } else if (depCoords) {
-                        pathCoordinates = [depCoords, depCoords];
-                    } else {
-                        pathCoordinates = [
-                            [45.725, 5.081],
-                            [51.148, -0.190]
-                        ];
-                    }
-
-                    const flightPath = L.polyline(pathCoordinates, {
-                        color: '#a855f7', 
-                        weight: 3.5,
-                        opacity: 0.9,
-                        dashArray: '6, 6'
-                    }).addTo(map);
-
-                    map.fitBounds(flightPath.getBounds(), { padding: [50, 50], maxZoom: 12 });
-
-                    L.circleMarker(pathCoordinates[0], { radius: 7, color: '#38bdf8', fillColor: '#0284c7', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
-                    L.circleMarker(pathCoordinates[pathCoordinates.length - 1], { radius: 7, color: '#22c55e', fillColor: '#16a34a', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
-                }
-
-                setTimeout(() => {
-                    if (this.mapInstance) {
-                        this.mapInstance.invalidateSize();
-                    }
-                }, 200);
-            } catch (err) {
-                console.error('Error rendering Leaflet map:', err);
-            }
-        },
-
-        renderChart() {
-            try {
-                const canvas = this.$refs.chartContainer;
-                if (!canvas || typeof Chart === 'undefined') return;
-
-                if (this.chartInstance) {
-                    this.chartInstance.destroy();
-                    this.chartInstance = null;
-                }
-                if (typeof Chart.getChart === 'function') {
-                    const existing = Chart.getChart(canvas);
-                    if (existing) existing.destroy();
-                }
-                if (window.flightProfileChartInstance) {
-                    window.flightProfileChartInstance.destroy();
-                    window.flightProfileChartInstance = null;
-                }
-
-                let chartLabels = [];
-                let altitudeData = [];
-                let speedData = [];
-
-                const validTelemetry = Array.isArray(this.telemetry) ? this.telemetry.filter(p => p && p.alt !== undefined) : [];
-
-                if (validTelemetry.length > 0) {
-                    validTelemetry.forEach((pt, idx) => {
-                        chartLabels.push(pt.time || (idx + ''));
-                        altitudeData.push(typeof pt.alt === 'number' ? pt.alt : 0);
-                        speedData.push(typeof pt.spd === 'number' ? pt.spd : 0);
-                    });
-                } else {
-                    const totalPoints = 40;
-                    for (let i = 0; i <= totalPoints; i++) {
-                        chartLabels.push(i + 'm');
-                        if (i < 8) altitudeData.push(Math.round(i * 4200)); 
-                        else if (i > 32) altitudeData.push(Math.round((totalPoints - i) * 4200));
-                        else altitudeData.push(35000);
-                        
-                        if (i < 8) speedData.push(Math.round(150 + (i * 35))); 
-                        else if (i > 32) speedData.push(Math.round(150 + ((totalPoints - i) * 35)));
-                        else speedData.push(440);
-                    }
-                }
-
-                const ctx = canvas.getContext('2d');
-                this.chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [
-                            {
-                                label: 'Altitude (ft)',
-                                data: altitudeData,
-                                borderColor: '#38bdf8',
-                                backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                                yAxisID: 'y',
-                                tension: 0.3,
-                                fill: true,
-                                pointRadius: altitudeData.length > 50 ? 0 : 2
-                            },
-                            {
-                                label: 'Groundspeed (kts)',
-                                data: speedData,
-                                borderColor: '#f87171',
-                                backgroundColor: 'transparent',
-                                yAxisID: 'y1',
-                                tension: 0.3,
-                                fill: false,
-                                pointRadius: speedData.length > 50 ? 0 : 2
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { color: '#9ca3af' }
-                            }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                grid: { color: '#273142' },
-                                ticks: { color: '#9ca3af' },
-                                title: { display: true, text: 'Altitude (ft)', color: '#9ca3af' }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                grid: { drawOnChartArea: false },
-                                ticks: { color: '#9ca3af' },
-                                title: { display: true, text: 'Speed (kts)', color: '#9ca3af' }
-                            }
-                        }
-                    }
-                });
-                window.flightProfileChartInstance = this.chartInstance;
-            } catch (err) {
-                console.error('Error rendering Chart.js profile:', err);
-            }
-        }
-    }"
+        arrIcao: '{{ $arrIcao }}'
+    })"
 >
     @if (session()->has('message'))
         <div class="bg-green-500/20 border border-green-500 text-green-100 px-4 py-3 rounded-xl relative text-xs font-bold" role="alert">
@@ -790,3 +476,337 @@
 
     </div>
 </div>
+
+<script>
+    (() => {
+        const registerComponent = () => {
+            if (typeof Alpine !== 'undefined') {
+                Alpine.data('pirepDetailDashboard', (config) => ({
+                    telemetry: config.telemetry || [],
+                    depIcao: config.depIcao || '',
+                    arrIcao: config.arrIcao || '',
+                    mapInstance: null,
+                    chartInstance: null,
+
+                    loadScript(src, globalName) {
+                        return new Promise((resolve, reject) => {
+                            if (globalName && typeof window[globalName] !== 'undefined') {
+                                return resolve(window[globalName]);
+                            }
+                            let existing = document.querySelector(`script[src='${src}']`);
+                            if (existing) {
+                                if (globalName && typeof window[globalName] !== 'undefined') {
+                                    return resolve(window[globalName]);
+                                }
+                                existing.addEventListener('load', () => resolve(globalName ? window[globalName] : true));
+                                existing.addEventListener('error', (e) => reject(e));
+                                return;
+                            }
+                            const s = document.createElement('script');
+                            s.src = src;
+                            s.onload = () => resolve(globalName ? window[globalName] : true);
+                            s.onerror = (e) => reject(e);
+                            document.head.appendChild(s);
+                        });
+                    },
+
+                    loadStylesheet(href) {
+                        return new Promise((resolve) => {
+                            if (document.querySelector(`link[href*='${href}']`)) return resolve();
+                            const l = document.createElement('link');
+                            l.rel = 'stylesheet';
+                            l.href = href;
+                            l.onload = () => resolve();
+                            l.onerror = () => resolve();
+                            document.head.appendChild(l);
+                        });
+                    },
+
+                    async ensureDependencies() {
+                        const promises = [];
+                        if (typeof L === 'undefined') {
+                            this.loadStylesheet('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+                            promises.push(this.loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', 'L'));
+                        }
+                        if (typeof Chart === 'undefined') {
+                            promises.push(this.loadScript('https://cdn.jsdelivr.net/npm/chart.js', 'Chart'));
+                        }
+                        if (promises.length > 0) {
+                            await Promise.all(promises);
+                        }
+                    },
+
+                    async init() {
+                        await this.ensureDependencies();
+                        this.$nextTick(() => {
+                            this.renderDashboard();
+                        });
+                    },
+
+                    renderDashboard() {
+                        this.renderMap();
+                        this.renderChart();
+                    },
+
+                    async renderMap() {
+                        try {
+                            const container = this.$refs.mapContainer;
+                            if (!container || typeof L === 'undefined') return;
+
+                            if (this.mapInstance) {
+                                this.mapInstance.remove();
+                                this.mapInstance = null;
+                            } else if (container._leaflet_id) {
+                                container._leaflet_id = null;
+                            }
+
+                            const map = L.map(container, {
+                                zoomControl: true,
+                                attributionControl: true
+                            }).setView([50.0, 10.0], 4);
+                            this.mapInstance = map;
+
+                            const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CARTO_API_KEY) || '';
+                            const tileUrl = cartoKey
+                                ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
+                                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+                            L.tileLayer(tileUrl, {
+                                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                                subdomains: 'abcd',
+                                maxZoom: 20
+                            }).addTo(map);
+
+                            const getPhaseColor = (phase, alt) => {
+                                const p = (phase || '').toUpperCase();
+                                if (p.includes('CLIMB') || p.includes('TAKEOFF')) return '#38bdf8';
+                                if (p.includes('CRUISE') || p.includes('ENROUTE') || p.includes('LEVEL')) return '#a855f7';
+                                if (p.includes('DESCENT')) return '#f97316';
+                                if (p.includes('APPROACH') || p.includes('LANDING') || p.includes('TOUCHDOWN') || p.includes('FINAL')) return '#22c55e';
+                                if (p.includes('TAXI') || p.includes('BOARD') || p.includes('PREFLIGHT') || p.includes('PARKED')) return '#eab308';
+                                
+                                if (alt >= 28000) return '#a855f7';
+                                if (alt >= 18000) return '#818cf8';
+                                if (alt >= 8000) return '#38bdf8';
+                                if (alt >= 2000) return '#f97316';
+                                return '#22c55e';
+                            };
+
+                            const validTelemetry = Array.isArray(this.telemetry) 
+                                ? this.telemetry.filter(p => p && typeof p.lat === 'number' && typeof p.lon === 'number' && !isNaN(p.lat) && !isNaN(p.lon) && (p.lat !== 0 || p.lon !== 0))
+                                : [];
+
+                            if (validTelemetry.length > 1) {
+                                const bounds = [];
+                                for (let i = 0; i < validTelemetry.length - 1; i++) {
+                                    const p1 = validTelemetry[i];
+                                    const p2 = validTelemetry[i + 1];
+                                    const seg = [[p1.lat, p1.lon], [p2.lat, p2.lon]];
+                                    bounds.push([p1.lat, p1.lon]);
+                                    const color = getPhaseColor(p1.phase, p1.alt);
+                                    
+                                    L.polyline(seg, {
+                                        color: color,
+                                        weight: 4,
+                                        opacity: 0.95,
+                                        smoothFactor: 1
+                                    }).bindPopup(`<strong>Phase:</strong> ${p1.phase || 'Enroute'}<br><strong>Altitude:</strong> ${p1.alt} ft<br><strong>Speed:</strong> ${p1.spd} kts<br><strong>Time:</strong> ${p1.time}`).addTo(map);
+                                }
+                                const lastPt = validTelemetry[validTelemetry.length - 1];
+                                bounds.push([lastPt.lat, lastPt.lon]);
+
+                                if (bounds.length > 0) {
+                                    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+
+                                    L.circleMarker(bounds[0], { 
+                                        radius: 7, 
+                                        color: '#38bdf8', 
+                                        fillColor: '#0284c7', 
+                                        fillOpacity: 1, 
+                                        weight: 2 
+                                    }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
+
+                                    L.circleMarker(bounds[bounds.length - 1], { 
+                                        radius: 7, 
+                                        color: '#22c55e', 
+                                        fillColor: '#16a34a', 
+                                        fillOpacity: 1, 
+                                        weight: 2 
+                                    }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
+                                }
+                            } else {
+                                const getCoords = async (icao) => {
+                                    if (!icao) return null;
+                                    try {
+                                        const res = await fetch(`/api/airport/${encodeURIComponent(icao)}`);
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            if (data && !isNaN(data.lat) && !isNaN(data.lon)) {
+                                                return [parseFloat(data.lat), parseFloat(data.lon)];
+                                            }
+                                        }
+                                    } catch(e) {
+                                        console.warn('Airport lookup failed for ' + icao, e);
+                                    }
+                                    return null;
+                                };
+
+                                const [depCoords, arrCoords] = await Promise.all([
+                                    getCoords(this.depIcao),
+                                    getCoords(this.arrIcao)
+                                ]);
+
+                                let pathCoordinates = [];
+                                if (depCoords && arrCoords) {
+                                    pathCoordinates = [depCoords, arrCoords];
+                                } else if (depCoords) {
+                                    pathCoordinates = [depCoords, depCoords];
+                                } else {
+                                    pathCoordinates = [
+                                        [45.725, 5.081],
+                                        [51.148, -0.190]
+                                    ];
+                                }
+
+                                const flightPath = L.polyline(pathCoordinates, {
+                                    color: '#a855f7', 
+                                    weight: 3.5,
+                                    opacity: 0.9,
+                                    dashArray: '6, 6'
+                                }).addTo(map);
+
+                                map.fitBounds(flightPath.getBounds(), { padding: [50, 50], maxZoom: 12 });
+
+                                L.circleMarker(pathCoordinates[0], { radius: 7, color: '#38bdf8', fillColor: '#0284c7', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Departure:</strong> ${this.depIcao}`).addTo(map);
+                                L.circleMarker(pathCoordinates[pathCoordinates.length - 1], { radius: 7, color: '#22c55e', fillColor: '#16a34a', fillOpacity: 1, weight: 2 }).bindPopup(`<strong>Arrival:</strong> ${this.arrIcao}`).addTo(map);
+                            }
+
+                            setTimeout(() => {
+                                if (this.mapInstance) {
+                                    this.mapInstance.invalidateSize();
+                                }
+                            }, 200);
+                        } catch (err) {
+                            console.error('Error rendering Leaflet map:', err);
+                        }
+                    },
+
+                    renderChart() {
+                        try {
+                            const canvas = this.$refs.chartContainer;
+                            if (!canvas || typeof Chart === 'undefined') return;
+
+                            if (this.chartInstance) {
+                                this.chartInstance.destroy();
+                                this.chartInstance = null;
+                            }
+                            if (typeof Chart.getChart === 'function') {
+                                const existing = Chart.getChart(canvas);
+                                if (existing) existing.destroy();
+                            }
+                            if (window.flightProfileChartInstance) {
+                                window.flightProfileChartInstance.destroy();
+                                window.flightProfileChartInstance = null;
+                            }
+
+                            let chartLabels = [];
+                            let altitudeData = [];
+                            let speedData = [];
+
+                            const validTelemetry = Array.isArray(this.telemetry) ? this.telemetry.filter(p => p && p.alt !== undefined) : [];
+
+                            if (validTelemetry.length > 0) {
+                                validTelemetry.forEach((pt, idx) => {
+                                    chartLabels.push(pt.time || (idx + ''));
+                                    altitudeData.push(typeof pt.alt === 'number' ? pt.alt : 0);
+                                    speedData.push(typeof pt.spd === 'number' ? pt.spd : 0);
+                                });
+                            } else {
+                                const totalPoints = 40;
+                                for (let i = 0; i <= totalPoints; i++) {
+                                    chartLabels.push(i + 'm');
+                                    if (i < 8) altitudeData.push(Math.round(i * 4200)); 
+                                    else if (i > 32) altitudeData.push(Math.round((totalPoints - i) * 4200));
+                                    else altitudeData.push(35000);
+                                    
+                                    if (i < 8) speedData.push(Math.round(150 + (i * 35))); 
+                                    else if (i > 32) speedData.push(Math.round(150 + ((totalPoints - i) * 35)));
+                                    else speedData.push(440);
+                                }
+                            }
+
+                            const ctx = canvas.getContext('2d');
+                            this.chartInstance = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: chartLabels,
+                                    datasets: [
+                                        {
+                                            label: 'Altitude (ft)',
+                                            data: altitudeData,
+                                            borderColor: '#38bdf8',
+                                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                                            yAxisID: 'y',
+                                            tension: 0.3,
+                                            fill: true,
+                                            pointRadius: altitudeData.length > 50 ? 0 : 2
+                                        },
+                                        {
+                                            label: 'Groundspeed (kts)',
+                                            data: speedData,
+                                            borderColor: '#f87171',
+                                            backgroundColor: 'transparent',
+                                            yAxisID: 'y1',
+                                            tension: 0.3,
+                                            fill: false,
+                                            pointRadius: speedData.length > 50 ? 0 : 2
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    interaction: { mode: 'index', intersect: false },
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: { color: '#9ca3af' }
+                                        }
+                                    },
+                                    scales: {
+                                        x: { display: false },
+                                        y: {
+                                            type: 'linear',
+                                            display: true,
+                                            position: 'left',
+                                            grid: { color: '#273142' },
+                                            ticks: { color: '#9ca3af' },
+                                            title: { display: true, text: 'Altitude (ft)', color: '#9ca3af' }
+                                        },
+                                        y1: {
+                                            type: 'linear',
+                                            display: true,
+                                            position: 'right',
+                                            grid: { drawOnChartArea: false },
+                                            ticks: { color: '#9ca3af' },
+                                            title: { display: true, text: 'Speed (kts)', color: '#9ca3af' }
+                                        }
+                                    }
+                                }
+                            });
+                            window.flightProfileChartInstance = this.chartInstance;
+                        } catch (err) {
+                            console.error('Error rendering Chart.js profile:', err);
+                        }
+                    }
+                }));
+            }
+        };
+
+        if (window.Alpine) {
+            registerComponent();
+        } else {
+            document.addEventListener('alpine:init', registerComponent);
+        }
+    })();
+</script>
