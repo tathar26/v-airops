@@ -843,21 +843,93 @@ class Dispatch extends Component
             $endurance = str_replace(':', '', (string)$sb['times']['est_endurance']);
         }
 
+        // Wake turbulence category resolution
+        $wake = strtoupper(trim((string)($sb['aircraft']['equip_category'] ?? ($sb['aircraft']['wake_category'] ?? ''))));
+        if (empty($wake)) {
+            if (in_array($acType, ['A388', 'A380', 'A225'])) {
+                $wake = 'J';
+            } elseif (in_array($acType, [
+                'B772', 'B773', 'B77W', 'B77L', 'B77F', 'B777',
+                'B788', 'B789', 'B78X', 'B787',
+                'B744', 'B748', 'B747', 'B762', 'B763', 'B764', 'B767',
+                'A330', 'A332', 'A333', 'A338', 'A339',
+                'A340', 'A342', 'A343', 'A345', 'A346',
+                'A350', 'A359', 'A35K',
+                'MD11', 'DC10', 'IL76', 'IL96', 'A124'
+            ])) {
+                $wake = 'H';
+            } elseif (in_array($acType, ['C152', 'C172', 'C182', 'PA28', 'SR22', 'DA40', 'DA42', 'BE36', 'BE58', 'C208'])) {
+                $wake = 'L';
+            } else {
+                $wake = 'M';
+            }
+        }
+
+        // Equipment & Transponder
+        $equipment = $sb['aircraft']['equip_navigation'] ?? ($sb['atc']['equipment'] ?? 'SDE3FGHIJ1RWXYZ');
+        $transponder = $sb['aircraft']['equip_transponder'] ?? ($sb['atc']['transponder'] ?? 'LB1');
+
+        // Remarks & Section 18
+        $section18 = $sb['atc']['section18'] ?? '';
+        $dxRmk = $sb['general']['dx_rmk'][0] ?? ($sb['general']['dx_rmk'] ?? '');
+        $remarks = !empty($section18) ? $section18 : (!empty($dxRmk) ? $dxRmk : 'VOPS / SIMBRIEF OFP');
+
+        // Raw ICAO flight plan string
+        $rawFpl = $sb['atc']['flightplan_text'] ?? '';
+        if (empty($rawFpl) && !empty($sb['prefile']['vatsim']['link'])) {
+            parse_str(parse_url($sb['prefile']['vatsim']['link'], PHP_URL_QUERY) ?? '', $simbriefVatsimParams);
+            $rawFpl = $simbriefVatsimParams['raw'] ?? '';
+        }
+
+        // POB (Persons On Board)
+        $pob = $sb['weights']['pax_count'] ?? ($this->passengers ?: '');
+
         $params = [
             'callsign' => $cs,
             'aircraft' => $acType,
+            'flight_rules' => 'IFR',
+            'rules' => 'IFR',
+            'flight_type' => 'S',
+            'wake_category' => $wake,
+            'wake' => $wake,
+            'wtc' => $wake,
+            'wakeTurbulence' => $wake,
+            'equipment' => $equipment,
+            'equip' => $equipment,
+            'transponder' => $transponder,
+            'trans' => $transponder,
             'dep' => $dep,
+            'origin' => $dep,
             'arr' => $arr,
+            'destination' => $arr,
             'alt' => $alt,
+            'alternate' => $alt,
             'alt2' => $alt2,
             'route' => $route,
             'altitude' => $altitude,
             'tas' => $tas,
+            'speed' => $tas,
+            'airspeed' => $tas,
             'deptime' => $depTime,
+            'dep_time' => $depTime,
             'enroute' => $eteClean,
+            'eet' => $eteClean,
             'fuel' => $endurance,
-            'remarks' => $sb['general']['dx_rmk'][0] ?? ($sb['general']['dx_rmk'] ?? 'VOPS / SIMBRIEF OFP'),
+            'fuel_time' => $endurance,
+            'endurance' => $endurance,
+            'remarks' => $remarks,
+            'rmk' => $remarks,
+            'other_info' => $section18,
         ];
+
+        if (!empty($pob)) {
+            $params['pob'] = (int)$pob;
+            $params['souls'] = (int)$pob;
+        }
+
+        if (!empty($rawFpl)) {
+            $params['raw'] = $rawFpl;
+        }
 
         return 'https://my.vatsim.net/pilots/flightplan?' . http_build_query($params);
     }
@@ -865,6 +937,10 @@ class Dispatch extends Component
     public function getIvaoPrefileUrlProperty(): string
     {
         $sb = $this->booking->simbrief_data ?? [];
+        if (!empty($sb['prefile']['ivao']['link'])) {
+            return $sb['prefile']['ivao']['link'];
+        }
+
         $cs = strtoupper(trim((string)($sb['general']['callsign'] ?? ($this->callsign ?? ''))));
         $acType = strtoupper(trim((string)($sb['aircraft']['icao_code'] ?? ($sb['general']['aircraft_type'] ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320')))));
         $dep = strtoupper(trim((string)($sb['general']['origin'] ?? ($sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '')))));
@@ -904,6 +980,11 @@ class Dispatch extends Component
 
     public function getPosconPrefileUrlProperty(): string
     {
+        $sb = $this->booking->simbrief_data ?? [];
+        if (!empty($sb['prefile']['poscon']['link'])) {
+            return $sb['prefile']['poscon']['link'];
+        }
+
         return 'https://hq.poscon.net/';
     }
 
@@ -964,12 +1045,12 @@ class Dispatch extends Component
 
         $origLat = (float)($sb['origin']['pos_lat'] ?? 0);
         $origLon = (float)($sb['origin']['pos_long'] ?? 0);
-        $origIcao = $sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '');
+        $origIcao = strtoupper(trim((string)($sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? ''))));
         $origName = $sb['origin']['name'] ?? $origIcao;
 
         $destLat = (float)($sb['destination']['pos_lat'] ?? 0);
         $destLon = (float)($sb['destination']['pos_long'] ?? 0);
-        $destIcao = $sb['destination']['icao_code'] ?? ($this->booking->route?->arrival_icao ?? '');
+        $destIcao = strtoupper(trim((string)($sb['destination']['icao_code'] ?? ($this->booking->route?->arrival_icao ?? ''))));
         $destName = $sb['destination']['name'] ?? $destIcao;
 
         if ($origLat === 0.0 && $origLon === 0.0 && !empty($origIcao)) {
@@ -987,7 +1068,7 @@ class Dispatch extends Component
             }
         }
 
-        if ($origLat != 0 || $origLon != 0) {
+        if ($origLat != 0.0 || $origLon != 0.0) {
             $waypoints[] = [
                 'ident' => $origIcao,
                 'name' => $origName,
@@ -997,27 +1078,64 @@ class Dispatch extends Component
             ];
         }
 
-        $fixes = $sb['navlog']['fix'] ?? [];
-        if (is_array($fixes)) {
-            foreach ($fixes as $fix) {
-                $lat = (float)($fix['pos_lat'] ?? 0);
-                $lon = (float)($fix['pos_long'] ?? 0);
-                $ident = $fix['ident'] ?? '';
-                if (($lat != 0 || $lon != 0) && !in_array($ident, ['TOC', 'TOD'])) {
-                    $waypoints[] = [
-                        'ident' => $ident,
-                        'name' => $fix['name'] ?? $ident,
-                        'lat' => $lat,
-                        'lon' => $lon,
-                        'alt' => (int)($fix['altitude_feet'] ?? 0),
-                        'stage' => $fix['stage'] ?? '',
-                        'type' => 'waypoint',
-                    ];
-                }
+        // Support both direct indexed array (SimBrief JSON v2) and XML-nested array (navlog.fix)
+        $fixes = [];
+        if (!empty($sb['navlog'])) {
+            if (isset($sb['navlog']['fix'])) {
+                $fixes = isset($sb['navlog']['fix'][0]) ? $sb['navlog']['fix'] : [$sb['navlog']['fix']];
+            } elseif (is_array($sb['navlog'])) {
+                $fixes = isset($sb['navlog'][0]) ? $sb['navlog'] : [$sb['navlog']];
             }
         }
 
-        if ($destLat != 0 || $destLon != 0) {
+        $destAdded = false;
+        foreach ($fixes as $fix) {
+            if (!is_array($fix)) continue;
+
+            $lat = (float)($fix['pos_lat'] ?? ($fix['lat'] ?? 0));
+            $lon = (float)($fix['pos_long'] ?? ($fix['lon'] ?? ($fix['long'] ?? 0)));
+            $ident = strtoupper(trim((string)($fix['ident'] ?? '')));
+
+            if ($lat == 0.0 && $lon == 0.0) continue;
+            if ($ident === $origIcao) continue;
+
+            // Check if fix is the arrival airport
+            if ($ident === $destIcao || (($fix['type'] ?? '') === 'apt' && abs($lat - $destLat) < 0.1 && abs($lon - $destLon) < 0.1)) {
+                $waypoints[] = [
+                    'ident' => $destIcao,
+                    'name' => $destName,
+                    'lat' => $destLat ?: $lat,
+                    'lon' => $destLon ?: $lon,
+                    'type' => 'arrival',
+                ];
+                $destAdded = true;
+                continue;
+            }
+
+            $fixType = 'waypoint';
+            if ($ident === 'TOC') {
+                $fixType = 'toc';
+            } elseif ($ident === 'TOD') {
+                $fixType = 'tod';
+            } elseif (($fix['type'] ?? '') === 'vor') {
+                $fixType = 'vor';
+            } elseif (($fix['type'] ?? '') === 'ndb') {
+                $fixType = 'ndb';
+            }
+
+            $waypoints[] = [
+                'ident' => $ident,
+                'name' => $fix['name'] ?? $ident,
+                'lat' => $lat,
+                'lon' => $lon,
+                'alt' => (int)($fix['altitude_feet'] ?? 0),
+                'stage' => $fix['stage'] ?? '',
+                'airway' => $fix['via_airway'] ?? '',
+                'type' => $fixType,
+            ];
+        }
+
+        if (!$destAdded && ($destLat != 0.0 || $destLon != 0.0)) {
             $waypoints[] = [
                 'ident' => $destIcao,
                 'name' => $destName,
@@ -1119,6 +1237,8 @@ class Dispatch extends Component
             'altn_count' => (int)$this->num_alternates,
             'units' => 'KGS',
             'planformat' => $resolvedFormat,
+            'navlog' => 1,
+            'detailed_navlog' => 1,
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
 

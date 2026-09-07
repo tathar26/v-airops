@@ -1284,9 +1284,15 @@ ATC ROUTE
                                 attributionControl: false
                             });
 
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                                maxZoom: 19,
-                                subdomains: 'abcd',
+                            const cartoKey = window.CARTO_API_KEY || '';
+                            const tileUrl = cartoKey
+                                ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
+                                : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+
+                            L.tileLayer(tileUrl, {
+                                maxZoom: 18,
+                                subdomains: cartoKey ? 'abcd' : '',
+                                attribution: '&copy; Basemap'
                             }).addTo(this.map);
 
                             if (Array.isArray(waypoints) && waypoints.length > 0) {
@@ -1299,8 +1305,8 @@ ATC ROUTE
                                 }).addTo(this.map);
 
                                 waypoints.forEach((wp, index) => {
-                                    const isDep = index === 0;
-                                    const isArr = index === waypoints.length - 1;
+                                    const isDep = wp.type === 'departure' || index === 0;
+                                    const isArr = wp.type === 'arrival' || index === waypoints.length - 1;
                                     if (isDep || isArr) {
                                         const icon = L.divIcon({
                                             className: 'custom-map-icon',
@@ -1308,16 +1314,43 @@ ATC ROUTE
                                             iconSize: [28, 28],
                                             iconAnchor: [14, 14]
                                         });
-                                        L.marker([wp.lat, wp.lon], { icon }).addTo(this.map).bindPopup('<b>' + wp.ident + '</b><br>' + (wp.name || ''));
+                                        L.marker([wp.lat, wp.lon], { icon }).addTo(this.map).bindPopup('<b>' + wp.ident + '</b>' + (wp.name ? '<br>' + wp.name : ''));
+                                    } else if (wp.type === 'toc' || wp.ident === 'TOC') {
+                                        const icon = L.divIcon({
+                                            className: 'custom-toc-icon',
+                                            html: '<div style="background:#10B981;color:#ffffff;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:4px;border:1px solid #ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.6);text-align:center;white-space:nowrap;">TOC</div>',
+                                            iconAnchor: [16, 10]
+                                        });
+                                        L.marker([wp.lat, wp.lon], { icon }).addTo(this.map).bindPopup('<b>Top of Climb (TOC)</b>' + (wp.alt ? '<br>FL' + Math.floor(wp.alt/100) : ''));
+                                    } else if (wp.type === 'tod' || wp.ident === 'TOD') {
+                                        const icon = L.divIcon({
+                                            className: 'custom-tod-icon',
+                                            html: '<div style="background:#F59E0B;color:#ffffff;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:4px;border:1px solid #ffffff;box-shadow:0 2px 6px rgba(0,0,0,0.6);text-align:center;white-space:nowrap;">TOD</div>',
+                                            iconAnchor: [16, 10]
+                                        });
+                                        L.marker([wp.lat, wp.lon], { icon }).addTo(this.map).bindPopup('<b>Top of Descent (TOD)</b>' + (wp.alt ? '<br>FL' + Math.floor(wp.alt/100) : ''));
                                     } else {
-                                        L.circleMarker([wp.lat, wp.lon], {
+                                        const marker = L.circleMarker([wp.lat, wp.lon], {
                                             radius: 4,
                                             fillColor: '#21A19D',
                                             color: '#ffffff',
                                             weight: 1.5,
                                             opacity: 1,
                                             fillOpacity: 0.9
-                                        }).addTo(this.map).bindPopup('<b>' + wp.ident + '</b>' + (wp.alt ? '<br>FL' + Math.floor(wp.alt/100) : ''));
+                                        }).addTo(this.map);
+
+                                        let popup = '<b>' + wp.ident + '</b>';
+                                        if (wp.name && wp.name !== wp.ident) popup += '<br>' + wp.name;
+                                        if (wp.alt) popup += '<br>FL' + Math.floor(wp.alt/100);
+                                        if (wp.airway) popup += '<br>Airway: ' + wp.airway;
+                                        if (wp.stage) popup += ' (' + wp.stage + ')';
+                                        marker.bindPopup(popup);
+
+                                        marker.bindTooltip(wp.ident, {
+                                            direction: 'top',
+                                            offset: [0, -4],
+                                            className: 'bg-black/90 text-white font-mono text-[10px] px-1.5 py-0.5 rounded border border-white/20'
+                                        });
                                     }
                                 });
 

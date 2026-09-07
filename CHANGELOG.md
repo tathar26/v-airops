@@ -2,6 +2,24 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.19] - 2026-09-07
+
+### 🗺️ Route Map Waypoints & VATSIM Pre-File Completion
+- **Intermediate Route Waypoints on Dispatch Map:** Fixed waypoint extraction from SimBrief API v2 JSON payloads (`navlog` array format), allowing the route polyline to accurately trace through all SIDs, airways, navigation fixes, and STARs instead of a single straight line.
+- **Top of Climb (TOC) & Top of Descent (TOD) Badges:** Distinctly styled `TOC` (emerald badge) and `TOD` (amber badge) markers along the route with altitude tooltips and flight level popups.
+- **Waypoints Hover Tooltips & Details:** Added hover tooltips with waypoint identifiers and clickable popups displaying fix name, altitude, airway, and flight stage.
+- **Watermark-Free Basemap Tiles:** Updated Leaflet tile layer to fall back to clean ESRI World Dark Gray Canvas when `CARTO_API_KEY` is not provided, completely removing the "API KEY REQUIRED" watermark from the dispatch map banner.
+- **Comprehensive VATSIM Pre-Filing:** Fully populated all VATSIM flight plan form fields (`https://my.vatsim.net/pilots/flightplan`), including:
+  - Wake Turbulence Category (`wake_category`, `wake`, `wtc`, `wakeTurbulence`): `M` (Medium), `H` (Heavy), `J` (Super), `L` (Light) auto-resolved from SimBrief equipment category and ICAO airframe specifications.
+  - Aircraft Equipment (`equipment`, `equip`) and Transponder (`transponder`, `trans`).
+  - Flight Rules (`IFR`), Flight Type (`S`), Off-Block UTC time, Cruise Altitude, Airspeed (TAS), Enroute Time (EET), and Fuel Endurance.
+  - Full ICAO Flight Plan raw string (`raw`) and Section 18 / Dispatcher remarks.
+  - Persons On Board (`pob`, `souls`).
+- **Direct IVAO & POSCON SimBrief Links:** Directly utilizes official pre-file links provided in the SimBrief OFP payload when available (`$sb['prefile']['ivao']['link']` and `$sb['prefile']['poscon']['link']`).
+- **Detailed Navlog Param in SimBrief Options:** Added `navlog=1` and `detailed_navlog=1` to the SimBrief custom dispatch popup parameters to ensure future generated OFPs always include comprehensive waypoint data.
+
+---
+
 ## [v1.1.18] - 2026-09-07
 
 ### 🛠️ Fix Dispatch Action Route Names
