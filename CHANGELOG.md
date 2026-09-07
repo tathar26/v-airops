@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.14] - 2026-09-07
+
+### 🗺️ PIREP Map & Chart Fixes
+- **Resolved Fatal Module Syntax Error:** Fixed `Uncaught SyntaxError: Cannot use 'import.meta' outside a module` on the PIREP details dashboard by removing `import.meta` evaluation from the inline `<script>` tag.
+- **Restored Leaflet Map & Altitude Profile Chart:** Elimination of the script parse error allows Alpine's `pirepDetailDashboard` component to register cleanly, restoring the interactive flight map and telemetry profile graphs.
+
+---
+
 ## [v1.1.13] - 2026-09-07
 
 ### 📊 Pilot Statistics & Logbook Overhaul

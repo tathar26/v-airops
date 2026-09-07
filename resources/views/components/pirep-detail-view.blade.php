@@ -566,7 +566,7 @@
                             }).setView([50.0, 10.0], 4);
                             this.mapInstance = map;
 
-                            const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CARTO_API_KEY) || '';
+                            const cartoKey = window.CARTO_API_KEY || document.querySelector('meta[name="carto-api-key"]')?.getAttribute('content') || '';
                             const tileUrl = cartoKey
                                 ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`
                                 : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
