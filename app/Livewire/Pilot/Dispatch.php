@@ -21,6 +21,7 @@ class Dispatch extends Component
 
     // Aircraft & Callsign
     public $airframe_id;
+    public $airplane_profile = 'default';
     public $callsign;
     public $flight_number;
     public $dispatch_via_simbrief = true;
@@ -39,9 +40,9 @@ class Dispatch extends Component
     public $alternate_2 = '';
 
     // Payload
-    public $passengers = 170;
+    public $passengers = null;
     public $passengers_max = 186;
-    public $hold_bags = 152;
+    public $hold_bags = null;
     public $hold_bags_max = 170;
     public $estimated_zfw = 61626;
 
@@ -77,7 +78,7 @@ class Dispatch extends Component
 
         // Pilot SimBrief Username
         $profile = auth()->user()->pilotProfiles()->first();
-        $this->simbrief_username = $simData['simbrief_username'] ?? ($profile->simbrief_username ?? '');
+        $this->simbrief_username = $profile?->simbrief_username ?? ($simData['simbrief_username'] ?? '');
 
         // If booking is already dispatched or has OFP generated, show OFP View
         if ($booking->status === 'dispatched' || isset($simData['weights'])) {
@@ -91,6 +92,8 @@ class Dispatch extends Component
             $this->airframe_id = $firstAirframe ? $firstAirframe->id : null;
         }
 
+        $this->airplane_profile = $simData['airplane_profile'] ?? 'default';
+
         $route = $booking->route;
         $tenant = $booking->tenant ?? auth()->user()->tenant;
         $defaultIcao = $tenant->icao ?? 'EZY';
@@ -103,7 +106,7 @@ class Dispatch extends Component
         $this->flight_number = $simData['general']['flight_number'] 
             ?? ($simData['flight_number'] 
             ?? ($route?->flight_number ?? $this->callsign));
-        $this->dispatch_via_simbrief = $simData['dispatch_via_simbrief'] ?? true;
+        $this->dispatch_via_simbrief = !empty($this->simbrief_username) ? ($simData['dispatch_via_simbrief'] ?? true) : false;
 
         // Schedule & Route Defaults
         $this->departure_date = $simData['departure_date'] ?? date('Y-m-d');
@@ -118,20 +121,22 @@ class Dispatch extends Component
             ?? ($profile?->simbrief_ofp_format 
             ?? ($tenant?->default_simbrief_ofp_format ?? 'LIDO')))));
 
-        // Alternates Defaults
+        // Alternates Defaults - Keep empty when auto_find_alternates is true so SimBrief chooses
         $this->auto_find_alternates = $simData['auto_find_alternates'] ?? true;
         $this->num_alternates = $simData['num_alternates'] ?? 2;
-        $this->alternate_1 = $simData['general']['alternate'] ?? ($simData['alternate_1'] ?? '');
-        $this->alternate_2 = $simData['general']['alternate2'] ?? ($simData['alternate_2'] ?? '');
+        $this->alternate_1 = $this->auto_find_alternates ? '' : ($simData['general']['alternate'] ?? ($simData['alternate_1'] ?? ''));
+        $this->alternate_2 = $this->auto_find_alternates ? '' : ($simData['general']['alternate2'] ?? ($simData['alternate_2'] ?? ''));
 
-        // Auto-find default alternates if empty
-        if (empty($this->alternate_1)) {
-            $this->findDefaultAlternates();
+        // Payload Defaults - empty by default so SimBrief automatically calculates load
+        $this->passengers = $simData['weights']['pax_count'] ?? ($simData['passengers'] ?? null);
+        $this->hold_bags = $simData['weights']['bag_count'] ?? ($simData['hold_bags'] ?? null);
+
+        $profiles = $this->availableAirplaneProfiles;
+        $activeProf = $profiles[$this->airplane_profile] ?? ($profiles['default'] ?? null);
+        if ($activeProf) {
+            $this->passengers_max = $activeProf['max_pax'] ?? 186;
+            $this->hold_bags_max = $activeProf['max_bags'] ?? 170;
         }
-
-        // Payload Defaults
-        $this->passengers = $simData['weights']['pax_count'] ?? ($simData['passengers'] ?? 170);
-        $this->hold_bags = $simData['weights']['bag_count'] ?? ($simData['hold_bags'] ?? 152);
         $this->recalculateZfw();
 
         // Network Defaults
@@ -144,37 +149,223 @@ class Dispatch extends Component
         }
     }
 
-    public function findDefaultAlternates()
+    public function updatedDispatchViaSimbrief($value)
     {
-        $arrIcao = $this->booking->route->arrival_icao;
-        $depIcao = $this->booking->route->departure_icao;
-
-        $nearby = Airport::where('icao', '!=', $arrIcao)
-            ->where('icao', '!=', $depIcao)
-            ->where(function($q) use ($arrIcao) {
-                $prefix = substr($arrIcao, 0, 2);
-                $q->where('icao', 'like', $prefix . '%');
-            })
-            ->limit(5)
-            ->get();
-
-        if ($nearby->count() >= 1) {
-            $this->alternate_1 = $nearby[0]->icao;
+        if ($value) {
+            $profile = auth()->user()->pilotProfiles()->first();
+            $simId = $profile?->simbrief_username;
+            if (empty(trim((string)$simId))) {
+                $this->dispatch_via_simbrief = false;
+                session()->flash('error', 'You must first set your SimBrief Username or Pilot ID in your Account Settings / Preferences before enabling Dispatch via SimBrief.');
+                return;
+            }
+            $this->simbrief_username = trim($simId);
         }
-        if ($nearby->count() >= 2) {
-            $this->alternate_2 = $nearby[1]->icao;
+    }
+
+    public function updatedAutoFindAlternates($value)
+    {
+        if ($value) {
+            $this->alternate_1 = '';
+            $this->alternate_2 = '';
         }
+    }
+
+    public function updatedAirframeId($value)
+    {
+        $this->airplane_profile = 'default';
+        $profiles = $this->availableAirplaneProfiles;
+        $def = $profiles['default'] ?? null;
+        if ($def) {
+            $this->passengers_max = $def['max_pax'];
+            $this->hold_bags_max = $def['max_bags'];
+            $this->passengers = null;
+            $this->hold_bags = null;
+            $this->recalculateZfw();
+        }
+    }
+
+    public function updatedAirplaneProfile($profileId)
+    {
+        $profiles = $this->availableAirplaneProfiles;
+        $profile = $profiles[$profileId] ?? ($profiles['default'] ?? null);
+        if ($profile) {
+            $this->passengers_max = $profile['max_pax'] ?? 186;
+            $this->hold_bags_max = $profile['max_bags'] ?? 170;
+            if ($profileId === 'default') {
+                $this->passengers = null;
+                $this->hold_bags = null;
+            } else {
+                $this->passengers = (int)round(($this->passengers_max) * 0.9);
+                $this->hold_bags = (int)round(($this->passengers) * 0.85);
+            }
+            $this->recalculateZfw();
+        }
+    }
+
+    public function getAvailableAirplaneProfilesProperty(): array
+    {
+        $selectedAirframe = Airframe::with('aircraftType')->find($this->airframe_id);
+        $rawCode = $selectedAirframe?->aircraftType?->code 
+            ?? ($this->booking->airframe?->aircraftType?->code 
+            ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+        $code = strtoupper(trim((string)$rawCode));
+
+        $defaultOption = [
+            'default' => [
+                'id' => 'default',
+                'name' => 'Default SimBrief (' . $code . ' Auto Load)',
+                'max_pax' => 180,
+                'max_bags' => 180,
+                'oew' => 42500,
+                'type' => $code,
+            ],
+        ];
+
+        // Fetch live profiles directly from SimBrief API
+        try {
+            $simbriefService = app(SimBriefService::class);
+            $liveAirframes = $simbriefService->getAirframesForType($code);
+            if (!empty($liveAirframes)) {
+                return array_merge($defaultOption, $liveAirframes);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SimBrief live airframe fetch failed: ' . $e->getMessage());
+        }
+
+        $catalogue = [
+            'A320' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+                'fenix_a320_cfm' => ['name' => 'Fenix A320-200 (CFM56)', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+                'fenix_a320_iae' => ['name' => 'Fenix A320-200 (IAE V2500)', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+                'fbw_a320neo' => ['name' => 'FlyByWire A320neo (LEAP-1A)', 'max_pax' => 186, 'max_bags' => 186, 'oew' => 44300, 'type' => 'A20N'],
+                'toliss_a320' => ['name' => 'ToLiss A320 (CEO / NEO)', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+                'inibuilds_a320neo' => ['name' => 'iniBuilds A320neo (v2)', 'max_pax' => 186, 'max_bags' => 186, 'oew' => 44300, 'type' => 'A20N'],
+                'ff_a320' => ['name' => 'Flight Factor A320 Ultimate', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+                'latinvfr_a320' => ['name' => 'LatinVFR A320 CEO', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => 'A320'],
+            ],
+            'A321' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 220, 'max_bags' => 220, 'oew' => 47000, 'type' => 'A321'],
+                'fenix_a321_cfm' => ['name' => 'Fenix A321-200 (CFM)', 'max_pax' => 220, 'max_bags' => 220, 'oew' => 47000, 'type' => 'A321'],
+                'fenix_a321_iae' => ['name' => 'Fenix A321-200 (IAE)', 'max_pax' => 220, 'max_bags' => 220, 'oew' => 47000, 'type' => 'A321'],
+                'toliss_a321' => ['name' => 'ToLiss A321 (CEO & NEO)', 'max_pax' => 220, 'max_bags' => 220, 'oew' => 47000, 'type' => 'A321'],
+                'inibuilds_a321neo' => ['name' => 'iniBuilds A321neo', 'max_pax' => 230, 'max_bags' => 230, 'oew' => 47500, 'type' => 'A21N'],
+            ],
+            'A319' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 150, 'max_bags' => 150, 'oew' => 40800, 'type' => 'A319'],
+                'fenix_a319_cfm' => ['name' => 'Fenix A319-100 (CFM)', 'max_pax' => 150, 'max_bags' => 150, 'oew' => 40800, 'type' => 'A319'],
+                'fenix_a319_iae' => ['name' => 'Fenix A319-100 (IAE)', 'max_pax' => 150, 'max_bags' => 150, 'oew' => 40800, 'type' => 'A319'],
+                'toliss_a319' => ['name' => 'ToLiss A319', 'max_pax' => 150, 'max_bags' => 150, 'oew' => 40800, 'type' => 'A319'],
+            ],
+            'B738' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 189, 'max_bags' => 189, 'oew' => 41400, 'type' => 'B738'],
+                'pmdg_738' => ['name' => 'PMDG 737-800', 'max_pax' => 189, 'max_bags' => 189, 'oew' => 41400, 'type' => 'B738'],
+                'zibo_738' => ['name' => 'Zibo Mod 737-800', 'max_pax' => 189, 'max_bags' => 189, 'oew' => 41400, 'type' => 'B738'],
+                'ifly_738_max' => ['name' => 'iFly 737 MAX 8', 'max_pax' => 189, 'max_bags' => 189, 'oew' => 45070, 'type' => 'B38M'],
+                'pmdg_738_max' => ['name' => 'PMDG 737 MAX 8', 'max_pax' => 189, 'max_bags' => 189, 'oew' => 45070, 'type' => 'B38M'],
+            ],
+            'B737' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 149, 'max_bags' => 149, 'oew' => 38100, 'type' => 'B737'],
+                'pmdg_737' => ['name' => 'PMDG 737-700', 'max_pax' => 149, 'max_bags' => 149, 'oew' => 38100, 'type' => 'B737'],
+                'pmdg_736' => ['name' => 'PMDG 737-600', 'max_pax' => 123, 'max_bags' => 123, 'oew' => 36378, 'type' => 'B736'],
+                'pmdg_739' => ['name' => 'PMDG 737-900ER', 'max_pax' => 215, 'max_bags' => 215, 'oew' => 44676, 'type' => 'B739'],
+            ],
+            'B777' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 396, 'max_bags' => 396, 'oew' => 167800, 'type' => 'B77W'],
+                'pmdg_77w' => ['name' => 'PMDG 777-300ER', 'max_pax' => 396, 'max_bags' => 396, 'oew' => 167800, 'type' => 'B77W'],
+                'ff_772' => ['name' => 'Flight Factor 777-200ER', 'max_pax' => 312, 'max_bags' => 312, 'oew' => 142900, 'type' => 'B772'],
+            ],
+            'B787' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 290, 'max_bags' => 290, 'oew' => 128800, 'type' => 'B789'],
+                'kuro_788' => ['name' => 'Kuro 787-8', 'max_pax' => 248, 'max_bags' => 248, 'oew' => 119950, 'type' => 'B788'],
+                'horizon_789' => ['name' => 'Horizon Simulations 787-9', 'max_pax' => 290, 'max_bags' => 290, 'oew' => 128800, 'type' => 'B789'],
+                'asobo_78x' => ['name' => 'Asobo 787-10', 'max_pax' => 330, 'max_bags' => 330, 'oew' => 135500, 'type' => 'B78X'],
+            ],
+            'A330' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 287, 'max_bags' => 287, 'oew' => 137000, 'type' => 'A339'],
+                'headwind_a339' => ['name' => 'Headwind A330-900neo', 'max_pax' => 287, 'max_bags' => 287, 'oew' => 137000, 'type' => 'A339'],
+                'inibuilds_a330' => ['name' => 'iniBuilds A330-300', 'max_pax' => 287, 'max_bags' => 287, 'oew' => 124500, 'type' => 'A333'],
+                'aerosoft_a330' => ['name' => 'Aerosoft A330-300', 'max_pax' => 287, 'max_bags' => 287, 'oew' => 124500, 'type' => 'A333'],
+            ],
+            'CRJ' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 90, 'max_bags' => 90, 'oew' => 21800, 'type' => 'CRJ9'],
+                'aerosoft_crj7' => ['name' => 'Aerosoft CRJ-700', 'max_pax' => 70, 'max_bags' => 70, 'oew' => 20000, 'type' => 'CRJ7'],
+                'aerosoft_crj9' => ['name' => 'Aerosoft CRJ-900', 'max_pax' => 90, 'max_bags' => 90, 'oew' => 21800, 'type' => 'CRJ9'],
+                'aerosoft_crjx' => ['name' => 'Aerosoft CRJ-1000', 'max_pax' => 100, 'max_bags' => 100, 'oew' => 23180, 'type' => 'CRJX'],
+            ],
+            'EJET' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 100, 'max_bags' => 100, 'oew' => 28000, 'type' => 'E190'],
+                'fss_e170' => ['name' => 'FlightSim Studio E-Jets 170', 'max_pax' => 76, 'max_bags' => 76, 'oew' => 21140, 'type' => 'E170'],
+                'fss_e175' => ['name' => 'FlightSim Studio E-Jets 175', 'max_pax' => 88, 'max_bags' => 88, 'oew' => 21810, 'type' => 'E175'],
+                'fss_e190' => ['name' => 'FlightSim Studio E-Jets 190', 'max_pax' => 100, 'max_bags' => 100, 'oew' => 28080, 'type' => 'E190'],
+                'fss_e195' => ['name' => 'FlightSim Studio E-Jets 195', 'max_pax' => 122, 'max_bags' => 122, 'oew' => 28970, 'type' => 'E195'],
+            ],
+            'ATR' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 72, 'max_bags' => 72, 'oew' => 13500, 'type' => 'AT76'],
+                'ms_atr72' => ['name' => 'Microsoft / Hans Hartmann ATR 72-600', 'max_pax' => 72, 'max_bags' => 72, 'oew' => 13500, 'type' => 'AT76'],
+                'ms_atr42' => ['name' => 'Microsoft / Hans Hartmann ATR 42-600', 'max_pax' => 48, 'max_bags' => 48, 'oew' => 11550, 'type' => 'AT46'],
+            ],
+            'MD11' => [
+                'default' => ['name' => 'Default SimBrief (Auto Load)', 'max_pax' => 298, 'max_bags' => 298, 'oew' => 128800, 'type' => 'MD11'],
+                'tfdi_md11' => ['name' => 'TFDi Design MD-11', 'max_pax' => 298, 'max_bags' => 298, 'oew' => 128800, 'type' => 'MD11'],
+            ],
+        ];
+
+        if (str_contains($code, '321') || $code === 'A21N') {
+            return $catalogue['A321'];
+        }
+        if (str_contains($code, '319') || $code === 'A19N') {
+            return $catalogue['A319'];
+        }
+        if (str_contains($code, '320') || $code === 'A20N') {
+            return $catalogue['A320'];
+        }
+        if (str_contains($code, '738') || str_contains($code, '800') || str_contains($code, '38M') || str_contains($code, 'MAX8')) {
+            return $catalogue['B738'];
+        }
+        if (str_contains($code, '737') || str_contains($code, '736') || str_contains($code, '739')) {
+            return $catalogue['B737'];
+        }
+        if (str_contains($code, '777') || str_contains($code, '77W') || str_contains($code, '772') || str_contains($code, '773') || str_contains($code, '77L')) {
+            return $catalogue['B777'];
+        }
+        if (str_contains($code, '787') || str_contains($code, '788') || str_contains($code, '789') || str_contains($code, '78X')) {
+            return $catalogue['B787'];
+        }
+        if (str_contains($code, '330') || str_contains($code, '339') || str_contains($code, '333') || str_contains($code, '332')) {
+            return $catalogue['A330'];
+        }
+        if (str_contains($code, 'CRJ')) {
+            return $catalogue['CRJ'];
+        }
+        if (str_contains($code, 'E17') || str_contains($code, 'E19') || str_contains($code, 'EJET') || str_contains($code, '295')) {
+            return $catalogue['EJET'];
+        }
+        if (str_contains($code, 'ATR') || str_contains($code, 'AT7') || str_contains($code, 'AT4')) {
+            return $catalogue['ATR'];
+        }
+        if (str_contains($code, 'MD11') || str_contains($code, 'M11')) {
+            return $catalogue['MD11'];
+        }
+
+        return [
+            'default' => ['name' => 'Default SimBrief (' . $code . ' Auto Load)', 'max_pax' => 180, 'max_bags' => 180, 'oew' => 42500, 'type' => $code],
+        ];
     }
 
     public function updatedPassengers()
     {
-        $this->passengers = max(0, min((int)$this->passengers, $this->passengers_max));
+        if ($this->passengers !== null && $this->passengers !== '') {
+            $this->passengers = max(0, min((int)$this->passengers, $this->passengers_max));
+        }
         $this->recalculateZfw();
     }
 
     public function updatedHoldBags()
     {
-        $this->hold_bags = max(0, min((int)$this->hold_bags, $this->hold_bags_max));
+        if ($this->hold_bags !== null && $this->hold_bags !== '') {
+            $this->hold_bags = max(0, min((int)$this->hold_bags, $this->hold_bags_max));
+        }
         $this->recalculateZfw();
     }
 
@@ -186,15 +377,31 @@ class Dispatch extends Component
 
     public function generateHoldBags()
     {
-        $this->hold_bags = rand((int)($this->passengers * 0.75), (int)min($this->passengers * 1.0, $this->hold_bags_max));
+        $pax = (int)($this->passengers ?: $this->passengers_max);
+        $this->hold_bags = rand((int)($pax * 0.75), (int)min($pax * 1.0, $this->hold_bags_max));
+        $this->recalculateZfw();
+    }
+
+    public function clearPassengers()
+    {
+        $this->passengers = null;
+        $this->recalculateZfw();
+    }
+
+    public function clearHoldBags()
+    {
+        $this->hold_bags = null;
         $this->recalculateZfw();
     }
 
     public function recalculateZfw()
     {
-        $paxWeight = $this->passengers * 84;
-        $bagWeight = $this->hold_bags * 15;
-        $oew = 42500;
+        $profiles = $this->availableAirplaneProfiles;
+        $profile = $profiles[$this->airplane_profile] ?? ($profiles['default'] ?? null);
+        $oew = $profile['oew'] ?? 42500;
+
+        $paxWeight = !empty($this->passengers) ? ((int)$this->passengers * 84) : 0;
+        $bagWeight = !empty($this->hold_bags) ? ((int)$this->hold_bags * 15) : 0;
         $this->estimated_zfw = $oew + $paxWeight + $bagWeight;
     }
 
@@ -376,7 +583,10 @@ class Dispatch extends Component
     public function generateOfpData()
     {
         $selectedAirframe = Airframe::with('aircraftType')->find($this->airframe_id);
-        $targetTypeCode = $selectedAirframe?->aircraftType?->code ?? ($this->booking->route->aircraftType->code ?? ($this->booking->route->aircraftTypes?->first()?->code ?? 'A20N'));
+        $profiles = $this->availableAirplaneProfiles;
+        $profile = $profiles[$this->airplane_profile] ?? ($profiles['default'] ?? null);
+
+        $targetTypeCode = $profile['type'] ?? ($selectedAirframe?->aircraftType?->code ?? ($this->booking->route->aircraftType->code ?? ($this->booking->route->aircraftTypes?->first()?->code ?? 'A20N')));
         $targetRegCode = $selectedAirframe ? $selectedAirframe->registration : ($this->booking->airframe?->registration ?? 'HB-AYE');
         $targetPlanFormat = strtoupper((string)($this->ofp_format ?: (auth()->user()->pilotProfiles()->first()?->simbrief_ofp_format ?: ($this->booking->tenant?->default_simbrief_ofp_format ?? 'LIDO'))));
 
@@ -384,17 +594,21 @@ class Dispatch extends Component
             'type' => $targetTypeCode,
             'reg' => $targetRegCode,
             'airframe_id' => $this->airframe_id,
+            'airplane_profile' => $this->airplane_profile,
+            'airplane_profile_name' => $profile['name'] ?? 'Default Profile',
             'callsign' => strtoupper($this->callsign),
             'flight_number' => strtoupper($this->flight_number),
             'orig' => $this->booking->route->departure_icao,
             'dest' => $this->booking->route->arrival_icao,
-            'altn' => strtoupper($this->alternate_1),
-            'altn2' => strtoupper($this->alternate_2),
+            'altn' => $this->auto_find_alternates ? '' : strtoupper($this->alternate_1),
+            'altn2' => $this->auto_find_alternates ? '' : strtoupper($this->alternate_2),
+            'auto_find_alternates' => $this->auto_find_alternates,
+            'num_alternates' => $this->num_alternates,
             'route' => $this->routing,
             'fl' => $this->flight_level,
             'ci' => $this->cost_index,
-            'passengers' => $this->passengers,
-            'hold_bags' => $this->hold_bags,
+            'passengers' => !empty($this->passengers) ? (int)$this->passengers : null,
+            'hold_bags' => !empty($this->hold_bags) ? (int)$this->hold_bags : null,
             'estimated_zfw' => $this->estimated_zfw,
             'distance' => $this->booking->route->distance ?? 374,
             'departure_date' => $this->departure_date,
@@ -498,7 +712,7 @@ class Dispatch extends Component
         }
 
         $regCode = $selectedAirframe ? $selectedAirframe->registration : ($this->booking->airframe?->registration ?? 'HB-AYE');
-        $typeCode = $selectedAirframe?->aircraftType?->code ?? ($this->booking->airframe?->aircraftType?->code ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
+        $baseTypeCode = $selectedAirframe?->aircraftType?->code ?? ($this->booking->airframe?->aircraftType?->code ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320'));
         $dateCode = date('dMY', strtotime($this->departure_date ?: date('Y-m-d')));
         $depH = (int)date('H', strtotime($this->departure_time ?: date('H:i')));
         $depM = (int)date('i', strtotime($this->departure_time ?: date('H:i')));
@@ -506,6 +720,10 @@ class Dispatch extends Component
         $profile = auth()->user()->pilotProfiles()->first();
         $tenant = $this->booking->tenant ?? auth()->user()->tenant;
         $resolvedFormat = strtoupper((string)($this->ofp_format ?: ($profile?->simbrief_ofp_format ?: ($tenant?->default_simbrief_ofp_format ?? 'LIDO'))));
+
+        $availableAirplaneProfiles = $this->availableAirplaneProfiles;
+        $selectedAirplaneProfile = $availableAirplaneProfiles[$this->airplane_profile] ?? ($availableAirplaneProfiles['default'] ?? null);
+        $targetTypeCode = $selectedAirplaneProfile['type'] ?? $baseTypeCode;
 
         $availableOfpFormats = [
             'LIDO' => 'LIDO (Standard IATA / European)',
@@ -536,7 +754,7 @@ class Dispatch extends Component
             'airline' => $airlineCode,
             'fltnum' => $fltNumDigits,
             'callsign' => $callsignCode,
-            'type' => $typeCode,
+            'type' => $targetTypeCode,
             'orig' => $this->booking->route?->departure_icao ?? 'EGLL',
             'dest' => $this->booking->route?->arrival_icao ?? 'LFPG',
             'date' => $dateCode,
@@ -548,16 +766,33 @@ class Dispatch extends Component
             'route' => $this->routing,
             'fl' => $this->flight_level ?: 'AUTO',
             'civalue' => $this->cost_index ?: 4,
-            'altn' => strtoupper($this->alternate_1),
             'altn_count' => (int)$this->num_alternates,
-            'altn_1_id' => strtoupper($this->alternate_1),
-            'altn_2_id' => strtoupper($this->alternate_2),
-            'pax' => (int)$this->passengers,
-            'cargo' => round(($this->hold_bags * 15) / 1000, 1),
             'units' => 'KGS',
             'planformat' => $resolvedFormat,
             'static_id' => 'VOPS-' . $this->booking->id,
         ];
+
+        // Alternates handling: only pass if not auto_find_alternates
+        if (!$this->auto_find_alternates && !empty($this->alternate_1)) {
+            $simbriefParams['altn'] = strtoupper($this->alternate_1);
+            $simbriefParams['altn_1_id'] = strtoupper($this->alternate_1);
+        }
+        if (!$this->auto_find_alternates && !empty($this->alternate_2)) {
+            $simbriefParams['altn_2_id'] = strtoupper($this->alternate_2);
+        }
+
+        // Passenger & Load handling: if empty, send AUTO so SimBrief chooses
+        if (!empty($this->passengers) && (int)$this->passengers > 0) {
+            $simbriefParams['pax'] = (int)$this->passengers;
+        } else {
+            $simbriefParams['pax'] = 'AUTO';
+        }
+
+        if (!empty($this->hold_bags) && (int)$this->hold_bags > 0) {
+            $simbriefParams['cargo'] = round(($this->hold_bags * 15) / 1000, 1);
+        } else {
+            $simbriefParams['cargo'] = 'AUTO';
+        }
 
         // Navigraph SimBrief Custom URL
         $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/custom?' . http_build_query($simbriefParams);
@@ -566,6 +801,7 @@ class Dispatch extends Component
             'booking' => $this->booking,
             'fleet' => $fleet,
             'selectedAirframe' => $selectedAirframe,
+            'availableAirplaneProfiles' => $availableAirplaneProfiles,
             'copilots' => $copilots,
             'availableOfpFormats' => $availableOfpFormats,
             'resolvedFormat' => $resolvedFormat,

@@ -4,9 +4,92 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class SimBriefService
 {
+    /**
+     * Get available airframe profiles from SimBrief API matching an aircraft type code.
+     *
+     * @param string $typeCode Aircraft ICAO code (e.g. A320, A20N, B738)
+     * @return array
+     */
+    public function getAirframesForType(string $typeCode): array
+    {
+        $typeCode = strtoupper(trim($typeCode));
+        if (empty($typeCode)) {
+            return [];
+        }
+
+        $allAirframes = Cache::remember('simbrief_all_airframes_v1', 86400, function () {
+            try {
+                $response = Http::timeout(10)->get('https://www.simbrief.com/api/inputs.airframes.json');
+                if ($response->successful()) {
+                    return $response->json();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to fetch SimBrief airframes: ' . $e->getMessage());
+            }
+            return null;
+        });
+
+        if (!is_array($allAirframes)) {
+            return [];
+        }
+
+        // Match type code and common family aliases
+        $candidateTypes = [$typeCode];
+        if (in_array($typeCode, ['A320', 'A20N'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['A320', 'A20N']));
+        } elseif (in_array($typeCode, ['A321', 'A21N'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['A321', 'A21N']));
+        } elseif (in_array($typeCode, ['A319', 'A19N'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['A319', 'A19N']));
+        } elseif (in_array($typeCode, ['B738', 'B38M'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['B738', 'B38M']));
+        } elseif (in_array($typeCode, ['B737', 'B736', 'B739'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['B737', 'B736', 'B739']));
+        } elseif (in_array($typeCode, ['B777', 'B77W', 'B772', 'B77L', 'B77F'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['B77W', 'B772', 'B77L', 'B77F', 'B777']));
+        } elseif (in_array($typeCode, ['B787', 'B788', 'B789', 'B78X'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['B789', 'B788', 'B78X', 'B787']));
+        } elseif (in_array($typeCode, ['A330', 'A339', 'A333', 'A332'])) {
+            $candidateTypes = array_unique(array_merge([$typeCode], ['A339', 'A333', 'A332', 'A330']));
+        }
+
+        $results = [];
+        foreach ($candidateTypes as $type) {
+            if (!empty($allAirframes[$type]['airframes']) && is_array($allAirframes[$type]['airframes'])) {
+                foreach ($allAirframes[$type]['airframes'] as $af) {
+                    $internalId = (string)($af['airframe_internal_id'] ?? ($af['airframe_id'] ?? ''));
+                    if (empty($internalId)) {
+                        continue;
+                    }
+                    $comments = trim((string)($af['airframe_comments'] ?? ''));
+                    $name = trim((string)($af['airframe_name'] ?? ''));
+                    $displayName = $comments ?: ($name ?: $internalId);
+                    if (strtolower($displayName) === 'default') {
+                        $displayName = 'SimBrief Standard (' . $type . ')';
+                    }
+
+                    $maxPax = (int)($af['airframe_passengers'] ?? ($af['airframe_options']['maxpax'] ?? 180));
+                    $oew = (int)($af['airframe_options']['oew'] ?? 42500);
+
+                    $results[$internalId] = [
+                        'id' => $internalId,
+                        'type' => $internalId,
+                        'name' => $displayName,
+                        'max_pax' => $maxPax,
+                        'max_bags' => (int)($maxPax * 1.1),
+                        'oew' => $oew,
+                        'base_type' => $type,
+                    ];
+                }
+            }
+        }
+
+        return $results;
+    }
     /**
      * Fetch a live flight plan from SimBrief XML/JSON API using username or User ID.
      *

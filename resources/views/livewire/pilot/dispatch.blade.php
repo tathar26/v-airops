@@ -738,36 +738,38 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
 
                 @if($showSectionAircraft)
                     <div class="p-6 space-y-4">
-                        <!-- SimBrief Pilot Account Integration -->
-                        <div class="p-4 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-blue-300 uppercase tracking-wider">SimBrief Integration & Live Sync</span>
-                                <a href="{!! $simbriefPopupUrl !!}" target="_blank" class="text-xs text-blue-400 hover:underline">Open Pre-filled SimBrief Generator</a>
+                        @if (session()->has('simbrief_error') || session()->has('error'))
+                            <div class="p-3 bg-red-500/20 border border-red-500 text-red-200 rounded-lg text-xs flex items-center justify-between">
+                                <span>{{ session('simbrief_error') ?? session('error') }}</span>
+                                <a href="{{ route('profile.preferences') }}" target="_blank" class="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-xs transition">Account Settings →</a>
                             </div>
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <div class="flex-1">
-                                    <x-input type="text" wire:model="simbrief_username" class="w-full bg-[#1C212E] border-blue-500/40 text-white text-sm" placeholder="Enter your SimBrief Username or Pilot ID (e.g. 123456)" />
-                                </div>
-                                <button wire:click="fetchLiveSimbriefOfp" class="px-4 py-2 bg-tenant-accent hover:opacity-90 text-white text-xs font-bold rounded-lg transition flex items-center justify-center gap-2">
-                                    📥 Fetch Live OFP from SimBrief
-                                </button>
-                            </div>
-                            <p class="text-[11px] text-gray-400">Enter your Navigraph Alias or SimBrief Pilot ID above to pull your exact live generated OFP directly into V-Ops.</p>
-                        </div>
+                        @endif
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <x-label for="airframe_id" value="{{ __('Aircraft') }}" class="text-white font-medium" />
                                     <div class="flex gap-3 text-xs">
-                                        <a href="{{ route('fleet') }}" target="_blank" class="text-tenant-accent hover:underline">Aircraft Picker</a>
-                                        <a href="https://www.flightradar24.com" target="_blank" class="text-gray-400 hover:text-white underline">FR24 Lookup</a>
+                                        <a href="{{ route('fleet') }}" target="_blank" class="text-tenant-accent hover:underline">Fleet</a>
+                                        <a href="https://www.flightradar24.com" target="_blank" class="text-gray-400 hover:text-white underline">FR24</a>
                                     </div>
                                 </div>
                                 <select id="airframe_id" wire:model.live="airframe_id" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent">
                                     <option value="">Select Airframe...</option>
                                     @foreach($fleet as $airframe)
                                         <option value="{{ $airframe->id }}">{{ $airframe->registration }} | {{ $airframe->aircraftType->name ?? $airframe->aircraftType->code }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <x-label for="airplane_profile" value="{{ __('Airplane Profile') }}" class="text-white font-medium" />
+                                    <span class="text-[11px] text-gray-400">SimBrief matched</span>
+                                </div>
+                                <select id="airplane_profile" wire:model.live="airplane_profile" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent font-medium">
+                                    @foreach($availableAirplaneProfiles as $pKey => $prof)
+                                        <option value="{{ $pKey }}">{{ $prof['name'] ?? $pKey }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -797,6 +799,9 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             <div>
                                 <span class="text-sm font-semibold text-white block">Dispatch via SimBrief</span>
                                 <span class="text-xs text-gray-400">Generate an OFP before creating booking</span>
+                                @if(empty($simbrief_username))
+                                    <span class="block text-[11px] text-amber-400 mt-1">⚠️ SimBrief ID not configured in <a href="{{ route('profile.preferences') }}" target="_blank" class="underline hover:text-amber-300 font-semibold">Account Settings</a></span>
+                                @endif
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" wire:model.live="dispatch_via_simbrief" class="sr-only peer">
@@ -872,7 +877,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                         </div>
                         <div>
                             <h3 class="font-bold text-white text-base">Alternates</h3>
-                            <p class="text-xs text-gray-400">Alternate 1: {{ $alternate_1 ?: 'None' }} · Alternate 2: {{ $alternate_2 ?: 'None' }}</p>
+                            <p class="text-xs text-gray-400">Alternate 1: {{ $auto_find_alternates ? 'Auto (SimBrief)' : ($alternate_1 ?: 'None') }} · Alternate 2: {{ $auto_find_alternates ? 'Auto (SimBrief)' : ($alternate_2 ?: 'None') }}</p>
                         </div>
                     </div>
                     <span class="text-gray-400">{{ $showSectionAlternates ? '∧' : '∨' }}</span>
@@ -883,7 +888,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                         <div class="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
                             <div>
                                 <span class="text-sm font-semibold text-white block">Auto-find Alternates</span>
-                                <span class="text-xs text-gray-400">Automatically suggest nearby alternate airports</span>
+                                <span class="text-xs text-gray-400">SimBrief automatically selects optimal alternate airports</span>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" wire:model.live="auto_find_alternates" class="sr-only peer">
@@ -902,12 +907,12 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             </div>
                             <div>
                                 <x-label for="alternate_1" value="{{ __('Alternate 1 (ICAO)') }}" class="text-white font-medium mb-1" />
-                                <x-input id="alternate_1" type="text" wire:model="alternate_1" class="w-full bg-[#1C212E] border-gray-700 text-white uppercase text-sm" placeholder="e.g. EDDH" />
+                                <x-input id="alternate_1" type="text" wire:model="alternate_1" :disabled="$auto_find_alternates" class="w-full bg-[#1C212E] border-gray-700 text-white uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed" placeholder="{{ $auto_find_alternates ? 'Auto (SimBrief chooses)' : 'e.g. EDDH' }}" />
                             </div>
                             @if($num_alternates >= 2)
                                 <div>
                                     <x-label for="alternate_2" value="{{ __('Alternate 2 (ICAO)') }}" class="text-white font-medium mb-1" />
-                                    <x-input id="alternate_2" type="text" wire:model="alternate_2" class="w-full bg-[#1C212E] border-gray-700 text-white uppercase text-sm" placeholder="e.g. EDDW" />
+                                    <x-input id="alternate_2" type="text" wire:model="alternate_2" :disabled="$auto_find_alternates" class="w-full bg-[#1C212E] border-gray-700 text-white uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed" placeholder="{{ $auto_find_alternates ? 'Auto (SimBrief chooses)' : 'e.g. EDDW' }}" />
                                 </div>
                             @endif
                         </div>
@@ -924,7 +929,7 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                         </div>
                         <div>
                             <h3 class="font-bold text-white text-base">Payload</h3>
-                            <p class="text-xs text-gray-400">{{ $passengers }} pax · {{ $hold_bags }} bags · ZFW {{ number_format($estimated_zfw) }} kg</p>
+                            <p class="text-xs text-gray-400">{{ !empty($passengers) ? $passengers . ' pax' : 'Auto (SimBrief Load)' }} · {{ !empty($hold_bags) ? $hold_bags . ' bags' : 'Auto' }} · ZFW {{ !empty($passengers) ? number_format($estimated_zfw) . ' kg' : 'Calculated by SimBrief (Auto)' }}</p>
                         </div>
                     </div>
                     <span class="text-gray-400">{{ $showSectionPayload ? '∧' : '∨' }}</span>
@@ -936,23 +941,39 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <x-label for="passengers" value="Passengers (max {{ $passengers_max }})" class="text-white font-medium" />
-                                    <button type="button" wire:click="generatePassengers" class="text-xs text-tenant-accent hover:underline flex items-center gap-1">↻ Generate</button>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <button type="button" wire:click="generatePassengers" class="text-tenant-accent hover:underline flex items-center gap-1">↻ Generate</button>
+                                        @if($passengers !== null && $passengers !== '')
+                                            <button type="button" wire:click="clearPassengers" class="text-gray-400 hover:text-white underline">Clear (Auto)</button>
+                                        @endif
+                                    </div>
                                 </div>
-                                <x-input id="passengers" type="number" min="0" max="{{ $passengers_max }}" wire:model.live="passengers" class="w-full bg-[#1C212E] border-gray-700 text-white text-sm" />
+                                <x-input id="passengers" type="number" min="0" max="{{ $passengers_max }}" wire:model.live="passengers" class="w-full bg-[#1C212E] border-gray-700 text-white text-sm" placeholder="Auto (SimBrief chooses load)" />
+                                @if(empty($passengers))
+                                    <span class="text-[11px] text-gray-400 block mt-1">Left empty: SimBrief will automatically calculate realistic passengers and load.</span>
+                                @endif
                             </div>
 
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <x-label for="hold_bags" value="Passengers with Hold Luggage (max {{ $hold_bags_max }})" class="text-white font-medium" />
-                                    <button type="button" wire:click="generateHoldBags" class="text-xs text-tenant-accent hover:underline flex items-center gap-1">↻ Generate</button>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <button type="button" wire:click="generateHoldBags" class="text-tenant-accent hover:underline flex items-center gap-1">↻ Generate</button>
+                                        @if($hold_bags !== null && $hold_bags !== '')
+                                            <button type="button" wire:click="clearHoldBags" class="text-gray-400 hover:text-white underline">Clear (Auto)</button>
+                                        @endif
+                                    </div>
                                 </div>
-                                <x-input id="hold_bags" type="number" min="0" max="{{ $hold_bags_max }}" wire:model.live="hold_bags" class="w-full bg-[#1C212E] border-gray-700 text-white text-sm" />
+                                <x-input id="hold_bags" type="number" min="0" max="{{ $hold_bags_max }}" wire:model.live="hold_bags" class="w-full bg-[#1C212E] border-gray-700 text-white text-sm" placeholder="Auto (SimBrief chooses luggage)" />
+                                @if(empty($hold_bags))
+                                    <span class="text-[11px] text-gray-400 block mt-1">Left empty: SimBrief will automatically calculate cargo/luggage weight.</span>
+                                @endif
                             </div>
                         </div>
 
                         <div class="pt-3 border-t border-white/5 flex items-center justify-between text-sm">
                             <span class="text-gray-400">Estimated Zero Fuel Weight (ZFW):</span>
-                            <span class="font-bold text-white font-mono text-base">{{ number_format($estimated_zfw) }} kg</span>
+                            <span class="font-bold text-white font-mono text-base">{{ !empty($passengers) ? number_format($estimated_zfw) . ' kg' : 'Calculated by SimBrief (Auto Load)' }}</span>
                         </div>
                     </div>
                 @endif
