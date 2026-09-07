@@ -64,5 +64,9 @@ return [
         'releases_url' => env('VPILOT_ACARS_RELEASES_URL', 'https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest'),
     ],
 
+    'google' => [
+        'analytics_id' => env('GOOGLE_ANALYTICS_ID', 'G-52RCD5KV68'),
+    ],
+
 ];
 

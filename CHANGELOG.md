@@ -2,6 +2,15 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.22] - 2026-09-07
+
+### 📈 Google Analytics Integration
+- **Google tag (gtag.js) Deployment:** Integrated official Google Analytics tag (`G-52RCD5KV68`) across all web views, including landing page, portal application layout, guest layouts, authentication, and onboarding flows.
+- **Blade Component Architecture:** Created `<x-google-analytics />` component with configurable `services.google.analytics_id` environment support (`GOOGLE_ANALYTICS_ID`).
+- **Cookie Consent Integration:** Gracefully coordinates with the platform's cookie consent manager (`vops_cookie_consent`), respecting telemetry and analytics preferences in accordance with GDPR requirements.
+
+---
+
 ## [v1.1.21] - 2026-09-07
 
 ### 📦 Resources Menu & vPilot ACARS Client Download

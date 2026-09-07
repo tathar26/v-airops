@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <x-google-analytics />
+
     <title>{{ config('app.name', 'V-Air Ops') }} &bull; Virtual Airline Management System</title>
 
     <!-- Google Fonts -->
