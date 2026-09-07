@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.17] - 2026-09-07
+
+### 🛠️ Fix Multiple Root Elements in Dispatch View
+- **Resolved Livewire Multiple Root Elements Exception:** Moved Leaflet CSS stylesheet into `<head>` in `layouts/app.blade.php` and removed the `@push('scripts')` block containing `<link>` from `dispatch.blade.php`, ensuring Livewire's DOM parser detects strictly one root HTML element.
+- **Sanitized Monospace OFP Output:** Prioritized `plan_text` for monospaced OFP viewing to avoid any potential external HTML fragments breaking the component's DOM tree.
+
+---
+
 ## [v1.1.16] - 2026-09-07
 
 ### ✈️ Redesigned Flight Dispatch Console & Modern Deck Layout

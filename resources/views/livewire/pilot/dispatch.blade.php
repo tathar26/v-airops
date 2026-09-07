@@ -682,10 +682,10 @@
                         </div>
 
                         <div id="ofp-full-text" class="bg-[#090C12] border border-white/15 rounded-2xl p-5 font-mono text-xs text-slate-200 overflow-x-auto max-h-[700px] leading-relaxed shadow-inner select-text">
-                            @if(!empty($ofp['text']['plan_html']) && is_string($ofp['text']['plan_html']))
-                                <div class="ofp-html-content font-mono whitespace-pre-wrap">{!! $ofp['text']['plan_html'] !!}</div>
-                            @elseif(!empty($ofp['text']['plan_text']))
+                            @if(!empty($ofp['text']['plan_text']))
                                 <pre class="whitespace-pre font-mono text-slate-200">{{ $safeStr($ofp['text']['plan_text']) }}</pre>
+                            @elseif(!empty($ofp['text']['plan_html']) && is_string($ofp['text']['plan_html']))
+                                <div class="ofp-html-content font-mono whitespace-pre-wrap">{!! $ofp['text']['plan_html'] !!}</div>
                             @else
                                 <pre class="whitespace-pre font-mono text-slate-200">
 ================================================================================
@@ -1257,10 +1257,6 @@ ATC ROUTE
         @endif
     @endif
 
-    @push('scripts')
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    @endpush
 
     <script>
         (function() {
