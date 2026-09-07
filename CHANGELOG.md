@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.25] - 2026-09-07
+
+### 🖼️ Real Application Screenshots on Homepage
+- **Application UI Screenshots:** Embedded real application screenshots of the V-Air Ops platform across the public homepage (`welcome.blade.php`), replacing CSS mockups and abstract vectors.
+- **Operations Console Preview:** Embedded high-resolution UI screenshot of the main **Operations Dashboard** (`public/images/screenshots/console-dashboard.jpg`).
+- **Pilot Roster & Profile Portal:** Embedded high-resolution UI screenshot of the **Pilot Portal** (`public/images/screenshots/pilot-portal.jpg`).
+- **Live ACARS Radar Map:** Embedded high-resolution UI screenshot of the **Live ACARS Radar** map interface (`public/images/screenshots/live-radar-map.jpg`).
+
+---
+
 ## [v1.1.24] - 2026-09-07
 
 ### 🏛️ Professional Homepage & Neutral Copy Refactoring

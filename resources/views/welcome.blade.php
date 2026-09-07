@@ -119,7 +119,7 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Mobile Actions (Console/Sign-in + Hamburger button) -->
+            <!-- Mobile Actions -->
             <div class="flex items-center gap-2 md:hidden">
                 <?php if (auth()->check()): ?>
                     <a href="{{ url('/dashboard') }}" class="px-3 py-1.5 rounded-lg bg-navy-800 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono">
@@ -228,69 +228,23 @@
                 </div>
             </div>
 
-            <!-- Hero Mockup Container -->
+            <!-- Application Screenshot: Operations Console -->
             <div class="mt-16 lg:mt-20 relative max-w-6xl mx-auto">
-                <div class="relative rounded-xl flat-card border border-navy-700 overflow-hidden shadow-xl">
-                    <!-- Window Header Controls -->
+                <div class="relative rounded-xl flat-card border border-navy-700 overflow-hidden shadow-2xl group">
                     <div class="bg-navy-950 border-b border-navy-700 px-4 py-3 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
-                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
-                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
-                            <span class="text-xs font-mono text-slate-400 ml-2">vops-console.app &bull; Flight Monitoring Console</span>
+                            <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">vops-console.app &bull; Operations Dashboard</span>
                         </div>
-                        <div class="flex items-center gap-3 text-xs font-mono text-slate-400">
+                        <div class="flex items-center gap-3 text-xs font-mono text-teal-400">
                             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>ACARS TELEMETRY STREAM: ACTIVE</span>
+                            <span>LIVE APP PREVIEW</span>
                         </div>
                     </div>
-
-                    <!-- Mockup Inner Content -->
-                    <div class="p-6 bg-navy-900 space-y-6">
-                        <!-- Top Stat Bar inside Mockup -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Flight Dispatching</span>
-                                <span class="text-lg font-bold font-mono text-[#21A19D]">ACTIVE</span>
-                            </div>
-                            <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">ACARS Telemetry</span>
-                                <span class="text-lg font-bold font-mono text-[#6F3B84]">SUB-SECOND</span>
-                            </div>
-                            <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">SimBrief OFP</span>
-                                <span class="text-lg font-bold font-mono text-emerald-400">LIDO FORMAT</span>
-                            </div>
-                            <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Multi-Tenant</span>
-                                <span class="text-lg font-bold font-mono text-teal-300">ISOLATED</span>
-                            </div>
-                        </div>
-
-                        <!-- Clean Live Map Mockup -->
-                        <div class="h-[340px] sm:h-[400px] rounded-lg bg-navy-950 border border-navy-700 relative overflow-hidden flex items-center justify-center">
-                            <!-- Vector Routes Overlay -->
-                            <svg class="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 1000 500" fill="none">
-                                <path d="M 150 350 Q 300 150 500 200 T 850 120" stroke="#6F3B84" stroke-width="2" stroke-dasharray="6,6"/>
-                                <path d="M 200 400 Q 450 300 750 180" stroke="#21A19D" stroke-width="2"/>
-                                <path d="M 100 180 Q 400 120 800 380" stroke="#10B981" stroke-width="2"/>
-                            </svg>
-
-                            <!-- Flight Markers Preview -->
-                            <div class="absolute top-[28%] left-[45%] flex items-center gap-2 bg-navy-900 border border-[#21A19D]/60 px-3 py-1.5 rounded-lg shadow-md z-20">
-                                <span class="w-2 h-2 rounded-full bg-[#21A19D]"></span>
-                                <div class="text-left font-mono text-xs">
-                                    <span class="font-bold text-white block">Flight Telemetry</span>
-                                    <span class="text-[10px] text-slate-400">Enroute &bull; Live Telemetry Tracking</span>
-                                </div>
-                            </div>
-
-                            <!-- Map Overlay Badge -->
-                            <div class="absolute bottom-4 left-4 bg-navy-950 border border-navy-700 px-4 py-2 rounded-lg text-xs font-mono text-slate-400">
-                                Live ACARS Flight Monitor &bull; Low-Latency Tracking Engine
-                            </div>
-                        </div>
-                    </div>
+                    
+                    <img src="{{ asset('images/screenshots/console-dashboard.jpg') }}" alt="V-Air Ops Operations Dashboard Screenshot" class="w-full h-auto object-cover rounded-b-xl">
                 </div>
             </div>
         </div>
@@ -439,68 +393,13 @@
                     </div>
                 </div>
 
-                <!-- Right Feature Mockup Card -->
-                <div class="flat-card rounded-xl p-6 sm:p-8 space-y-6 shadow-lg">
-                    <div class="flex items-center justify-between border-b border-navy-700 pb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-[#21A19D] font-bold flex items-center justify-center text-white font-heading text-sm">
-                                CPT
-                            </div>
-                            <div>
-                                <h4 class="font-heading font-bold text-white text-sm">Capt. Alexander Wright</h4>
-                                <span class="text-xs font-mono text-[#21A19D]">Senior Captain &bull; SVK-104</span>
-                            </div>
-                        </div>
-                        <span class="px-3 py-1 rounded-md bg-navy-950 text-emerald-400 text-xs font-mono font-bold border border-navy-700">
-                            RANK: COMMANDER
-                        </span>
+                <!-- Application Screenshot: Pilot Roster & Profile -->
+                <div class="flat-card rounded-xl border border-navy-700 overflow-hidden shadow-xl">
+                    <div class="bg-navy-950 border-b border-navy-700 px-4 py-2.5 flex items-center justify-between text-xs font-mono text-slate-400">
+                        <span class="font-bold text-white">PILOT PROFILE &amp; ROSTER UI</span>
+                        <span class="text-teal-400">VERIFIED LOGBOOK</span>
                     </div>
-
-                    <!-- Progress Cards -->
-                    <div class="space-y-4 text-xs font-mono">
-                        <div>
-                            <div class="flex justify-between text-slate-300 mb-1">
-                                <span>Flight Hours Logged</span>
-                                <span class="text-[#21A19D] font-bold">1,240h / 1,500h</span>
-                            </div>
-                            <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-700">
-                                <div class="bg-[#21A19D] h-full w-[82%] rounded-full"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between text-slate-300 mb-1">
-                                <span>Landing Rate Analysis</span>
-                                <span class="text-emerald-400 font-bold">-130 FPM Average</span>
-                            </div>
-                            <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-700">
-                                <div class="bg-emerald-500 h-full w-[92%] rounded-full"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Flights Log Preview -->
-                    <div class="space-y-3 pt-2">
-                        <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider block font-bold">Recent Verified PIREPs</span>
-                        
-                        <div class="p-3 bg-navy-950 rounded-lg border border-navy-700 flex items-center justify-between text-xs font-mono">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[#21A19D] font-bold">EGLL &rarr; LFPG</span>
-                                <span class="text-slate-400">A320</span>
-                            </div>
-                            <span class="text-emerald-400 font-bold">-112 FPM</span>
-                            <span class="text-slate-300">01:15 &bull; ACCEPTED</span>
-                        </div>
-
-                        <div class="p-3 bg-navy-950 rounded-lg border border-navy-700 flex items-center justify-between text-xs font-mono">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[#21A19D] font-bold">EDDF &rarr; KJFK</span>
-                                <span class="text-slate-400">B789</span>
-                            </div>
-                            <span class="text-emerald-400 font-bold">-148 FPM</span>
-                            <span class="text-slate-300">07:42 &bull; ACCEPTED</span>
-                        </div>
-                    </div>
+                    <img src="{{ asset('images/screenshots/pilot-portal.jpg') }}" alt="V-Air Ops Pilot Roster & Profile Portal Screenshot" class="w-full h-auto object-cover">
                 </div>
             </div>
         </div>
@@ -528,32 +427,19 @@
                 </div>
             </div>
 
-            <!-- Stylized Flat Map Container -->
-            <div class="flat-card rounded-xl overflow-hidden shadow-xl relative">
-                <!-- Map Header Bar -->
+            <!-- Application Screenshot: Live ACARS Radar -->
+            <div class="flat-card rounded-xl border border-navy-700 overflow-hidden shadow-2xl">
                 <div class="bg-navy-950 border-b border-navy-700 p-4 flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-                        <span class="font-heading font-bold text-white text-sm">FLIGHT MONITORING CONSOLE &bull; NETWORK RADAR</span>
+                        <span class="font-heading font-bold text-white text-sm">FLIGHT MONITORING CONSOLE &bull; ACARS RADAR UI</span>
                     </div>
                     <div class="flex items-center gap-4 text-xs font-mono text-slate-400">
                         <span>TELEMETRY: <strong class="text-emerald-400">ACTIVE</strong></span>
                     </div>
                 </div>
 
-                <!-- Map Body -->
-                <div class="h-[440px] bg-navy-950 relative flex items-center justify-center overflow-hidden">
-                    <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 1000 500" fill="none">
-                        <path d="M 150 350 Q 300 150 500 200 T 850 120" stroke="#6F3B84" stroke-width="2"/>
-                        <path d="M 200 400 Q 450 300 750 180" stroke="#21A19D" stroke-width="2"/>
-                    </svg>
-
-                    <!-- Clean Position Display Marker -->
-                    <div class="bg-navy-900 border border-navy-700 px-4 py-3 rounded-lg shadow-lg text-center space-y-1 font-mono">
-                        <span class="text-xs font-bold text-white block">Interactive Live Flight Radar</span>
-                        <span class="text-[11px] text-slate-400 block">Sub-Second ACARS Telemetry Sync Enabled</span>
-                    </div>
-                </div>
+                <img src="{{ asset('images/screenshots/live-radar-map.jpg') }}" alt="V-Air Ops Live ACARS Radar Tracking Screenshot" class="w-full h-auto object-cover">
             </div>
         </div>
     </section>
