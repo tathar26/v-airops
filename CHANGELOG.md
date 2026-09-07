@@ -2,6 +2,13 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.27] - 2026-09-07
+
+### 🔒 Screenshot Anonymization & Privacy Protection
+- **Personal Identifier Protection:** Processed all live application screenshots on the public homepage to blur personal names, user profile header menus, and pilot identity details while maintaining clear visibility of platform UI metrics, fleet statistics, and interactive maps.
+
+---
+
 ## [v1.1.26] - 2026-09-07
 
 ### 📸 Authentic Live Site Screenshots
