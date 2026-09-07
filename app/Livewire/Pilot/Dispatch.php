@@ -822,6 +822,23 @@ class Dispatch extends Component
     public function getVatsimPrefileUrlProperty(): string
     {
         $sb = $this->booking->simbrief_data ?? [];
+
+        // 1. Direct official SimBrief VATSIM link (battle-tested, includes complete ICAO raw string & fuel_time)
+        if (!empty($sb['prefile']['vatsim']['link'])) {
+            return html_entity_decode((string)$sb['prefile']['vatsim']['link']);
+        }
+
+        // 2. Clean single-line ICAO flight plan string if OFP text is available
+        if (!empty($sb['atc']['flightplan_text'])) {
+            $cleanRaw = trim((string)preg_replace('/\s+/', ' ', (string)$sb['atc']['flightplan_text']));
+            $fuelTime = '0330';
+            if (isset($sb['times']['est_endurance'])) {
+                $fuelTime = str_replace(':', '', (string)$sb['times']['est_endurance']);
+            }
+            return 'https://my.vatsim.net/pilots/flightplan?raw=' . urlencode($cleanRaw) . '&fuel_time=' . urlencode($fuelTime);
+        }
+
+        // 3. Clean fallback query parameters for manual bookings prior to SimBrief generation
         $cs = strtoupper(trim((string)($sb['general']['callsign'] ?? ($this->callsign ?? ''))));
         $acType = strtoupper(trim((string)($sb['aircraft']['icao_code'] ?? ($sb['general']['aircraft_type'] ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320')))));
         $dep = strtoupper(trim((string)($sb['general']['origin'] ?? ($sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '')))));
@@ -843,93 +860,21 @@ class Dispatch extends Component
             $endurance = str_replace(':', '', (string)$sb['times']['est_endurance']);
         }
 
-        // Wake turbulence category resolution
-        $wake = strtoupper(trim((string)($sb['aircraft']['equip_category'] ?? ($sb['aircraft']['wake_category'] ?? ''))));
-        if (empty($wake)) {
-            if (in_array($acType, ['A388', 'A380', 'A225'])) {
-                $wake = 'J';
-            } elseif (in_array($acType, [
-                'B772', 'B773', 'B77W', 'B77L', 'B77F', 'B777',
-                'B788', 'B789', 'B78X', 'B787',
-                'B744', 'B748', 'B747', 'B762', 'B763', 'B764', 'B767',
-                'A330', 'A332', 'A333', 'A338', 'A339',
-                'A340', 'A342', 'A343', 'A345', 'A346',
-                'A350', 'A359', 'A35K',
-                'MD11', 'DC10', 'IL76', 'IL96', 'A124'
-            ])) {
-                $wake = 'H';
-            } elseif (in_array($acType, ['C152', 'C172', 'C182', 'PA28', 'SR22', 'DA40', 'DA42', 'BE36', 'BE58', 'C208'])) {
-                $wake = 'L';
-            } else {
-                $wake = 'M';
-            }
-        }
-
-        // Equipment & Transponder
-        $equipment = $sb['aircraft']['equip_navigation'] ?? ($sb['atc']['equipment'] ?? 'SDE3FGHIJ1RWXYZ');
-        $transponder = $sb['aircraft']['equip_transponder'] ?? ($sb['atc']['transponder'] ?? 'LB1');
-
-        // Remarks & Section 18
-        $section18 = $sb['atc']['section18'] ?? '';
-        $dxRmk = $sb['general']['dx_rmk'][0] ?? ($sb['general']['dx_rmk'] ?? '');
-        $remarks = !empty($section18) ? $section18 : (!empty($dxRmk) ? $dxRmk : 'VOPS / SIMBRIEF OFP');
-
-        // Raw ICAO flight plan string
-        $rawFpl = $sb['atc']['flightplan_text'] ?? '';
-        if (empty($rawFpl) && !empty($sb['prefile']['vatsim']['link'])) {
-            parse_str(parse_url($sb['prefile']['vatsim']['link'], PHP_URL_QUERY) ?? '', $simbriefVatsimParams);
-            $rawFpl = $simbriefVatsimParams['raw'] ?? '';
-        }
-
-        // POB (Persons On Board)
-        $pob = $sb['weights']['pax_count'] ?? ($this->passengers ?: '');
-
         $params = [
             'callsign' => $cs,
             'aircraft' => $acType,
-            'flight_rules' => 'IFR',
-            'rules' => 'IFR',
-            'flight_type' => 'S',
-            'wake_category' => $wake,
-            'wake' => $wake,
-            'wtc' => $wake,
-            'wakeTurbulence' => $wake,
-            'equipment' => $equipment,
-            'equip' => $equipment,
-            'transponder' => $transponder,
-            'trans' => $transponder,
             'dep' => $dep,
-            'origin' => $dep,
             'arr' => $arr,
-            'destination' => $arr,
             'alt' => $alt,
-            'alternate' => $alt,
             'alt2' => $alt2,
             'route' => $route,
             'altitude' => $altitude,
             'tas' => $tas,
-            'speed' => $tas,
-            'airspeed' => $tas,
             'deptime' => $depTime,
-            'dep_time' => $depTime,
             'enroute' => $eteClean,
-            'eet' => $eteClean,
             'fuel' => $endurance,
-            'fuel_time' => $endurance,
-            'endurance' => $endurance,
-            'remarks' => $remarks,
-            'rmk' => $remarks,
-            'other_info' => $section18,
+            'remarks' => $sb['general']['dx_rmk'][0] ?? ($sb['general']['dx_rmk'] ?? 'VOPS / SIMBRIEF OFP'),
         ];
-
-        if (!empty($pob)) {
-            $params['pob'] = (int)$pob;
-            $params['souls'] = (int)$pob;
-        }
-
-        if (!empty($rawFpl)) {
-            $params['raw'] = $rawFpl;
-        }
 
         return 'https://my.vatsim.net/pilots/flightplan?' . http_build_query($params);
     }

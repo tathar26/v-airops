@@ -2,6 +2,15 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.20] - 2026-09-07
+
+### 🛠️ Fix VATSIM Pre-Filing 500 Error
+- **Direct Official SimBrief VATSIM Pre-file Link:** Switched to directly returning SimBrief's official, battle-tested pre-file link (`$sb['prefile']['vatsim']['link']`), which properly passes the clean, single-line ICAO flight plan string (`raw`) and fuel endurance (`fuel_time`).
+- **Eliminated URL Parameter Conflicts:** Removed the conflicting multi-parameter query string (containing conflicting duplicate keys, unaccepted formatting, and raw newline `%0A` characters) that triggered an unhandled exception (`500 Server Error`) in VATSIM's backend parser.
+- **Clean Fallback Generator:** For bookings prior to SimBrief generation, restored the clean, validated parameter baseline (`callsign`, `aircraft`, `dep`, `arr`, `alt`, `route`, `altitude`, `tas`, `deptime`, `enroute`, `fuel`, `remarks`) without unhandled query parameters.
+
+---
+
 ## [v1.1.19] - 2026-09-07
 
 ### 🗺️ Route Map Waypoints & VATSIM Pre-File Completion
