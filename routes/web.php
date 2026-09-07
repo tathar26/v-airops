@@ -33,6 +33,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/session/switch-airline', [\App\Http\Controllers\SessionAirlineController::class, 'switchActiveAirline'])->name('session.switch-airline');
 });
 
+// Legal & Support Pages
+Route::get('/terms', function () {
+    return view('legal.terms');
+})->name('terms.show');
+
+Route::get('/privacy', function () {
+    return view('legal.privacy');
+})->name('policy.show');
+
+Route::get('/security', function () {
+    return view('legal.security');
+})->name('security.show');
+
 // Resource & Client Downloads
 Route::get('/resources/vpilot-acars', function () {
     return redirect()->away(config('services.vpilot_acars.releases_url', 'https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest'));

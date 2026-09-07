@@ -56,20 +56,6 @@
                             purple: '#6F3B84',
                             success: '#10B981',
                         }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'radar-sweep': 'radar-sweep 4s linear infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-6px)' },
-                        },
-                        'radar-sweep': {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(360deg)' },
-                        }
                     }
                 }
             }
@@ -93,8 +79,8 @@
         .flat-card-hover:hover {
             background-color: #142954;
             border-color: #21A19D;
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.4);
         }
     </style>
 </head>
@@ -111,24 +97,24 @@
             <!-- Desktop Nav Links -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
                 <a href="#features" class="hover:text-[#21A19D] transition">Features</a>
-                <a href="#dispatch" class="hover:text-[#21A19D] transition">Smart Dispatch</a>
-                <a href="#portal" class="hover:text-[#21A19D] transition">Pilot Portal</a>
-                <a href="#radar" class="hover:text-[#21A19D] transition">Live ACARS</a>
-                <a href="#infrastructure" class="hover:text-[#21A19D] transition">Enterprise Ops</a>
+                <a href="#dispatch" class="hover:text-[#21A19D] transition">Dispatch Integration</a>
+                <a href="#portal" class="hover:text-[#21A19D] transition">Pilot Roster</a>
+                <a href="#tracking" class="hover:text-[#21A19D] transition">ACARS Tracking</a>
+                <a href="#architecture" class="hover:text-[#21A19D] transition">System Architecture</a>
             </nav>
 
             <!-- Desktop Authentication / CTAs -->
             <div class="hidden md:flex items-center gap-4">
                 <?php if (auth()->check()): ?>
                     <a href="{{ url('/dashboard') }}" class="px-5 py-2.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono transition">
-                        GO TO CONSOLE &rarr;
+                        OPERATIONS CONSOLE &rarr;
                     </a>
                 <?php else: ?>
                     <a href="{{ route('login') }}" class="text-xs font-bold text-slate-300 hover:text-white px-4 py-2 transition">
                         Sign In
                     </a>
                     <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
-                        Join or create your own airline.
+                        Register Airline
                     </a>
                 <?php endif; ?>
             </div>
@@ -177,19 +163,15 @@
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <a href="#dispatch" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
-                    <span>Smart Dispatch</span>
+                    <span>Dispatch Integration</span>
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
                 <a href="#portal" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
-                    <span>Pilot Portal</span>
+                    <span>Pilot Roster</span>
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
-                <a href="#radar" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
-                    <span>Live ACARS</span>
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a href="#infrastructure" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
-                    <span>Enterprise Ops</span>
+                <a href="#tracking" @click="mobileMenuOpen = false" class="px-3 py-2.5 rounded-lg hover:bg-navy-900 hover:text-[#21A19D] transition flex items-center justify-between">
+                    <span>ACARS Tracking</span>
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
             </nav>
@@ -197,14 +179,14 @@
             <div class="pt-3 border-t border-navy-700 flex flex-col gap-2.5">
                 <?php if (auth()->check()): ?>
                     <a href="{{ url('/dashboard') }}" class="w-full text-center px-4 py-3 rounded-lg bg-navy-800 text-[#21A19D] border border-navy-700 text-xs font-bold font-mono transition">
-                        GO TO CONSOLE &rarr;
+                        OPERATIONS CONSOLE &rarr;
                     </a>
                 <?php else: ?>
                     <a href="{{ route('login') }}" class="w-full text-center px-4 py-2.5 rounded-lg bg-navy-900 border border-navy-700 text-xs font-bold text-slate-200 hover:text-white transition">
                         Sign In
                     </a>
                     <a href="{{ route('register') }}" class="w-full text-center px-4 py-3 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
-                        Join or create your own airline.
+                        Register Airline
                     </a>
                 <?php endif; ?>
             </div>
@@ -212,64 +194,54 @@
     </header>
 
     <!-- SECTION 1: HERO SECTION -->
-    <section class="relative pt-16 pb-24 lg:pt-24 lg:pb-32 bg-navy-900 border-b border-navy-700 overflow-hidden">
+    <section class="relative pt-16 pb-20 lg:pt-24 lg:pb-28 bg-navy-900 border-b border-navy-700 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center max-w-4xl mx-auto space-y-8">
                 
-                <!-- Badge -->
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg flat-card text-xs text-teal-300 shadow-md">
+                <!-- Professional Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg flat-card text-xs text-slate-300 shadow-sm border border-navy-700">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span class="font-mono font-semibold uppercase tracking-wider text-[11px]">100% Free &bull; Built for MSFS 2024 &amp; X-Plane 12</span>
-                    <span class="text-slate-500">&bull;</span>
-                    <span class="text-purple-300 font-bold">PMDG &bull; iFly &bull; Fenix Ready</span>
+                    <span class="font-mono font-medium uppercase tracking-wider text-[11px]">Virtual Airline Operations &amp; Flight Tracking Platform</span>
                 </div>
 
                 <!-- Main Heading -->
                 <h1 class="font-heading font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight leading-[1.08] text-white">
-                    Run Your Virtual Airline <br class="hidden sm:inline" />
-                    <span class="text-[#21A19D]">Like the Real Thing.</span>
+                    Complete Management System <br class="hidden sm:inline" />
+                    <span class="text-[#21A19D]">For Virtual Airlines</span>
                 </h1>
 
                 <!-- Subheadline -->
-                <p class="text-slate-300 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed font-light">
-                    The modern, high-performance SaaS platform for virtual aviation communities. Smart SimBrief dispatching, sub-second telemetry ACARS, automated pilot rosters, and zero-maintenance cloud infrastructure.
+                <p class="text-slate-300 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed font-normal">
+                    V-Air Ops provides schedule management, live ACARS tracking, SimBrief flight plan dispatching, and comprehensive pilot roster tools for virtual aviation operations.
                 </p>
 
                 <!-- Call To Actions -->
                 <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-xl bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-extrabold text-base shadow-lg hover:scale-[1.01] transition flex items-center gap-3">
-                        <span>Join or create your own airline.</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-xl bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-base shadow-md transition flex items-center gap-3">
+                        <span>Get Started</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
 
-                    <a href="#features" class="px-8 py-4 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-200 font-heading font-bold text-base border border-navy-700 transition flex items-center gap-2">
-                        <svg class="w-5 h-5 text-[#21A19D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <a href="#features" class="px-8 py-4 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-200 font-heading font-semibold text-base border border-navy-700 transition flex items-center gap-2">
                         <span>Explore Features</span>
                     </a>
-                </div>
-
-                <!-- Micro Proof Text -->
-                <div class="flex items-center justify-center gap-6 text-xs text-slate-400 font-mono pt-2">
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> 100% Free Forever</span>
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> No Credit Card Required</span>
-                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Instant 2-Minute Setup</span>
                 </div>
             </div>
 
             <!-- Hero Mockup Container -->
-            <div class="mt-16 lg:mt-24 relative max-w-6xl mx-auto">
-                <div class="relative rounded-xl flat-card border border-navy-700 overflow-hidden shadow-2xl">
+            <div class="mt-16 lg:mt-20 relative max-w-6xl mx-auto">
+                <div class="relative rounded-xl flat-card border border-navy-700 overflow-hidden shadow-xl">
                     <!-- Window Header Controls -->
                     <div class="bg-navy-950 border-b border-navy-700 px-4 py-3 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-                            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-                            <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-                            <span class="text-xs font-mono text-slate-400 ml-2">vops-console.app/admin/live-radar</span>
+                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
+                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
+                            <span class="w-3 h-3 rounded-full bg-slate-700"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">vops-console.app &bull; Flight Monitoring Console</span>
                         </div>
-                        <div class="flex items-center gap-3 text-xs font-mono text-teal-400">
+                        <div class="flex items-center gap-3 text-xs font-mono text-slate-400">
                             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>ACARS STREAM: ACTIVE (128 FLIGHTS IN AIR)</span>
+                            <span>ACARS TELEMETRY STREAM: ACTIVE</span>
                         </div>
                     </div>
 
@@ -278,60 +250,44 @@
                         <!-- Top Stat Bar inside Mockup -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Enroute Flights</span>
-                                <span class="text-2xl font-bold font-mono text-[#21A19D]">142 FLTS</span>
+                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Flight Dispatching</span>
+                                <span class="text-lg font-bold font-mono text-[#21A19D]">ACTIVE</span>
                             </div>
                             <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Network Fleet Load</span>
-                                <span class="text-2xl font-bold font-mono text-[#6F3B84]">89.4%</span>
+                                <span class="text-[10px] font-mono uppercase text-slate-400 block">ACARS Telemetry</span>
+                                <span class="text-lg font-bold font-mono text-[#6F3B84]">SUB-SECOND</span>
                             </div>
                             <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Avg Landing Rate</span>
-                                <span class="text-2xl font-bold font-mono text-emerald-400">-142 FPM</span>
+                                <span class="text-[10px] font-mono uppercase text-slate-400 block">SimBrief OFP</span>
+                                <span class="text-lg font-bold font-mono text-emerald-400">LIDO FORMAT</span>
                             </div>
                             <div class="p-4 rounded-lg bg-navy-950 border border-navy-700">
-                                <span class="text-[10px] font-mono uppercase text-slate-400 block">System Health</span>
-                                <span class="text-2xl font-bold font-mono text-teal-300">100% OK</span>
+                                <span class="text-[10px] font-mono uppercase text-slate-400 block">Multi-Tenant</span>
+                                <span class="text-lg font-bold font-mono text-teal-300">ISOLATED</span>
                             </div>
                         </div>
 
-                        <!-- Dark Live Map Mockup -->
-                        <div class="h-[380px] sm:h-[460px] rounded-lg bg-navy-950 border border-navy-700 relative overflow-hidden flex items-center justify-center">
-                            <!-- Simulated Vector Paths -->
-                            <svg class="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 1000 500" fill="none">
+                        <!-- Clean Live Map Mockup -->
+                        <div class="h-[340px] sm:h-[400px] rounded-lg bg-navy-950 border border-navy-700 relative overflow-hidden flex items-center justify-center">
+                            <!-- Vector Routes Overlay -->
+                            <svg class="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 1000 500" fill="none">
                                 <path d="M 150 350 Q 300 150 500 200 T 850 120" stroke="#6F3B84" stroke-width="2" stroke-dasharray="6,6"/>
-                                <path d="M 200 400 Q 450 300 750 180" stroke="#21A19D" stroke-width="3"/>
+                                <path d="M 200 400 Q 450 300 750 180" stroke="#21A19D" stroke-width="2"/>
                                 <path d="M 100 180 Q 400 120 800 380" stroke="#10B981" stroke-width="2"/>
                             </svg>
 
-                            <!-- Live Flight Pins -->
-                            <div class="absolute top-[22%] left-[48%] animate-float flex items-center gap-2 bg-navy-900 border border-[#21A19D] px-3 py-1.5 rounded-lg shadow-xl z-20">
+                            <!-- Flight Markers Preview -->
+                            <div class="absolute top-[28%] left-[45%] flex items-center gap-2 bg-navy-900 border border-[#21A19D]/60 px-3 py-1.5 rounded-lg shadow-md z-20">
                                 <span class="w-2 h-2 rounded-full bg-[#21A19D]"></span>
-                                <div class="text-left font-mono">
-                                    <span class="text-xs font-bold text-white block">SVK101 &bull; B738</span>
-                                    <span class="text-[10px] text-teal-300">FL360 &bull; 460 KTS &bull; EGLL &rarr; LFPG</span>
-                                </div>
-                            </div>
-
-                            <div class="absolute top-[52%] left-[28%] flex items-center gap-2 bg-navy-900 border border-[#6F3B84] px-3 py-1.5 rounded-lg shadow-xl z-20">
-                                <span class="w-2 h-2 rounded-full bg-[#6F3B84]"></span>
-                                <div class="text-left font-mono">
-                                    <span class="text-xs font-bold text-white block">EZS8999 &bull; A320</span>
-                                    <span class="text-[10px] text-purple-300">FL380 &bull; 442 KTS &bull; LFLL &rarr; EGKK</span>
-                                </div>
-                            </div>
-
-                            <div class="absolute bottom-[28%] right-[22%] flex items-center gap-2 bg-navy-900 border border-emerald-500 px-3 py-1.5 rounded-lg shadow-xl z-20">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                                <div class="text-left font-mono">
-                                    <span class="text-xs font-bold text-white block">DLH404 &bull; A359</span>
-                                    <span class="text-[10px] text-emerald-300">FL410 &bull; 488 KTS &bull; EDDF &rarr; KJFK</span>
+                                <div class="text-left font-mono text-xs">
+                                    <span class="font-bold text-white block">Flight Telemetry</span>
+                                    <span class="text-[10px] text-slate-400">Enroute &bull; Live Telemetry Tracking</span>
                                 </div>
                             </div>
 
                             <!-- Map Overlay Badge -->
-                            <div class="absolute bottom-4 left-4 bg-navy-950 border border-navy-700 px-4 py-2 rounded-lg text-xs font-mono text-slate-300">
-                                Global Live Radar Stream &bull; Sub-Second Telemetry Sync
+                            <div class="absolute bottom-4 left-4 bg-navy-950 border border-navy-700 px-4 py-2 rounded-lg text-xs font-mono text-slate-400">
+                                Live ACARS Flight Monitor &bull; Low-Latency Tracking Engine
                             </div>
                         </div>
                     </div>
@@ -340,66 +296,66 @@
         </div>
     </section>
 
-    <!-- SECTION 2: LIVE STATISTICS BAR (SOCIAL PROOF) -->
+    <!-- SECTION 2: SYSTEM CAPABILITIES HIGHLIGHTS -->
     <section class="py-12 bg-navy-950 border-b border-navy-700 relative z-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-navy-700">
                 <div class="space-y-1">
-                    <span class="font-heading font-black text-3xl sm:text-5xl text-[#21A19D] font-mono">1,420+</span>
-                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400 block">Active Flights Today</span>
+                    <span class="font-heading font-bold text-lg text-[#21A19D] block">Multi-Simulator</span>
+                    <span class="text-xs text-slate-400 block font-mono">MSFS, X-Plane &amp; P3D</span>
                 </div>
                 <div class="space-y-1 pl-4">
-                    <span class="font-heading font-black text-3xl sm:text-5xl text-[#6F3B84] font-mono">38,500+</span>
-                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400 block">Registered Pilots</span>
+                    <span class="font-heading font-bold text-lg text-[#6F3B84] block">SimBrief Integration</span>
+                    <span class="text-xs text-slate-400 block font-mono">LIDO OFP Flight Plans</span>
                 </div>
                 <div class="space-y-1 pl-4">
-                    <span class="font-heading font-black text-3xl sm:text-5xl text-teal-300 font-mono">1.8M+</span>
-                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400 block">Block Hours Logged</span>
+                    <span class="font-heading font-bold text-lg text-teal-300 block">vPilot ACARS</span>
+                    <span class="text-xs text-slate-400 block font-mono">Native Telemetry Client</span>
                 </div>
                 <div class="space-y-1 pl-4">
-                    <span class="font-heading font-black text-3xl sm:text-5xl text-emerald-400 font-mono">99.99%</span>
-                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400 block">Uptime Guarantee</span>
+                    <span class="font-heading font-bold text-lg text-emerald-400 block">Multi-Tenant</span>
+                    <span class="text-xs text-slate-400 block font-mono">Dedicated VA Isolation</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- SECTION 3: CORE FEATURES GRID -->
-    <section id="features" class="py-24 lg:py-32 bg-navy-900 border-b border-navy-700 relative z-10">
+    <section id="features" class="py-20 lg:py-28 bg-navy-900 border-b border-navy-700 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
             
             <div class="text-center max-w-3xl mx-auto space-y-4">
                 <span class="text-xs font-mono uppercase tracking-widest text-[#21A19D] font-bold bg-navy-950 px-3 py-1 rounded-md border border-navy-700">
-                    COMPLETE VIRTUAL AIRLINE SUITE
+                    VIRTUAL AIRLINE MANAGEMENT SUITE
                 </span>
                 <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight">
-                    Everything You Need to Scale Your Airline
+                    Essential Tools for Virtual Airline Operations
                 </h2>
                 <p class="text-slate-400 text-base sm:text-lg">
-                    Ditch legacy spreadsheets and outdated PHP scripts. V-Air Ops provides an enterprise SaaS backbone built specifically for virtual airline managers and dedicated flight simmers.
+                    V-Air Ops provides schedule management, pilot administration, automated flight plan dispatch, and flight tracking tailored for virtual aviation communities.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <!-- Feature 1 -->
-                <div class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
+                <div id="dispatch" class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
                     <div class="w-12 h-12 rounded-lg bg-navy-950 border border-navy-700 flex items-center justify-center text-[#21A19D]">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     </div>
-                    <h3 class="font-heading font-bold text-xl text-white">Smart SimBrief Dispatch</h3>
+                    <h3 class="font-heading font-bold text-xl text-white">SimBrief Flight Dispatch</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">
-                        One-click official LIDO flight plan generation, automated route validation, real-time ETOPS calculations, and passenger/cargo payload balancing.
+                        Integrated SimBrief flight plan generation with official LIDO format layout, route validation, ETOPS calculations, and fuel weight balance.
                     </p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
+                <div id="tracking" class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
                     <div class="w-12 h-12 rounded-lg bg-navy-950 border border-navy-700 flex items-center justify-center text-[#6F3B84]">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
-                    <h3 class="font-heading font-bold text-xl text-white">Real-Time ACARS Telemetry</h3>
+                    <h3 class="font-heading font-bold text-xl text-white">ACARS Telemetry Engine</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">
-                        Lightweight background tracking client compatible across MSFS 2024, X-Plane 12, and P3D. Captures pitch, bank, G-force, and fuel burn sub-secondly.
+                        Lightweight desktop tracking client logging altitude, airspeed, position, fuel flow, and touchdown sink rate across modern flight simulators.
                     </p>
                 </div>
 
@@ -408,20 +364,20 @@
                     <div class="w-12 h-12 rounded-lg bg-navy-950 border border-navy-700 flex items-center justify-center text-teal-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     </div>
-                    <h3 class="font-heading font-bold text-xl text-white">Advanced Flight Analytics</h3>
+                    <h3 class="font-heading font-bold text-xl text-white">Schedule &amp; Fleet Management</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">
-                        Detailed vertical profile graphs, touchdown FPM scoring, overspeed/stall penalty detection, and automated pilot logbook audits.
+                        Import and organize routes, flight numbers, aircraft registration details, airport ICAOs, and active aircraft type assignments.
                     </p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
+                <div id="architecture" class="flat-card flat-card-hover p-8 rounded-xl space-y-4 relative overflow-hidden group">
                     <div class="w-12 h-12 rounded-lg bg-navy-950 border border-navy-700 flex items-center justify-center text-emerald-400">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     </div>
-                    <h3 class="font-heading font-bold text-xl text-white">Rock-Solid Infrastructure</h3>
+                    <h3 class="font-heading font-bold text-xl text-white">Multi-Tenant Infrastructure</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">
-                        Built on containerized, auto-scaling cloud microservices. Guarantees zero downtime during 100+ pilot community group flights and VATSIM events.
+                        Isolated databases and tenant configuration models, allowing independent management, custom ranks, and dedicated rosters per airline.
                     </p>
                 </div>
             </div>
@@ -429,7 +385,7 @@
     </section>
 
     <!-- SECTION 4: THE PILOT EXPERIENCE -->
-    <section id="portal" class="py-24 lg:py-32 bg-navy-950 border-b border-navy-700 relative z-10">
+    <section id="portal" class="py-20 lg:py-28 bg-navy-950 border-b border-navy-700 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 
@@ -437,13 +393,13 @@
                 <div class="space-y-8">
                     <div class="space-y-4">
                         <span class="text-xs font-mono uppercase tracking-widest text-[#6F3B84] font-bold bg-navy-900 px-3 py-1 rounded-md border border-navy-700">
-                            THE PILOT EXPERIENCE
+                            PILOT MANAGEMENT &amp; PROGRESSION
                         </span>
                         <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight">
-                            Empower Your Pilots with a World-Class Portal
+                            Streamlined Roster &amp; Flight Log Verification
                         </h2>
                         <p class="text-slate-400 text-base sm:text-lg leading-relaxed">
-                            Keep your community engaged with gamified rank progression, community flight goals, detailed pilot profiles, and seamless Discord integration.
+                            Manage pilot qualifications, track flight hours, process automated PIREPs, and integrate community Discord announcements.
                         </p>
                     </div>
 
@@ -454,8 +410,8 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                             <div class="space-y-1">
-                                <h4 class="font-heading font-bold text-lg text-white">Automated Rank Progression &amp; Badges</h4>
-                                <p class="text-slate-400 text-sm">Set custom hour thresholds and points criteria. Pilots automatically unlock ranks and type ratings as they log flight hours.</p>
+                                <h4 class="font-heading font-bold text-lg text-white">Automated Rank &amp; Qualification Tracking</h4>
+                                <p class="text-slate-400 text-sm">Define custom hour thresholds and rank structures. Ranks and type ratings update automatically as pilots log flight hours.</p>
                             </div>
                         </div>
 
@@ -465,26 +421,26 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             </div>
                             <div class="space-y-1">
-                                <h4 class="font-heading font-bold text-lg text-white">Native Discord Bot &amp; Role Syncing</h4>
-                                <p class="text-slate-400 text-sm">Automatically grant Discord roles when pilots join or rank up. Post flight dispatch notifications and landing debriefs directly into community channels.</p>
+                                <h4 class="font-heading font-bold text-lg text-white">Discord Notification Integration</h4>
+                                <p class="text-slate-400 text-sm">Synchronize community roles and trigger automated flight dispatch or PIREP completion notices to community Discord webhooks.</p>
                             </div>
                         </div>
 
                         <!-- Item 3 -->
                         <div class="flex gap-4 items-start">
                             <div class="w-10 h-10 rounded-lg bg-navy-900 border border-navy-700 flex items-center justify-center text-teal-300 shrink-0 mt-1">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 30a1 1 0 001 1h2a1 1 0 001-1v-1a1 1 0 00-1-1h-2a1 1 0 00-1 1v1z"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                             </div>
                             <div class="space-y-1">
-                                <h4 class="font-heading font-bold text-lg text-white">Community Goals &amp; Event Operations</h4>
-                                <p class="text-slate-400 text-sm">Create airline-wide destination challenges, event routes, and group flight leaderboards with live statistics.</p>
+                                <h4 class="font-heading font-bold text-lg text-white">Operational Statistics &amp; Analytics</h4>
+                                <p class="text-slate-400 text-sm">Review pilot landing rate performance, total flight hours, aircraft type usage, and route statistics.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Feature Mockup Card -->
-                <div class="flat-card rounded-xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <div class="flat-card rounded-xl p-6 sm:p-8 space-y-6 shadow-lg">
                     <div class="flex items-center justify-between border-b border-navy-700 pb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-[#21A19D] font-bold flex items-center justify-center text-white font-heading text-sm">
@@ -496,7 +452,7 @@
                             </div>
                         </div>
                         <span class="px-3 py-1 rounded-md bg-navy-950 text-emerald-400 text-xs font-mono font-bold border border-navy-700">
-                            RANK: SENIOR COMMANDER
+                            RANK: COMMANDER
                         </span>
                     </div>
 
@@ -504,21 +460,21 @@
                     <div class="space-y-4 text-xs font-mono">
                         <div>
                             <div class="flex justify-between text-slate-300 mb-1">
-                                <span>Flight Hours Progress</span>
+                                <span>Flight Hours Logged</span>
                                 <span class="text-[#21A19D] font-bold">1,240h / 1,500h</span>
                             </div>
-                            <div class="w-full bg-navy-950 h-2.5 rounded-full overflow-hidden border border-navy-700">
+                            <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-700">
                                 <div class="bg-[#21A19D] h-full w-[82%] rounded-full"></div>
                             </div>
                         </div>
 
                         <div>
                             <div class="flex justify-between text-slate-300 mb-1">
-                                <span>Landing Rating Score</span>
-                                <span class="text-emerald-400 font-bold">98.5% (Butter Average)</span>
+                                <span>Landing Rate Analysis</span>
+                                <span class="text-emerald-400 font-bold">-130 FPM Average</span>
                             </div>
-                            <div class="w-full bg-navy-950 h-2.5 rounded-full overflow-hidden border border-navy-700">
-                                <div class="bg-emerald-500 h-full w-[98%] rounded-full"></div>
+                            <div class="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-700">
+                                <div class="bg-emerald-500 h-full w-[92%] rounded-full"></div>
                             </div>
                         </div>
                     </div>
@@ -533,7 +489,7 @@
                                 <span class="text-slate-400">A320</span>
                             </div>
                             <span class="text-emerald-400 font-bold">-112 FPM</span>
-                            <span class="text-slate-300">01:15 &bull; +100 PTS</span>
+                            <span class="text-slate-300">01:15 &bull; ACCEPTED</span>
                         </div>
 
                         <div class="p-3 bg-navy-950 rounded-lg border border-navy-700 flex items-center justify-between text-xs font-mono">
@@ -542,7 +498,7 @@
                                 <span class="text-slate-400">B789</span>
                             </div>
                             <span class="text-emerald-400 font-bold">-148 FPM</span>
-                            <span class="text-slate-300">07:42 &bull; +100 PTS</span>
+                            <span class="text-slate-300">07:42 &bull; ACCEPTED</span>
                         </div>
                     </div>
                 </div>
@@ -550,18 +506,18 @@
         </div>
     </section>
 
-    <!-- SECTION 5: INTERACTIVE RADAR OVERVIEW -->
-    <section id="radar" class="py-24 lg:py-32 bg-navy-900 border-b border-navy-700 relative z-10">
+    <!-- SECTION 5: REAL-TIME FLIGHT MONITORING -->
+    <section class="py-20 lg:py-28 bg-navy-900 border-b border-navy-700 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div class="text-center max-w-3xl mx-auto space-y-4">
                 <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold bg-navy-950 px-3 py-1 rounded-md border border-navy-700">
-                    REAL-TIME RADAR OVERVIEW
+                    REAL-TIME FLIGHT TRACKING
                 </span>
                 <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight">
-                    Watch Your Entire Fleet Fly in Real Time
+                    Live Fleet &amp; Position Tracking
                 </h2>
                 <p class="text-slate-400 text-base sm:text-lg">
-                    Our high-resolution live map provides flight dispatchers and admins complete situational awareness across the globe with interactive flight tracking.
+                    Monitor active flights across your virtual airline network with live map tracking and low-latency position updates via the vPilot ACARS client.
                 </p>
                 <div class="pt-2 flex items-center justify-center gap-4">
                     <a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
@@ -572,46 +528,30 @@
                 </div>
             </div>
 
-            <!-- Stylized Flat Interactive Map Container -->
-            <div class="flat-card rounded-xl overflow-hidden shadow-2xl relative">
+            <!-- Stylized Flat Map Container -->
+            <div class="flat-card rounded-xl overflow-hidden shadow-xl relative">
                 <!-- Map Header Bar -->
                 <div class="bg-navy-950 border-b border-navy-700 p-4 flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-                        <span class="font-heading font-bold text-white text-sm">GLOBAL FLIGHT MONITOR &bull; NETWORK RADAR</span>
+                        <span class="font-heading font-bold text-white text-sm">FLIGHT MONITORING CONSOLE &bull; NETWORK RADAR</span>
                     </div>
-                    <div class="flex items-center gap-4 text-xs font-mono">
-                        <span class="text-slate-400">FILTER: <strong class="text-[#21A19D]">ALL FLEETS</strong></span>
-                        <span class="text-slate-400">SYNC: <strong class="text-emerald-400">SUB-SECOND TELEMETRY</strong></span>
+                    <div class="flex items-center gap-4 text-xs font-mono text-slate-400">
+                        <span>TELEMETRY: <strong class="text-emerald-400">ACTIVE</strong></span>
                     </div>
                 </div>
 
                 <!-- Map Body -->
-                <div class="h-[500px] bg-navy-950 relative flex items-center justify-center overflow-hidden">
-                    <!-- Simulated Aircraft Vectors -->
-                    <div class="absolute top-[35%] left-[30%] group cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-navy-900 border border-[#21A19D] flex items-center justify-center">
-                            <svg class="w-4 h-4 text-[#21A19D] transform rotate-45" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-                        </div>
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-navy-900 border border-navy-700 px-3 py-1.5 rounded-md text-xs font-mono text-white whitespace-nowrap shadow-xl">
-                            <span class="font-bold text-[#21A19D]">VOPS-142</span> &bull; B738 &bull; FL360
-                        </div>
-                    </div>
+                <div class="h-[440px] bg-navy-950 relative flex items-center justify-center overflow-hidden">
+                    <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 1000 500" fill="none">
+                        <path d="M 150 350 Q 300 150 500 200 T 850 120" stroke="#6F3B84" stroke-width="2"/>
+                        <path d="M 200 400 Q 450 300 750 180" stroke="#21A19D" stroke-width="2"/>
+                    </svg>
 
-                    <div class="absolute top-[45%] left-[62%] group cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-navy-900 border border-[#6F3B84] flex items-center justify-center">
-                            <svg class="w-4 h-4 text-[#6F3B84] transform rotate-90" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-                        </div>
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-navy-900 border border-navy-700 px-3 py-1.5 rounded-md text-xs font-mono text-white whitespace-nowrap shadow-xl">
-                            <span class="font-bold text-[#6F3B84]">VOPS-892</span> &bull; A320 &bull; FL380
-                        </div>
-                    </div>
-
-                    <!-- Radar Sweep Circle Animation -->
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="w-[600px] h-[600px] rounded-full border border-navy-700 relative animate-radar-sweep">
-                            <div class="absolute top-1/2 left-1/2 w-1/2 h-[1px] bg-[#21A19D] origin-left opacity-40"></div>
-                        </div>
+                    <!-- Clean Position Display Marker -->
+                    <div class="bg-navy-900 border border-navy-700 px-4 py-3 rounded-lg shadow-lg text-center space-y-1 font-mono">
+                        <span class="text-xs font-bold text-white block">Interactive Live Flight Radar</span>
+                        <span class="text-[11px] text-slate-400 block">Sub-Second ACARS Telemetry Sync Enabled</span>
                     </div>
                 </div>
             </div>
@@ -619,26 +559,26 @@
     </section>
 
     <!-- SECTION 6: FINAL CTA -->
-    <section class="py-24 lg:py-32 bg-navy-900 relative z-10 overflow-hidden">
+    <section class="py-20 lg:py-28 bg-navy-900 relative z-10 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flat-card border border-navy-700 rounded-2xl p-8 sm:p-16 text-center relative overflow-hidden space-y-8 shadow-2xl">
-                <h2 class="font-heading font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-tight">
-                    Ready to Launch Your Airline?
+            <div class="flat-card border border-navy-700 rounded-2xl p-8 sm:p-14 text-center relative overflow-hidden space-y-6 shadow-xl">
+                <h2 class="font-heading font-black text-3xl sm:text-5xl text-white tracking-tight leading-tight">
+                    Start Managing Your Virtual Airline
                 </h2>
                 
-                <p class="text-slate-300 text-base sm:text-xl max-w-2xl mx-auto font-light leading-relaxed">
-                    Join thousands of virtual airline pilots and community managers already using V-Air Ops to power their flight ops infrastructure for 100% free.
+                <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal leading-relaxed">
+                    Create your virtual airline or join an existing community on V-Air Ops today.
                 </p>
 
-                <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-xl bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-extrabold text-base shadow-lg hover:scale-[1.01] transition flex items-center gap-3">
-                        <span>Join or create your own airline.</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-xl bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-base shadow-md transition flex items-center gap-3">
+                        <span>Register Your Airline</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
                 </div>
 
-                <p class="text-xs font-mono text-slate-400">
-                    100% Free Forever &bull; Instant Setup &bull; Free Migration Support from vAMSYS / phpVMS &bull; No Credit Card Required
+                <p class="text-xs font-mono text-slate-400 pt-2">
+                    Free platform for virtual aviation communities &bull; Multi-Tenant System
                 </p>
             </div>
         </div>
@@ -654,7 +594,7 @@
                         <img src="{{ asset('images/v-air-ops-logo.png') }}" alt="V-Air Ops" class="h-16 w-auto object-contain">
                     </a>
                     <p class="text-slate-400 max-w-sm leading-relaxed">
-                        High-performance Virtual Airline SaaS platform &amp; sub-second ACARS telemetry engine for modern flight simulation communities.
+                        Virtual Airline Operations SaaS platform &amp; ACARS flight tracking system for virtual aviation communities.
                     </p>
                 </div>
 
@@ -662,10 +602,10 @@
                 <div class="space-y-3">
                     <h4 class="font-heading font-bold text-white text-xs uppercase tracking-wider">Product</h4>
                     <ul class="space-y-2">
-                        <li><a href="#dispatch" class="hover:text-[#21A19D] transition">Smart Dispatch</a></li>
-                        <li><a href="#radar" class="hover:text-[#21A19D] transition">Live ACARS Radar</a></li>
+                        <li><a href="#dispatch" class="hover:text-[#21A19D] transition">SimBrief Dispatch</a></li>
+                        <li><a href="#tracking" class="hover:text-[#21A19D] transition">ACARS Telemetry</a></li>
                         <li><a href="#portal" class="hover:text-[#21A19D] transition">Pilot Roster</a></li>
-                        <li><a href="#infrastructure" class="hover:text-[#21A19D] transition">Analytics Engine</a></li>
+                        <li><a href="#architecture" class="hover:text-[#21A19D] transition">Multi-Tenant Architecture</a></li>
                     </ul>
                 </div>
 
@@ -684,20 +624,20 @@
                 <div class="space-y-3">
                     <h4 class="font-heading font-bold text-white text-xs uppercase tracking-wider">Legal &amp; Support</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-[#21A19D] transition">Terms of Service</a></li>
-                        <li><a href="#" class="hover:text-[#21A19D] transition">Privacy Policy</a></li>
+                        <li><a href="{{ route('terms.show') }}" class="hover:text-[#21A19D] transition">Terms of Service</a></li>
+                        <li><a href="{{ route('policy.show') }}" class="hover:text-[#21A19D] transition">Privacy Policy</a></li>
                         <li><a href="javascript:void(0)" onclick="if(window.openCookieSettings) window.openCookieSettings();" class="hover:text-[#21A19D] transition">Cookie Preferences</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">Discord Support</a></li>
-                        <li><a href="#" class="hover:text-[#21A19D] transition">Security Policy</a></li>
+                        <li><a href="{{ route('security.show') }}" class="hover:text-[#21A19D] transition">Security Policy</a></li>
                     </ul>
                 </div>
             </div>
 
             <div class="border-t border-navy-700 pt-8 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px]">
-                <p>&copy; {{ date('Y') }} V-Air Ops SaaS Platform. All rights reserved. Not affiliated with any real-world airline.</p>
+                <p>&copy; {{ date('Y') }} V-Air Ops Platform. All rights reserved. Not affiliated with any real-world airline.</p>
                 <div class="flex items-center gap-2 text-emerald-400">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>ALL SYSTEMS OPERATIONAL</span>
+                    <span>SYSTEM OPERATIONAL</span>
                 </div>
             </div>
         </div>

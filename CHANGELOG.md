@@ -2,6 +2,25 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.24] - 2026-09-07
+
+### 🏛️ Professional Homepage & Neutral Copy Refactoring
+- **Removal of Hardcoded Fake Statistics:** Replaced all hardcoded fake stats (`1,420+ Active Flights`, `38,500+ Registered Pilots`, `1.8M+ Block Hours`, `128 Flights in Air`) with a clean 4-pillar system capability grid (Multi-Simulator, SimBrief OFP, vPilot ACARS, Multi-Tenant Architecture) modeled after phpVMS and vAMSYS.
+- **Professional & Neutral Copywriting:** Eliminated marketing hyperbole ("100% Free Forever", "PMDG Ready") in favor of clear, technical aviation descriptions.
+- **Refactored Pilot & Flight Metrics:** Replaced gamer slang ("Butter Average") with standard technical terms (*"Touchdown Sink Rate (-FPM) Analysis"*).
+- **Streamlined Graphics & Animations:** Removed sci-fi radar sweep animations (`animate-radar-sweep`) and gamer badges in favor of clean operations console previews.
+
+---
+
+## [v1.1.23] - 2026-09-07
+
+### ⚖️ Legal & Support Pages
+- **Dedicated Legal Pages:** Created responsive, dark-themed legal pages for **Terms of Service** (`/terms`), **Privacy Policy** (`/privacy`), and **Security Policy** (`/security`) matching V-Air Ops platform branding.
+- **Comprehensive Policy Content:** Detailed non-commercial flight sim usage, ACARS telemetry processing, GDPR data subject rights, TLS encryption, tenant isolation, and responsible vulnerability disclosure.
+- **Homepage Footer Link Updates:** Updated `Legal & Support` links on the landing page (`welcome.blade.php`) to point to the new named routes (`terms.show`, `policy.show`, `security.show`).
+
+---
+
 ## [v1.1.22] - 2026-09-07
 
 ### 📈 Google Analytics Integration
