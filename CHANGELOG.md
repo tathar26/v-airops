@@ -2,6 +2,13 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.18] - 2026-09-07
+
+### 🛠️ Fix Dispatch Action Route Names
+- **Resolved RouteNotFoundException:** Fixed undefined route references `pilot.flights` and `pilot.pireps.create` in the Booking Actions sidebar on the dispatch page by redirecting to `flight-centre.index` (for additional flight booking) and `profile.pireps` (for manual PIREPs).
+
+---
+
 ## [v1.1.17] - 2026-09-07
 
 ### 🛠️ Fix Multiple Root Elements in Dispatch View

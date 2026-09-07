@@ -757,12 +757,12 @@ ATC ROUTE
                         </a>
 
                         <!-- 8. Make Additional Booking -->
-                        <a href="{{ route('pilot.flights') }}" class="w-full block py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-gray-200 font-semibold text-xs text-center transition">
+                        <a href="{{ route('flight-centre.index') }}" class="w-full block py-2.5 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-gray-200 font-semibold text-xs text-center transition">
                             Make Additional Booking
                         </a>
 
                         <!-- 9. Manual PIREP / File a Claim -->
-                        <a href="{{ route('pilot.pireps.create') }}?booking_id={{ $booking->id }}" class="w-full block py-2.5 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold text-xs text-center transition">
+                        <a href="{{ route('profile.pireps') }}" class="w-full block py-2.5 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold text-xs text-center transition">
                             Manual PIREP / File a Claim
                         </a>
 
