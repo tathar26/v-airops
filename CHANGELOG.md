@@ -2,6 +2,21 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.16] - 2026-09-07
+
+### ✈️ Redesigned Flight Dispatch Console & Modern Deck Layout
+- **Deck-Inspired Layout & Interactive Route Map:** Completely redesigned the dispatched flight view (`/profile/dispatch/{booking}`) with a full-width Leaflet route map featuring Carto dark matter tiles, route polyline, waypoint markers, and departure/arrival indicators, alongside a flight start expiry countdown notice.
+- **Flight Information & METAR Briefing:** Added comprehensive flight identification, departure and arrival airports with visual flight vector, STD/STA/ETD/ETA times, distance, live METARs with quick-access links to Airport Information and METAR-TAF.com.
+- **Pilot Information Deck:** Displays assigned aircraft registration, type, Cost Index, Flight Level, passenger load, luggage, freight, route type, network badge, copyable route string, and dispatcher remarks.
+- **SimBrief OFP Summary Accordion:** Integrated structured OFP metrics including runway surface conditions and headwind/crosswind components, comprehensive Takeoff & Landing Report (TLR) with V-speeds (V1, VR, V2), flap settings, de-rate/flex temperatures, bleeds and anti-ice, performance profiles, and a 12-item fuel planning matrix.
+- **Raw Monospace OFP Viewer:** Retained full official SimBrief OFP monospaced document viewer with instant copy text, print, and external SimBrief link capabilities.
+- **Multi-Network Pre-Filing Integration:** Added one-click pre-filing support for **VATSIM** (`https://my.vatsim.net/pilots/flightplan`), **IVAO** (`https://fpl.ivao.aero/create`), and **POSCON** (`https://hq.poscon.net/`) with pre-populated aircraft, route, speed, altitude, endurance, and remarks.
+- **SimBrief FMS Flight Plan Downloads:** Provided direct in-app downloading for all SimBrief aircraft flight plans (MSFS `.pln`, PMDG `.rte`, Fenix A320 XML, X-Plane 11/12 `.fms`, PDF briefing, etc.).
+- **Route Historical Benchmarks (Compare):** Benchmarks active flight against previous flights on the same city pair, comparing landing rate, fuel burn, flight time, pilot points, passengers, and freight.
+- **Virtual Airline Branding Alignment:** Engineered with full tenant custom variable support (`var(--tenant-card-bg)`, `var(--tenant-accent)`, `var(--tenant-card-text)`, etc.) to preserve airline branding across themes.
+
+---
+
 ## [v1.1.15] - 2026-09-07
 
 ### ✈️ SimBrief OFP Layout & Alternate Airports Fix

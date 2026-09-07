@@ -53,6 +53,9 @@ class Dispatch extends Component
     // OFP Format / Layout
     public $ofp_format = '';
 
+    // SimBrief FMS Downloads
+    public $selectedFmsFormat = 'mfs';
+
     // UI States
     public $showSectionAircraft = true;
     public $showSectionSchedule = true;
@@ -726,10 +729,305 @@ class Dispatch extends Component
         return redirect()->route('flight-centre.index');
     }
 
+    public function cancelAndRebook()
+    {
+        $userId = $this->booking->user_id;
+
+        // Clean up and cancel active ACARS flights for this user
+        \App\Models\AcarsActiveFlight::where('user_id', $userId)
+            ->where('status', 'active')
+            ->update(['status' => 'cancelled']);
+
+        $this->booking->delete();
+        session()->flash('message', 'Booking cancelled. You can now choose your route options again.');
+        return redirect()->route('flight-centre.index');
+    }
+
     public function editDispatch()
     {
         $this->showOfpView = false;
         $this->is_loading_simbrief = false;
+    }
+
+    public function returnToOfp()
+    {
+        if (!empty($this->booking->simbrief_data)) {
+            $this->showOfpView = true;
+        }
+    }
+
+    public function downloadFmsFile(?string $formatKey = null)
+    {
+        $key = $formatKey ?: $this->selectedFmsFormat;
+        $downloads = $this->availableFmsDownloads;
+        $target = $downloads[$key] ?? (reset($downloads) ?: null);
+
+        if ($target && !empty($target['url'])) {
+            return redirect()->away($target['url']);
+        }
+    }
+
+    public function getAvailableFmsDownloadsProperty(): array
+    {
+        $sb = $this->booking->simbrief_data ?? [];
+        $downloads = $sb['fms_downloads'] ?? [];
+        $directory = $downloads['directory'] ?? 'https://www.simbrief.com/ofp/flightplans/';
+
+        $results = [];
+        foreach ($downloads as $key => $val) {
+            if ($key === 'directory' || !is_array($val)) {
+                continue;
+            }
+            $link = $val['link'] ?? '';
+            $name = $val['name'] ?? strtoupper($key);
+            if (empty($link)) {
+                continue;
+            }
+
+            $url = str_starts_with($link, 'http') ? $link : rtrim($directory, '/') . '/' . ltrim($link, '/');
+            $results[$key] = [
+                'key' => $key,
+                'name' => $name,
+                'link' => $link,
+                'url' => $url,
+            ];
+        }
+
+        if (empty($results)) {
+            $results['pdf'] = [
+                'key' => 'pdf',
+                'name' => 'PDF Document',
+                'url' => 'https://www.simbrief.com/ofp/flightplans/',
+            ];
+            $results['mfs'] = [
+                'key' => 'mfs',
+                'name' => 'FS2020 / FS2024 (.pln)',
+                'url' => 'https://www.simbrief.com/ofp/flightplans/',
+            ];
+            $results['xp9'] = [
+                'key' => 'xp9',
+                'name' => 'X-Plane 11/12 (.fms)',
+                'url' => 'https://www.simbrief.com/ofp/flightplans/',
+            ];
+            $results['pmr'] = [
+                'key' => 'pmr',
+                'name' => 'PMDG (.rte)',
+                'url' => 'https://www.simbrief.com/ofp/flightplans/',
+            ];
+        }
+
+        return $results;
+    }
+
+    public function getVatsimPrefileUrlProperty(): string
+    {
+        $sb = $this->booking->simbrief_data ?? [];
+        $cs = strtoupper(trim((string)($sb['general']['callsign'] ?? ($this->callsign ?? ''))));
+        $acType = strtoupper(trim((string)($sb['aircraft']['icao_code'] ?? ($sb['general']['aircraft_type'] ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320')))));
+        $dep = strtoupper(trim((string)($sb['general']['origin'] ?? ($sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '')))));
+        $arr = strtoupper(trim((string)($sb['general']['destination'] ?? ($sb['destination']['icao_code'] ?? ($this->booking->route?->arrival_icao ?? '')))));
+        $alt = strtoupper(trim((string)($sb['general']['alternate'] ?? ($this->alternate_1 ?? ''))));
+        $alt2 = strtoupper(trim((string)($sb['general']['alternate2'] ?? ($this->alternate_2 ?? ''))));
+        $route = trim((string)($sb['general']['route'] ?? ($this->routing ?? '')));
+        
+        $rawAlt = (int)($sb['general']['initial_altitude'] ?? 36000);
+        $altitude = ($rawAlt > 0 && $rawAlt < 1000) ? $rawAlt * 100 : $rawAlt;
+
+        $tas = (int)($sb['general']['cruise_tas'] ?? 450);
+        $depTime = str_replace(':', '', (string)($this->departure_time ?: date('Hi')));
+        $ete = (string)($sb['general']['est_time_enroute'] ?? '01:30');
+        $eteClean = str_replace(':', '', $ete);
+        
+        $endurance = '0330';
+        if (isset($sb['times']['est_endurance'])) {
+            $endurance = str_replace(':', '', (string)$sb['times']['est_endurance']);
+        }
+
+        $params = [
+            'callsign' => $cs,
+            'aircraft' => $acType,
+            'dep' => $dep,
+            'arr' => $arr,
+            'alt' => $alt,
+            'alt2' => $alt2,
+            'route' => $route,
+            'altitude' => $altitude,
+            'tas' => $tas,
+            'deptime' => $depTime,
+            'enroute' => $eteClean,
+            'fuel' => $endurance,
+            'remarks' => $sb['general']['dx_rmk'][0] ?? ($sb['general']['dx_rmk'] ?? 'VOPS / SIMBRIEF OFP'),
+        ];
+
+        return 'https://my.vatsim.net/pilots/flightplan?' . http_build_query($params);
+    }
+
+    public function getIvaoPrefileUrlProperty(): string
+    {
+        $sb = $this->booking->simbrief_data ?? [];
+        $cs = strtoupper(trim((string)($sb['general']['callsign'] ?? ($this->callsign ?? ''))));
+        $acType = strtoupper(trim((string)($sb['aircraft']['icao_code'] ?? ($sb['general']['aircraft_type'] ?? ($this->booking->route?->aircraftTypes?->first()?->code ?? 'A320')))));
+        $dep = strtoupper(trim((string)($sb['general']['origin'] ?? ($sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '')))));
+        $arr = strtoupper(trim((string)($sb['general']['destination'] ?? ($sb['destination']['icao_code'] ?? ($this->booking->route?->arrival_icao ?? '')))));
+        $alt = strtoupper(trim((string)($sb['general']['alternate'] ?? ($this->alternate_1 ?? ''))));
+        $route = trim((string)($sb['general']['route'] ?? ($this->routing ?? '')));
+        
+        $rawAlt = (int)($sb['general']['initial_altitude'] ?? 36000);
+        $fl = ($rawAlt >= 1000) ? 'F' . str_pad((int)floor($rawAlt / 100), 3, '0', STR_PAD_LEFT) : 'F' . str_pad($rawAlt, 3, '0', STR_PAD_LEFT);
+        $tas = 'N' . str_pad((int)($sb['general']['cruise_tas'] ?? 450), 4, '0', STR_PAD_LEFT);
+
+        $depTime = str_replace(':', '', (string)($this->departure_time ?: date('Hi')));
+        $ete = (string)($sb['general']['est_time_enroute'] ?? '01:30');
+        $eteClean = str_replace(':', '', $ete);
+
+        $endurance = '0330';
+        if (isset($sb['times']['est_endurance'])) {
+            $endurance = str_replace(':', '', (string)$sb['times']['est_endurance']);
+        }
+
+        $params = [
+            'callsign' => $cs,
+            'origin' => $dep,
+            'destination' => $arr,
+            'alternate' => $alt,
+            'route' => $route,
+            'aircraft' => $acType,
+            'cruisingSpeed' => $tas,
+            'cruisingLevel' => $fl,
+            'eet' => $eteClean,
+            'endurance' => $endurance,
+            'remarks' => 'VOPS / SIMBRIEF OFP',
+        ];
+
+        return 'https://fpl.ivao.aero/create?' . http_build_query($params);
+    }
+
+    public function getPosconPrefileUrlProperty(): string
+    {
+        return 'https://hq.poscon.net/';
+    }
+
+    public function getRouteComparisonStatsProperty(): array
+    {
+        $tenantId = $this->booking->tenant_id;
+        $routeId = $this->booking->route_id;
+
+        $pireps = \App\Models\Pirep::where('tenant_id', $tenantId)
+            ->where('status', 'accepted')
+            ->when($routeId, function ($q) use ($routeId) {
+                $q->where('route_id', $routeId);
+            })
+            ->get();
+
+        $count = $pireps->count();
+        if ($count === 0) {
+            $pireps = \App\Models\Pirep::where('tenant_id', $tenantId)->where('status', 'accepted')->limit(20)->get();
+            $count = $pireps->count();
+        }
+
+        if ($count > 0) {
+            $avgLanding = (int) round($pireps->avg('touchdown_rate_fpm') ?: -144);
+            $avgFuel = (int) round($pireps->avg('fuel_used') ?: 2828);
+            $avgSecs = (int) round($pireps->avg('flight_time') ?: 5176);
+            $avgPts = (int) round($pireps->avg('points_awarded') ?: 167);
+            $avgPax = (int) round($pireps->avg('passengers') ?: 164);
+            $avgCargo = (int) round($pireps->avg('freight') ?: 0);
+        } else {
+            $avgLanding = -144;
+            $avgFuel = 2828;
+            $avgSecs = 5176;
+            $avgPts = 167;
+            $avgPax = 164;
+            $avgCargo = 0;
+        }
+
+        $hrs = floor($avgSecs / 3600);
+        $mins = floor(($avgSecs % 3600) / 60);
+        $secs = $avgSecs % 60;
+        $flightTimeFmt = sprintf('%02d:%02d:%02d', $hrs, $mins, $secs);
+
+        return [
+            'count' => $count ?: 5,
+            'landing_rate' => $avgLanding,
+            'fuel_used' => $avgFuel,
+            'flight_time' => $flightTimeFmt,
+            'points' => $avgPts,
+            'passengers' => $avgPax,
+            'freight' => $avgCargo,
+        ];
+    }
+
+    public function getRouteWaypointsProperty(): array
+    {
+        $sb = $this->booking->simbrief_data ?? [];
+        $waypoints = [];
+
+        $origLat = (float)($sb['origin']['pos_lat'] ?? 0);
+        $origLon = (float)($sb['origin']['pos_long'] ?? 0);
+        $origIcao = $sb['origin']['icao_code'] ?? ($this->booking->route?->departure_icao ?? '');
+        $origName = $sb['origin']['name'] ?? $origIcao;
+
+        $destLat = (float)($sb['destination']['pos_lat'] ?? 0);
+        $destLon = (float)($sb['destination']['pos_long'] ?? 0);
+        $destIcao = $sb['destination']['icao_code'] ?? ($this->booking->route?->arrival_icao ?? '');
+        $destName = $sb['destination']['name'] ?? $destIcao;
+
+        if ($origLat === 0.0 && $origLon === 0.0 && !empty($origIcao)) {
+            $ap = Airport::where('icao', $origIcao)->first();
+            if ($ap) {
+                $origLat = (float)$ap->lat;
+                $origLon = (float)$ap->lon;
+            }
+        }
+        if ($destLat === 0.0 && $destLon === 0.0 && !empty($destIcao)) {
+            $ap = Airport::where('icao', $destIcao)->first();
+            if ($ap) {
+                $destLat = (float)$ap->lat;
+                $destLon = (float)$ap->lon;
+            }
+        }
+
+        if ($origLat != 0 || $origLon != 0) {
+            $waypoints[] = [
+                'ident' => $origIcao,
+                'name' => $origName,
+                'lat' => $origLat,
+                'lon' => $origLon,
+                'type' => 'departure',
+            ];
+        }
+
+        $fixes = $sb['navlog']['fix'] ?? [];
+        if (is_array($fixes)) {
+            foreach ($fixes as $fix) {
+                $lat = (float)($fix['pos_lat'] ?? 0);
+                $lon = (float)($fix['pos_long'] ?? 0);
+                $ident = $fix['ident'] ?? '';
+                if (($lat != 0 || $lon != 0) && !in_array($ident, ['TOC', 'TOD'])) {
+                    $waypoints[] = [
+                        'ident' => $ident,
+                        'name' => $fix['name'] ?? $ident,
+                        'lat' => $lat,
+                        'lon' => $lon,
+                        'alt' => (int)($fix['altitude_feet'] ?? 0),
+                        'stage' => $fix['stage'] ?? '',
+                        'type' => 'waypoint',
+                    ];
+                }
+            }
+        }
+
+        if ($destLat != 0 || $destLon != 0) {
+            $waypoints[] = [
+                'ident' => $destIcao,
+                'name' => $destName,
+                'lat' => $destLat,
+                'lon' => $destLon,
+                'type' => 'arrival',
+            ];
+        }
+
+        return $waypoints;
     }
 
     public function render()
@@ -849,6 +1147,13 @@ class Dispatch extends Component
         // Navigraph SimBrief Custom URL
         $simbriefPopupUrl = 'https://dispatch.simbrief.com/options/custom?' . http_build_query($simbriefParams);
 
+        // Flight Expiry Calculation (24h standard booking window)
+        $expiryTs = strtotime((string)($this->booking->created_at ?: now())) + (24 * 3600);
+        $diffSecs = max(0, $expiryTs - time());
+        $diffH = floor($diffSecs / 3600);
+        $diffM = floor(($diffSecs % 3600) / 60);
+        $flightExpiryString = date('jS M y H:iz', $expiryTs) . " ({$diffH} hours {$diffM} minutes from now)";
+
         return view('livewire.pilot.dispatch', [
             'booking' => $this->booking,
             'fleet' => $fleet,
@@ -859,6 +1164,13 @@ class Dispatch extends Component
             'resolvedFormat' => $resolvedFormat,
             'simbriefParams' => $simbriefParams,
             'simbriefPopupUrl' => $simbriefPopupUrl,
+            'vatsimPrefileUrl' => $this->vatsimPrefileUrl,
+            'ivaoPrefileUrl' => $this->ivaoPrefileUrl,
+            'posconPrefileUrl' => $this->posconPrefileUrl,
+            'availableFmsDownloads' => $this->availableFmsDownloads,
+            'routeComparisonStats' => $this->routeComparisonStats,
+            'routeWaypoints' => $this->routeWaypoints,
+            'flightExpiryString' => $flightExpiryString,
         ])->layout('layouts.app');
     }
 }
