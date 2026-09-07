@@ -2,6 +2,20 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.12] - 2026-09-07
+
+### ✈️ SimBrief Profile Integration & Dispatch Overhaul
+- **Live SimBrief Airframe Profiles:** Integrated SimBrief's dynamic airframe database (`https://www.simbrief.com/api/inputs.airframes.json`) via `SimBriefService::getAirframesForType()`. Automatically fetches and caches accurate add-on airframe profiles (e.g. Fenix A319/A320/A321 CFM/IAE, FlyByWire A320neo, ToLiss, iniBuilds, PMDG 737/777) matching the airframe's aircraft type.
+- **Direct SimBrief Profile Dispatch:** Selecting an add-on airplane profile passes its exact `airframe_internal_id` as the `type` parameter to SimBrief's custom dispatch URL, instantly loading the tailored weights, equipment codes, and fuel factors in SimBrief.
+- **Streamlined Dispatch UI:** Removed the redundant blue SimBrief sync box on the flight dispatch page, reorganizing the top configuration into a responsive 3-column grid (**Aircraft**, **SimBrief Airplane Profile**, and **SimBrief OFP Format / Layout**).
+- **SimBrief ID Validation Alert:** Added immediate validation when toggling "Dispatch via SimBrief". If the pilot has not configured their SimBrief Username or Pilot ID, the toggle resets and presents an alert linking directly to Pilot Preferences.
+- **Intelligent Auto-Alternates & Auto-Load:** When "Auto-find Alternates" is enabled, alternate inputs are disabled and left empty so SimBrief automatically determines the best alternates. Passenger and hold luggage counts default to empty, passing `pax=AUTO` and `cargo=AUTO` to SimBrief with quick-clear buttons to return to automated load calculations at any time.
+
+### 🛠️ Bug Fixes & Reliability
+- **PIREP Chart & Map Initialization:** Resolved race conditions and canvas reuse errors in `pirepDetailDashboard` by implementing guaranteed dependency loaders for Leaflet and Chart.js, waiting for Alpine DOM readiness (`$nextTick`), safely destroying prior Chart instances, and separating map and altitude profile chart rendering into isolated `try/catch` blocks.
+
+---
+
 ## [v1.1.11] - 2026-09-06
 
 ### 🛠️ Bug Fixes & Improvements
