@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.15] - 2026-09-07
+
+### ✈️ SimBrief OFP Layout & Alternate Airports Fix
+- **Dynamic OFP Layout Extraction:** Fixed SimBrief OFP format detection by reading from `params.ofp_layout` (which contains the true airline layout generated on SimBrief, such as `EZY`, `RYR`, `BAW`, `DLH`), preventing the layout from reverting to the default `LIDO`.
+- **Accurate Alternate Airport Parsing:** Fixed alternate airport extraction from SimBrief API v2 JSON payloads by supporting numerically indexed arrays (`alternate[0]`, `alternate[1]`), single objects, and distinct alternate keys.
+- **Removed Hardcoded German Fallbacks:** Removed all hardcoded fallbacks to `EDDW` (Bremen) and `EDHL` (Lübeck) across the dispatch view and briefing cards, displaying the actual primary and secondary alternate airports (or `None` when none are configured).
+- **Auto-Healing for Existing Bookings:** Dispatched bookings loaded in `Dispatch::mount()` automatically normalize layout and alternate keys from their stored SimBrief payloads.
+
+---
+
 ## [v1.1.14] - 2026-09-07
 
 ### 🗺️ PIREP Map & Chart Fixes

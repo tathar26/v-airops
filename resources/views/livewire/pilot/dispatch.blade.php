@@ -146,7 +146,12 @@
             ?? ($selectedAirframe ? $selectedAirframe->aircraftType->code : ($booking->airframe?->aircraftType->code ?? ($booking->route?->aircraftTypes?->first()?->code ?? 'A320'))))));
 
         // OFP Layout format
-        $headerOfpLayout = strtoupper($safeStr($sbData['general']['ofp_layout'] ?? ($sbData['params']['planformat'] ?? ($ofp_format ?: ($resolvedFormat ?? 'LIDO')))));
+        $headerOfpLayout = strtoupper($safeStr(
+            $sbData['params']['ofp_layout'] 
+            ?? ($sbData['general']['ofp_layout'] 
+            ?? ($sbData['params']['planformat'] 
+            ?? ($ofp_format ?: ($resolvedFormat ?? 'LIDO'))))
+        ));
     @endphp
 
     @if($is_loading_simbrief && !$showOfpView)
@@ -294,7 +299,11 @@
 
         @if($showOfpView && (isset($booking->simbrief_data['weights']) || isset($booking->simbrief_data['fuel'])))
             <!-- DISPATCHED FLIGHT / OFP PRESENTATION VIEW -->
-            @php $ofp = $booking->simbrief_data; @endphp
+            @php 
+                $ofp = $booking->simbrief_data;
+                $ofpAlt1 = $safeStr($ofp['general']['alternate'] ?? ($ofp['alternate'][0]['icao_code'] ?? ($ofp['alternate']['icao_code'] ?? ($alternate_1 ?: 'None'))));
+                $ofpAlt2 = $safeStr($ofp['general']['alternate2'] ?? ($ofp['alternate'][1]['icao_code'] ?? ($alternate_2 ?: 'None')));
+            @endphp
 
             <div x-data="{ currentTab: 'summary' }" class="rounded-2xl p-6 shadow-2xl space-y-6 border" style="background-color: var(--tenant-card-bg, #12161F); border-color: var(--tenant-input-border, rgba(255,255,255,0.12)); color: var(--tenant-card-text, #ffffff);">
                 <div class="flex items-center justify-between border-b pb-4 flex-wrap gap-4" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
@@ -399,8 +408,8 @@
                             <div class="text-xs space-y-1.5 pt-3 border-t border-white/10">
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Airframe:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $selectedAirframe ? $selectedAirframe->registration . ' (' . ($selectedAirframe->aircraftType->name ?? $selectedAirframe->aircraftType->code) . ')' : $headerReg . ' (' . $headerType . ')' }}</span></div>
                                 <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">OFP Format:</span> <span class="font-mono font-bold text-tenant-accent">{{ $headerOfpLayout }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate'] ?? ($alternate_1 ?: 'EDDW')) }}</span></div>
-                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $safeStr($ofp['general']['alternate2'] ?? ($alternate_2 ?: 'EDHL')) }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 1:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofpAlt1 }}</span></div>
+                                <div class="flex justify-between"><span style="color: var(--tenant-card-muted, #94a3b8);">Alt 2:</span> <span class="font-mono font-bold" style="color: var(--tenant-card-text, #ffffff);">{{ $ofpAlt2 }}</span></div>
                             </div>
                         </div>
                     </div>
@@ -470,7 +479,7 @@
 ================================================================================
 RELEASE: {{ strtoupper($callsign) }} / {{ date('dMY') }}   AIRFRAME: {{ $selectedAirframe ? $selectedAirframe->registration : 'HB-AYE' }} ({{ $selectedAirframe ? $selectedAirframe->aircraftType->code : 'A320' }})
 ORIGIN:  {{ $booking->route->departure_icao }}               DESTINATION: {{ $booking->route->arrival_icao }}
-ALTN:    {{ $safeStr($ofp['general']['alternate'] ?? $alternate_1) }} (ALTN2: {{ $safeStr($ofp['general']['alternate2'] ?? $alternate_2) }})
+ALTN:    {{ $ofpAlt1 }} (ALTN2: {{ $ofpAlt2 }})
 CRUISE:  {{ $ofpFl ?? 'FL360' }}   COST INDEX: {{ $safeStr($ofp['general']['cost_index'] ?? 4) }}   EST ETE: {{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}
 
 --------------------------------------------------------------------------------
@@ -483,7 +492,7 @@ FUEL PLANNING (KGS)
 --------------------------------------------------------------------------------
 TRIP FUEL:        {{ str_pad(number_format($safeNum($ofp['fuel']['enroute_burn'] ?? 4200)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: {{ $safeStr($ofp['general']['est_time_enroute'] ?? '01:30') }}
 CONTINGENCY 5%:   {{ str_pad(number_format($safeNum($ofp['fuel']['contingency'] ?? 350)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:15
-ALTERNATE ({{ $safeStr($ofp['general']['alternate'] ?? 'EDDW') }}): {{ str_pad(number_format($safeNum($ofp['fuel']['alternate'] ?? 1100)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
+ALTERNATE ({{ $ofpAlt1 }}): {{ str_pad(number_format($safeNum($ofp['fuel']['alternate'] ?? ($ofp['alternate'][0]['burn'] ?? 1100))), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
 FINAL RESERVE:    {{ str_pad(number_format($safeNum($ofp['fuel']['reserve'] ?? 1200)), 8, ' ', STR_PAD_LEFT) }} KG    TIME: 00:30
 --------------------------------------------------------------------------------
 MIN REQUIRED:     {{ str_pad(number_format($safeNum($ofp['fuel']['enroute_burn'] ?? 4200) + $safeNum($ofp['fuel']['contingency'] ?? 350) + $safeNum($ofp['fuel']['alternate'] ?? 1100) + $safeNum($ofp['fuel']['reserve'] ?? 1200)), 8, ' ', STR_PAD_LEFT) }} KG
@@ -626,13 +635,13 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
-                                    <span class="text-slate-400 text-[10px] uppercase block font-bold">Primary Alternate ({{ $safeStr($ofp['general']['alternate'] ?? $alternate_1) }})</span>
-                                    <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn_metar'] ?? '', 'No METAR available') }}</p>
+                                    <span class="text-slate-400 text-[10px] uppercase block font-bold">Primary Alternate ({{ $ofpAlt1 }})</span>
+                                    <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn_metar'] ?? ($ofp['alternate'][0]['metar'] ?? ''), 'No METAR available') }}</p>
                                 </div>
-                                @if(!empty($ofp['general']['alternate2']) || !empty($alternate_2))
+                                @if(!empty($ofpAlt2) && $ofpAlt2 !== 'None')
                                     <div class="p-4 bg-[#090C12] rounded-xl border border-white/10 space-y-1.5 shadow-inner">
-                                        <span class="text-slate-400 text-[10px] uppercase block font-bold">Secondary Alternate ({{ $safeStr($ofp['general']['alternate2'] ?? $alternate_2) }})</span>
-                                        <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn2_metar'] ?? '', 'No secondary alternate METAR reported') }}</p>
+                                        <span class="text-slate-400 text-[10px] uppercase block font-bold">Secondary Alternate ({{ $ofpAlt2 }})</span>
+                                        <p class="text-slate-200 font-semibold break-words">{{ $safeStr($ofp['weather']['altn2_metar'] ?? ($ofp['alternate'][1]['metar'] ?? ''), 'No secondary alternate METAR reported') }}</p>
                                     </div>
                                 @endif
                             </div>
@@ -777,6 +786,9 @@ ALT METAR: {{ $safeStr($ofp['weather']['altn_metar'] ?? 'N/A') }}
                             <div>
                                 <x-label for="ofp_format" value="{{ __('SimBrief OFP Format / Layout') }}" class="text-white font-medium mb-1" />
                                 <select id="ofp_format" wire:model.live="ofp_format" class="w-full bg-[#1C212E] border border-gray-700 text-white rounded-lg p-2.5 text-sm focus:border-tenant-accent focus:ring-tenant-accent font-semibold">
+                                    @if(!empty($ofp_format) && !isset($availableOfpFormats[$ofp_format]))
+                                        <option value="{{ $ofp_format }}">{{ $ofp_format }}</option>
+                                    @endif
                                     @foreach($availableOfpFormats as $fmtKey => $fmtName)
                                         <option value="{{ $fmtKey }}">{{ $fmtName }}</option>
                                     @endforeach

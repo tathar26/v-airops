@@ -135,20 +135,103 @@ class SimBriefService
                     if (empty($json['general']['flight_number']) && isset($json['general']['flight_number'])) {
                         $json['general']['flight_number'] = $json['general']['flight_number'];
                     }
-                    if (empty($json['general']['alternate']) && isset($json['alternate']['icao_code'])) {
-                        $json['general']['alternate'] = $json['alternate']['icao_code'];
+                    // Normalize Alternates (supports indexed arrays, single object, or separate keys)
+                    $altn1 = null;
+                    $altn1Metar = null;
+                    $altn2 = null;
+                    $altn2Metar = null;
+
+                    if (!empty($json['alternate'])) {
+                        if (is_array($json['alternate'])) {
+                            if (isset($json['alternate'][0])) {
+                                // Indexed array of alternates (SimBrief v2 list)
+                                $first = $json['alternate'][0];
+                                $altn1 = is_array($first) ? ($first['icao_code'] ?? ($first['ident'] ?? ($first['icao'] ?? null))) : (string)$first;
+                                $altn1Metar = is_array($first) ? ($first['metar'] ?? null) : null;
+
+                                if (isset($json['alternate'][1])) {
+                                    $second = $json['alternate'][1];
+                                    $altn2 = is_array($second) ? ($second['icao_code'] ?? ($second['ident'] ?? ($second['icao'] ?? null))) : (string)$second;
+                                    $altn2Metar = is_array($second) ? ($second['metar'] ?? null) : null;
+                                }
+                            } elseif (isset($json['alternate']['icao_code'])) {
+                                // Single alternate object
+                                $altn1 = $json['alternate']['icao_code'];
+                                $altn1Metar = $json['alternate']['metar'] ?? null;
+                            }
+                        } elseif (is_string($json['alternate'])) {
+                            $altn1 = $json['alternate'];
+                        }
                     }
+
+                    if (empty($altn2) && !empty($json['alternate2'])) {
+                        if (is_array($json['alternate2'])) {
+                            $altn2 = $json['alternate2']['icao_code'] ?? ($json['alternate2']['ident'] ?? ($json['alternate2']['icao'] ?? null));
+                            $altn2Metar = $json['alternate2']['metar'] ?? null;
+                        } elseif (is_string($json['alternate2'])) {
+                            $altn2 = $json['alternate2'];
+                        }
+                    }
+
+                    if (empty($altn1) && !empty($json['params']['altn'])) {
+                        $altn1 = $json['params']['altn'];
+                    }
+                    if (empty($altn2) && !empty($json['params']['altn2'])) {
+                        $altn2 = $json['params']['altn2'];
+                    }
+
+                    if (!empty($altn1)) {
+                        $json['general']['alternate'] = strtoupper((string)$altn1);
+                    }
+                    if (!empty($altn2)) {
+                        $json['general']['alternate2'] = strtoupper((string)$altn2);
+                    }
+
                     if (empty($json['general']['route']) && isset($json['general']['route'])) {
                         $json['general']['route'] = $json['general']['route'];
                     }
-                    if (empty($json['general']['ofp_layout'])) {
-                        $json['general']['ofp_layout'] = strtoupper((string)($json['params']['planformat'] ?? ($json['params']['plan_format'] ?? ($json['ofp_layout'] ?? ($json['general']['layout'] ?? 'LIDO')))));
+
+                    // Accurate OFP layout extraction (SimBrief returns params.ofp_layout e.g. "EZY", "LIDO", "RYR")
+                    $detectedLayout = $json['params']['ofp_layout'] 
+                        ?? ($json['params']['planformat'] 
+                        ?? ($json['params']['plan_format'] 
+                        ?? ($json['ofp_layout'] 
+                        ?? ($json['general']['layout'] 
+                        ?? ($json['general']['ofp_layout'] ?? null)))));
+
+                    if (!empty($detectedLayout)) {
+                        $json['general']['ofp_layout'] = strtoupper((string)$detectedLayout);
+                    } elseif (empty($json['general']['ofp_layout'])) {
+                        $json['general']['ofp_layout'] = 'LIDO';
                     }
+
                     if (empty($json['general']['aircraft_type']) && isset($json['aircraft']['icaocode'])) {
                         $json['general']['aircraft_type'] = $json['aircraft']['icaocode'];
                     }
                     if (empty($json['general']['registration']) && isset($json['aircraft']['reg'])) {
                         $json['general']['registration'] = $json['aircraft']['reg'];
+                    }
+
+                    // Weather METAR normalization
+                    if (!isset($json['weather']) || !is_array($json['weather'])) {
+                        $json['weather'] = [];
+                    }
+                    if (empty($json['weather']['orig_metar']) && !empty($json['origin']['metar'])) {
+                        $json['weather']['orig_metar'] = $json['origin']['metar'];
+                    }
+                    if (empty($json['weather']['dest_metar']) && !empty($json['destination']['metar'])) {
+                        $json['weather']['dest_metar'] = $json['destination']['metar'];
+                    }
+                    if (empty($json['weather']['altn_metar']) && !empty($altn1Metar)) {
+                        $json['weather']['altn_metar'] = $altn1Metar;
+                    }
+                    if (empty($json['weather']['altn2_metar']) && !empty($altn2Metar)) {
+                        $json['weather']['altn2_metar'] = $altn2Metar;
+                    }
+
+                    // Fuel alternate burn fallback
+                    if (empty($json['fuel']['alternate']) && isset($json['alternate'][0]['burn'])) {
+                        $json['fuel']['alternate'] = (int)$json['alternate'][0]['burn'];
                     }
 
                     return $json;
@@ -175,7 +258,14 @@ class SimBriefService
         if (!empty($username)) {
             $liveOfp = $this->fetchLiveOfp($username);
             if ($liveOfp) {
-                return $liveOfp;
+                $orig = strtoupper(trim((string)($liveOfp['general']['origin'] ?? ($liveOfp['origin']['icao_code'] ?? ''))));
+                $dest = strtoupper(trim((string)($liveOfp['general']['destination'] ?? ($liveOfp['destination']['icao_code'] ?? ''))));
+                $targetOrig = strtoupper(trim((string)($flightData['orig'] ?? '')));
+                $targetDest = strtoupper(trim((string)($flightData['dest'] ?? '')));
+
+                if (empty($targetOrig) || ($orig === $targetOrig && $dest === $targetDest)) {
+                    return $liveOfp;
+                }
             }
         }
 
@@ -195,8 +285,9 @@ class SimBriefService
 
         $origIcao = strtoupper($flightData['orig'] ?? 'LFSB');
         $destIcao = strtoupper($flightData['dest'] ?? 'EDDH');
-        $altn1 = strtoupper($flightData['altn'] ?? 'EDDW');
-        $altn2 = strtoupper($flightData['altn2'] ?? 'EDHL');
+        $altn1 = !empty($flightData['altn']) ? strtoupper($flightData['altn']) : '';
+        $altn2 = !empty($flightData['altn2']) ? strtoupper($flightData['altn2']) : '';
+        $planFormat = strtoupper((string)($flightData['planformat'] ?? ($flightData['ofp_layout'] ?? 'LIDO')));
 
         return [
             'is_simbrief_live' => false,
@@ -216,7 +307,7 @@ class SimBriefService
                 'gc_distance' => $flightData['distance'] ?? 374,
                 'est_time_enroute' => '01:30',
                 'units' => 'KGS',
-                'ofp_layout' => $flightData['planformat'] ?? 'LIDO',
+                'ofp_layout' => $planFormat,
                 'release_time' => date('d M Y H:i \U\T\C'),
             ],
             'weights' => [

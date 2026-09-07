@@ -108,6 +108,28 @@ class Dispatch extends Component
             ?? ($route?->flight_number ?? $this->callsign));
         $this->dispatch_via_simbrief = !empty($this->simbrief_username) ? ($simData['dispatch_via_simbrief'] ?? true) : false;
 
+        // Normalize existing SimBrief data if present
+        $simDataUpdated = false;
+        if (!empty($simData['params']['ofp_layout']) && ($simData['general']['ofp_layout'] ?? 'LIDO') === 'LIDO' && strtoupper($simData['params']['ofp_layout']) !== 'LIDO') {
+            $simData['general']['ofp_layout'] = strtoupper($simData['params']['ofp_layout']);
+            $simDataUpdated = true;
+        }
+        if (empty($simData['general']['alternate']) && !empty($simData['alternate'])) {
+            if (is_array($simData['alternate'])) {
+                if (isset($simData['alternate'][0]['icao_code'])) {
+                    $simData['general']['alternate'] = strtoupper($simData['alternate'][0]['icao_code']);
+                    $simDataUpdated = true;
+                }
+                if (isset($simData['alternate'][1]['icao_code'])) {
+                    $simData['general']['alternate2'] = strtoupper($simData['alternate'][1]['icao_code']);
+                    $simDataUpdated = true;
+                }
+            }
+        }
+        if ($simDataUpdated) {
+            $booking->update(['simbrief_data' => $simData]);
+        }
+
         // Schedule & Route Defaults
         $this->departure_date = $simData['departure_date'] ?? date('Y-m-d');
         $this->departure_time = $simData['departure_time'] ?? date('H:i', strtotime('+30 minutes'));
@@ -116,16 +138,26 @@ class Dispatch extends Component
         $this->cost_index = $simData['general']['cost_index'] ?? ($simData['cost_index'] ?? 4);
 
         // OFP Layout Format
-        $this->ofp_format = strtoupper((string)($simData['general']['ofp_layout'] 
+        $this->ofp_format = strtoupper((string)(
+            $simData['params']['ofp_layout']
+            ?? ($simData['general']['ofp_layout'] 
+            ?? ($simData['params']['planformat'] 
             ?? ($simData['planformat'] 
             ?? ($profile?->simbrief_ofp_format 
-            ?? ($tenant?->default_simbrief_ofp_format ?? 'LIDO')))));
+            ?? ($tenant?->default_simbrief_ofp_format ?? 'LIDO')))))
+        ));
 
-        // Alternates Defaults - Keep empty when auto_find_alternates is true so SimBrief chooses
+        // Alternates Defaults - If already dispatched with live OFP, populate from OFP; otherwise keep empty when auto_find_alternates is true so SimBrief chooses
         $this->auto_find_alternates = $simData['auto_find_alternates'] ?? true;
         $this->num_alternates = $simData['num_alternates'] ?? 2;
-        $this->alternate_1 = $this->auto_find_alternates ? '' : ($simData['general']['alternate'] ?? ($simData['alternate_1'] ?? ''));
-        $this->alternate_2 = $this->auto_find_alternates ? '' : ($simData['general']['alternate2'] ?? ($simData['alternate_2'] ?? ''));
+        $hasDispatchedOfp = ($booking->status === 'dispatched' || $this->showOfpView);
+
+        $this->alternate_1 = ($hasDispatchedOfp || !$this->auto_find_alternates)
+            ? ($simData['general']['alternate'] ?? ($simData['alternate_1'] ?? ($simData['alternate'][0]['icao_code'] ?? '')))
+            : '';
+        $this->alternate_2 = ($hasDispatchedOfp || !$this->auto_find_alternates)
+            ? ($simData['general']['alternate2'] ?? ($simData['alternate_2'] ?? ($simData['alternate'][1]['icao_code'] ?? '')))
+            : '';
 
         // Payload Defaults - empty by default so SimBrief automatically calculates load
         $this->passengers = $simData['weights']['pax_count'] ?? ($simData['passengers'] ?? null);
@@ -472,6 +504,16 @@ class Dispatch extends Component
         if ($liveOfp && $this->isOfpMatchingBooking($liveOfp)) {
             $liveOfp['simbrief_username'] = trim($this->simbrief_username);
 
+            if (!empty($liveOfp['general']['ofp_layout'])) {
+                $this->ofp_format = strtoupper($liveOfp['general']['ofp_layout']);
+            }
+            if (!empty($liveOfp['general']['alternate'])) {
+                $this->alternate_1 = strtoupper($liveOfp['general']['alternate']);
+            }
+            if (!empty($liveOfp['general']['alternate2'])) {
+                $this->alternate_2 = strtoupper($liveOfp['general']['alternate2']);
+            }
+
             $this->booking->update([
                 'airframe_id' => $this->airframe_id,
                 'simbrief_data' => $liveOfp,
@@ -506,6 +548,16 @@ class Dispatch extends Component
             }
 
             $liveOfp['simbrief_username'] = trim($this->simbrief_username);
+
+            if (!empty($liveOfp['general']['ofp_layout'])) {
+                $this->ofp_format = strtoupper($liveOfp['general']['ofp_layout']);
+            }
+            if (!empty($liveOfp['general']['alternate'])) {
+                $this->alternate_1 = strtoupper($liveOfp['general']['alternate']);
+            }
+            if (!empty($liveOfp['general']['alternate2'])) {
+                $this->alternate_2 = strtoupper($liveOfp['general']['alternate2']);
+            }
 
             $this->booking->update([
                 'airframe_id' => $this->airframe_id,
