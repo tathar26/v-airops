@@ -2,6 +2,15 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.28] - 2026-09-08
+
+### 📸 Authentic Live Site Screenshots (No AI Mockups)
+- **Complete AI Image Removal:** Removed all legacy AI-generated `.jpg` previews from `public/images/screenshots/` and codebase.
+- **Authentic Live UI Screenshots:** Embedded authentic PNG screenshots captured directly from the live `https://v-airops.artmex-hosting.com` application (Operations Dashboard, Pilot Roster Statistics, 3D Interactive Map) on the homepage.
+- **Selective Anonymization:** Applied precise Gaussian blur over personal account names and header menus while keeping all real application UI metrics, fleet counts, and routes crisp and clear.
+
+---
+
 ## [v1.1.27] - 2026-09-07
 
 ### 🔒 Screenshot Anonymization & Privacy Protection
