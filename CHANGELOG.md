@@ -2,6 +2,23 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.13] - 2026-09-07
+
+### 📊 Pilot Statistics & Logbook Overhaul
+- **Reliable Callsign Prefixes:** Fixed callsign extraction to inspect flight logs, ATC callsigns, and route identifiers. Handles 2-4 letter ICAO airline designators (e.g. `EZY`, `SVK`, `BAW`) and resolves single-letter anomalies (such as easyJet `U2` flights being mapped to `EZY`).
+- **Network Aggregation & Persistence:** Persisted the flown network (`VATSIM`, `IVAO`, `POSCON`, or `Offline`) on PIREP filing and automatically backfilled existing flights from SimBrief payloads and pilot preferences, eliminating `"Unknown"` network slices.
+- **Astronomical Day/Night Calculation Engine:** Implemented high-precision astronomical day/night calculations for both takeoffs and landings using `date_sun_info()`, airport coordinates, and departure/arrival timestamps (with regional solar longitude fallback), replacing hardcoded daytime defaults.
+- **Simulator Name Normalization:** Consolidated fragmented simulator strings (`MSFS`, `Microsoft Flight Simulator (MSFS)`, and unpopulated values) into standard canonical categories (`MSFS 2020`, `MSFS 2024`, `X-Plane 12`, `Prepar3D`, `FSX`).
+- **Modernized Landing Rate Chart:** Redesigned the touchdown rate chart into a continuous line graph with smooth tension curves (`tension: 0.3`), transparent gradient area fill, styled points with hover effects, custom tooltip formatting (`Touchdown: -X FPM`), and unique chronologically ordered date/callsign labels.
+- **Logbook Passenger, Freight & Fuel Data:** Fixed per-aircraft logbook metrics by persisting and backfilling passenger counts and freight/cargo from SimBrief and ACARS telemetry. Unified fuel usage calculations across rows and totals using `sum('fuel_used') ?: sum('block_fuel')`.
+- **Instant Statistics Auto-Refresh:** Added synchronous statistic recalculation upon visiting `/profile/statistics` along with a dedicated "Refresh Statistics" action with loading feedback.
+
+### 📡 vPilot ACARS Telemetry Enhancements
+- **Extended PIREP Payload:** Upgraded `vpilot-acars` to transmit `network`, `passengers`, `cargo_kg`, and precise `block_off_time` / `block_on_time` strings with every submitted PIREP.
+- **Dispatch OFP Metadata Retention:** Desktop client retains flight network and passenger/cargo loads from active booking dispatches, ensuring seamless end-to-end synchronization.
+
+---
+
 ## [v1.1.12] - 2026-09-07
 
 ### ✈️ SimBrief Profile Integration & Dispatch Overhaul

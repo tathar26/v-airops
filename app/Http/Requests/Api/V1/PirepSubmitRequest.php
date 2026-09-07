@@ -26,6 +26,11 @@ class PirepSubmitRequest extends FormRequest
             'atc_model' => ['nullable', 'string', 'max:50'],
             'aircraft_type' => ['nullable', 'string', 'max:50'],
             'simulator' => ['nullable', 'string', 'max:100'],
+            'network' => ['nullable', 'string', 'max:50'],
+            'network_connected' => ['nullable', 'string', 'max:50'],
+            'passengers' => ['nullable', 'integer', 'min:0'],
+            'freight' => ['nullable', 'numeric', 'min:0'],
+            'cargo_kg' => ['nullable', 'numeric', 'min:0'],
             'events' => ['nullable', 'array'],
         ];
     }

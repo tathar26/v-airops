@@ -241,9 +241,14 @@ class FlightController extends Controller
             'planned_zfw_kg' => $plannedZfw,
             'cost_index' => (int) ($sb['general']['cost_index'] ?? 4),
             'alternate_icao' => $sb['alternate']['icao_code'] ?? ($sb['general']['alternate'] ?? ''),
-            'passengers' => (int) ($sb['weights']['pax_count'] ?? 170),
-            'cargo_kg' => (float) ($sb['weights']['cargo'] ?? 1500.0),
+            'network' => $sb['network'] ?? ($booking->simbrief_data['network'] ?? ($booking->user?->pilotProfiles()->where('tenant_id', $booking->tenant_id)->first()?->preferred_network ?? 'Offline')),
+            'passengers' => (int) ($sb['weights']['pax_count'] ?? ($booking->simbrief_data['passengers'] ?? ($booking->passengers ?? 170))),
+            'cargo_kg' => (float) ($sb['weights']['cargo'] ?? ($booking->simbrief_data['cargo_kg'] ?? ($booking->cargo ?? 1500.0))),
         ];
+
+        $targetNetwork = $compactSimbrief['network'];
+        $targetPax = $compactSimbrief['passengers'];
+        $targetCargo = $compactSimbrief['cargo_kg'];
 
         return response()->json([
             'has_booking' => true,
@@ -254,6 +259,9 @@ class FlightController extends Controller
             'origin_icao' => strtoupper($targetDep),
             'destination_icao' => strtoupper($targetArr),
             'route' => $routeString,
+            'network' => $targetNetwork,
+            'passengers' => $targetPax,
+            'cargo_kg' => $targetCargo,
             'aircraft_type' => strtoupper($targetAircraft),
             'airframe' => $targetRegistration,
             'planned_altitude' => $plannedAltitude,

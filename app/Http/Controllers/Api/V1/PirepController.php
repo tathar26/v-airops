@@ -136,17 +136,63 @@ class PirepController extends Controller
                     ?? ($booking?->route?->route_string 
                     ?? 'DIRECT'));
 
+                $networkInput = $request->input('network') ?? $request->input('network_connected');
+                $network = \App\Jobs\RecalculatePilotStatistics::normalizeNetwork(
+                    $networkInput ?: ($booking?->simbrief_data['network'] ?? null),
+                    $user->pilotProfiles()->where('tenant_id', $tenantId)->first()?->preferred_network ?? 'Offline'
+                );
+
+                $normalizedSim = \App\Jobs\RecalculatePilotStatistics::normalizeSimulator($simulator);
+
+                $destIcao = strtoupper($request->input('actual_destination_icao') 
+                    ?? ($flight->destination_icao 
+                    ?? ($booking?->route?->arrival_icao 
+                    ?? '')));
+
+                $originIcao = strtoupper($flight->origin_icao ?? ($booking?->route?->departure_icao ?? ''));
+
+                $blockMins = (int) $request->input('block_time_minutes', 60);
+                $nowTs = time();
+                $takeoffTs = !empty($request->input('block_off_time')) ? strtotime($request->input('block_off_time')) : ($nowTs - ($blockMins * 60));
+                $landingTs = !empty($request->input('block_on_time')) ? strtotime($request->input('block_on_time')) : $nowTs;
+
+                $isDayTakeoff = \App\Jobs\RecalculatePilotStatistics::determineDaytime($takeoffTs, $originIcao);
+                $isDayLanding = \App\Jobs\RecalculatePilotStatistics::determineDaytime($landingTs, $destIcao);
+
+                $passengers = (int) ($request->input('passengers') 
+                    ?? ($sb['weights']['pax_count'] 
+                    ?? ($sb['params']['pax'] 
+                    ?? ($sb['passengers'] 
+                    ?? ($booking?->passengers 
+                    ?? 0)))));
+
+                $freight = (int) round((float) ($request->input('freight') 
+                    ?? ($request->input('cargo_kg') 
+                    ?? ($sb['weights']['cargo'] 
+                    ?? ($sb['cargo_kg'] 
+                    ?? ($booking?->cargo 
+                    ?? 0))))));
+
+                $fuelUsedKg = (float) $request->input('fuel_used_kg', 0.0);
+                $blockFuel = (int) round($fuelUsedKg);
+
                 Pirep::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $user->id,
                     'route_id' => $booking?->route_id,
                     'airframe_id' => $booking?->airframe_id,
                     'status' => $evalResult['status'],
-                    'simulator' => $simulator,
+                    'network' => $network,
+                    'simulator' => $normalizedSim,
                     'aircraft_title' => $aircraftTitle,
                     'atc_model' => $atcModel,
                     'flight_time' => $evalResult['hours_awarded'],
-                    'fuel_used' => (float) $request->input('fuel_used_kg', 0.0),
+                    'fuel_used' => $fuelUsedKg,
+                    'block_fuel' => $blockFuel,
+                    'is_day_takeoff' => $isDayTakeoff,
+                    'is_day_landing' => $isDayLanding,
+                    'passengers' => $passengers,
+                    'freight' => $freight,
                     'touchdown_rate_fpm' => (int) round($request->input('touchdown_fpm')),
                     'landing_g' => (float) $request->input('touchdown_gforce', 1.0),
                     'points_awarded' => $evalResult['points_awarded'],
@@ -157,10 +203,14 @@ class PirepController extends Controller
                         'origin' => strtoupper($flight->origin_icao),
                         'destination' => strtoupper($flight->destination_icao),
                         'route' => $routeString,
+                        'network' => $network,
+                        'passengers' => $passengers,
+                        'freight' => $freight,
+                        'cargo_kg' => $freight,
                         'aircraft_type' => $flight->aircraft_type ?? $atcModel,
                         'aircraft_title' => $aircraftTitle,
                         'livery' => $livery,
-                        'simulator' => $simulator,
+                        'simulator' => $normalizedSim,
                         'atc_model' => $atcModel,
                         'planned_altitude' => $flight->planned_altitude,
                         'planned_fuel_kg' => $flight->planned_fuel_kg,
@@ -175,7 +225,7 @@ class PirepController extends Controller
                         'block_off_time' => $request->input('block_off_time'),
                         'block_on_time' => $request->input('block_on_time'),
                         'block_time_minutes' => (int) $request->input('block_time_minutes'),
-                        'fuel_used_kg' => (float) $request->input('fuel_used_kg', 0.0),
+                        'fuel_used_kg' => $fuelUsedKg,
                         'simbrief_data' => $sb,
                     ],
                     'created_at' => Carbon::now(),

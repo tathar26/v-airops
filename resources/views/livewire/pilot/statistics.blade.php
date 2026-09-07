@@ -1,4 +1,29 @@
 <div class="space-y-6" x-data="statisticsDashboard({{ json_encode($stats) }})">
+    <!-- Header / Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-white tracking-wide">Pilot Statistics</h2>
+            <p class="text-xs text-gray-400">Comprehensive flight performance, aircraft breakdown, and logbook metrics.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            @if (session()->has('message'))
+                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-md">
+                    {{ session('message') }}
+                </span>
+            @endif
+            <button 
+                wire:click="refreshStatistics" 
+                wire:loading.attr="disabled"
+                class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-md transition"
+            >
+                <svg wire:loading.remove wire:target="refreshStatistics" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <svg wire:loading wire:target="refreshStatistics" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                <span wire:loading.remove wire:target="refreshStatistics">Refresh Statistics</span>
+                <span wire:loading wire:target="refreshStatistics">Updating...</span>
+            </button>
+        </div>
+    </div>
+
     @if(!$stats)
         <div class="bg-black/20 border border-white/10 rounded-lg p-12 text-center">
             <svg class="mx-auto h-12 w-12 text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -291,29 +316,60 @@
                         });
                     }
 
-                    // Line/Scatter Chart - Landing Rate
+                    // Line Chart - Landing Rate
                     if(this.stats.landing_rate_history_json && this.stats.landing_rate_history_json.length > 0) {
+                        const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--tenant-accent').trim() || '#0ea5e9';
                         new Chart(this.$refs.chartLandingRateLine, {
                             type: 'line',
                             data: {
                                 labels: this.stats.landing_rate_history_json.map(l => l.date),
                                 datasets: [{
-                                    label: 'FPM',
+                                    label: 'Touchdown Rate',
                                     data: this.stats.landing_rate_history_json.map(l => l.fpm),
-                                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--tenant-accent').trim() || '#0ea5e9',
-                                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--tenant-accent').trim() || '#0ea5e9',
-                                    borderWidth: 1,
-                                    showLine: false, // Make it look like a scatter or broken line as in the example
-                                    pointRadius: 4,
+                                    borderColor: accentColor,
+                                    backgroundColor: accentColor + '26', // subtle area fill
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    fill: true,
+                                    showLine: true,
+                                    spanGaps: true,
+                                    pointBackgroundColor: accentColor,
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 1.5,
+                                    pointRadius: 5,
+                                    pointHoverRadius: 8,
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
+                                plugins: { 
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return ` Touchdown: ${context.parsed.y} FPM`;
+                                            }
+                                        }
+                                    }
+                                },
                                 scales: {
-                                    y: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
-                                    x: { grid: { display: false } }
+                                    y: { 
+                                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                                        ticks: {
+                                            callback: function(value) {
+                                                return value + ' FPM';
+                                            }
+                                        }
+                                    },
+                                    x: { 
+                                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                                        ticks: {
+                                            maxRotation: 45,
+                                            autoSkip: true,
+                                            maxTicksLimit: 12
+                                        }
+                                    }
                                 }
                             }
                         });
