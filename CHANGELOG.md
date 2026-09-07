@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.26] - 2026-09-07
+
+### 📸 Authentic Live Site Screenshots
+- **Live System Authentication & Capture:** Authenticated into the live production environment (`https://v-airops.artmex-hosting.com`) to capture authentic UI screenshots directly from the live application.
+- **Operations Console Dashboard:** Updated homepage hero preview with live Operations Dashboard screenshot (`public/images/screenshots/console-dashboard.png`).
+- **Pilot Roster & Performance Analytics:** Updated pilot roster section with live Pilot Statistics & Logbook screenshot (`public/images/screenshots/pilot-portal.png`).
+- **Live Radar Map Tracking:** Updated flight monitoring section with live 3D Route Radar Map screenshot (`public/images/screenshots/live-radar-map.png`).
+
+---
+
 ## [v1.1.25] - 2026-09-07
 
 ### 🖼️ Real Application Screenshots on Homepage

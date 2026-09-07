@@ -244,7 +244,7 @@
                         </div>
                     </div>
                     
-                    <img src="{{ asset('images/screenshots/console-dashboard.jpg') }}" alt="V-Air Ops Operations Dashboard Screenshot" class="w-full h-auto object-cover rounded-b-xl">
+                    <img src="{{ asset('images/screenshots/console-dashboard.png') }}" alt="V-Air Ops Operations Dashboard Screenshot" class="w-full h-auto object-cover rounded-b-xl">
                 </div>
             </div>
         </div>
@@ -399,7 +399,7 @@
                         <span class="font-bold text-white">PILOT PROFILE &amp; ROSTER UI</span>
                         <span class="text-teal-400">VERIFIED LOGBOOK</span>
                     </div>
-                    <img src="{{ asset('images/screenshots/pilot-portal.jpg') }}" alt="V-Air Ops Pilot Roster & Profile Portal Screenshot" class="w-full h-auto object-cover">
+                    <img src="{{ asset('images/screenshots/pilot-portal.png') }}" alt="V-Air Ops Pilot Roster & Profile Portal Screenshot" class="w-full h-auto object-cover">
                 </div>
             </div>
         </div>
@@ -439,7 +439,7 @@
                     </div>
                 </div>
 
-                <img src="{{ asset('images/screenshots/live-radar-map.jpg') }}" alt="V-Air Ops Live ACARS Radar Tracking Screenshot" class="w-full h-auto object-cover">
+                <img src="{{ asset('images/screenshots/live-radar-map.png') }}" alt="V-Air Ops Live ACARS Radar Tracking Screenshot" class="w-full h-auto object-cover">
             </div>
         </div>
     </section>
