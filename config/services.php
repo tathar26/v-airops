@@ -60,5 +60,9 @@ return [
         'api_key' => env('CARTO_API_KEY'),
     ],
 
+    'vpilot_acars' => [
+        'releases_url' => env('VPILOT_ACARS_RELEASES_URL', 'https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest'),
+    ],
+
 ];
 

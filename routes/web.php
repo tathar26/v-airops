@@ -33,6 +33,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/session/switch-airline', [\App\Http\Controllers\SessionAirlineController::class, 'switchActiveAirline'])->name('session.switch-airline');
 });
 
+// Resource & Client Downloads
+Route::get('/resources/vpilot-acars', function () {
+    return redirect()->away(config('services.vpilot_acars.releases_url', 'https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest'));
+})->name('resources.vpilot-acars');
+
 // Airport Coordinate Lookup API
 Route::get('/api/airport/{icao}', function ($icao) {
     $icao = strtoupper($icao);

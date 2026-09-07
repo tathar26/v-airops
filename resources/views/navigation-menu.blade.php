@@ -126,6 +126,40 @@
             </a>
         </li>
 
+        <!-- Resources -->
+        <li x-data="{ open: {{ request()->routeIs('resources.*') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                class="nav-link w-full justify-between {{ request()->routeIs('resources.*') ? 'active' : '' }}">
+                <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    <span>Resources</span>
+                </div>
+                <svg class="w-3.5 h-3.5 opacity-60 transition-transform duration-200 flex-shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <ul x-show="open" x-transition class="mt-0.5 space-y-0.5 pl-9 pr-2 pb-1 bg-black/10 rounded-lg">
+                <li>
+                    <a href="{{ route('resources.vpilot-acars') }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-medium transition-colors opacity-80 hover:opacity-100 hover:bg-black/10 group">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span>Download vPilot ACARS</span>
+                        </span>
+                        <svg class="w-3 h-3 opacity-50 flex-shrink-0 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
         @php
             $canViewFleet = $user && ($user->hasAirlinePermission('view_fleet') || $user->hasAirlinePermission('manage_fleet'));
             $canViewRoutes = $user && ($user->hasAirlinePermission('view_routes') || $user->hasAirlinePermission('create_routes') || $user->hasAirlinePermission('edit_routes'));

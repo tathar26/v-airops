@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.21] - 2026-09-07
+
+### 📦 Resources Menu & vPilot ACARS Client Download
+- **New Resources Sidebar Menu:** Added a dedicated `Resources` menu in the pilot navigation sidebar with an Alpine.js collapsible sub-menu.
+- **vPilot ACARS Download Sub-Menu:** Added `Download vPilot ACARS` sub-menu link pointing directly to the latest released version on Gitea (`https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest`).
+- **Configurable Resource Route:** Added `/resources/vpilot-acars` named route backed by `config('services.vpilot_acars.releases_url')` for clean URLs and flexible configuration.
+- **Landing Page Integration:** Added direct download links to the vPilot ACARS client on the public homepage (`welcome.blade.php`) in the Live ACARS Radar section and footer.
+
+---
+
 ## [v1.1.20] - 2026-09-07
 
 ### 🛠️ Fix VATSIM Pre-Filing 500 Error
