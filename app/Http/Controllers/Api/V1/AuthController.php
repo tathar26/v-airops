@@ -106,6 +106,13 @@ class AuthController extends Controller
         $token = $user->createToken('vPilot-ACARS-Token')->plainTextToken;
 
         $pilotProfile = $user->pilotProfiles()->first();
+        $rankName = $user->getDisplayRank();
+        $rankImage = $user->getDisplayRankImageUrl();
+        $activeRankModel = $user->getHonoraryRank() && $user->isDisplayingHonoraryRank()
+            ? $user->getHonoraryRank()
+            : $user->getRankForAirline();
+        $rankAbbreviation = $activeRankModel?->abbreviation ?? 'CDT';
+        $isHonorary = $user->isDisplayingHonoraryRank();
 
         return response()->json([
             'access_token' => $token,
@@ -115,7 +122,10 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'callsign' => $user->activeCallsign() ?: ($user->callsign ?? 'PILOT'),
                 'name' => $user->full_name ?: $user->name,
-                'rank' => $user->active_rank_name ?: ($pilotProfile?->rank?->name ?? 'Captain'),
+                'rank' => $rankName,
+                'rank_abbreviation' => $rankAbbreviation,
+                'rank_image_url' => $rankImage,
+                'is_honorary' => $isHonorary,
                 'total_flights' => $user->pireps()->count(),
                 'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
             ]
@@ -126,13 +136,23 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $pilotProfile = $user->pilotProfiles()->first();
+        $rankName = $user->getDisplayRank();
+        $rankImage = $user->getDisplayRankImageUrl();
+        $activeRankModel = $user->getHonoraryRank() && $user->isDisplayingHonoraryRank()
+            ? $user->getHonoraryRank()
+            : $user->getRankForAirline();
+        $rankAbbreviation = $activeRankModel?->abbreviation ?? 'CDT';
+        $isHonorary = $user->isDisplayingHonoraryRank();
 
         return response()->json([
             'id' => $user->id,
             'email' => $user->email,
             'callsign' => $user->activeCallsign() ?: ($user->callsign ?? 'PILOT'),
             'name' => $user->full_name ?: $user->name,
-            'rank' => $user->active_rank_name ?: ($pilotProfile?->rank?->name ?? 'Captain'),
+            'rank' => $rankName,
+            'rank_abbreviation' => $rankAbbreviation,
+            'rank_image_url' => $rankImage,
+            'is_honorary' => $isHonorary,
             'total_flights' => $user->pireps()->count(),
             'total_hours' => round((float) ($pilotProfile?->flight_time ?? 0.0), 2),
         ]);

@@ -2,6 +2,23 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.34] - 2026-09-08
+
+### 🎖️ Milestone Rank System & Security Policy Documentation
+- **Recognition, Not Restriction Architecture:** Ranks serve strictly to celebrate pilot flight milestones and community recognition, never restricting aircraft types, routes, or airport bookings.
+- **Regular Ranks (4-Criteria Milestones):** Automated progression requiring flight hours, total flight points, cumulative bonus points, and accepted PIREPs simultaneously. Ordered strictly from lowest to highest.
+- **Honorary Ranks:** Manual staff recognition for instructors, staff members, and real-world pilots with pilot display preference toggle in preferences.
+- **Default Protected Ranks:** Automatic seeding and deletion protection for default Cadet (`Cdt`) and Staff Team (`ST`) ranks upon virtual airline creation.
+- **Custom 85×36 Epaulettes:** 7 built-in gold stripe presets (1–4 stripes, TRI, TRE, Staff Crest) plus support for custom image uploads.
+- **Interactive UI & ACARS API:** Integrated epaulettes into pilot dashboard, user roster, and ACARS API auth payload.
+- **Security Policy Documentation:** Added legal security policy view in legal views.
+
+## [v1.1.33] - 2026-09-08
+
+### 🔄 Past PIREP Recalculation Engine
+- **CLI Recalculation Command:** Added `php artisan pireps:rescore-all` with `--tenant` and `--force-status` flags.
+- **Web UI One-Click Recalculation:** Added recalculation action in Tenant Settings PIREP Scoring tab.
+
 ## [v1.1.32] - 2026-09-08
 
 ### 🎯 PIREP Scoring Overhaul, Dynamic Criteria Management, & Custom Permissions
@@ -75,7 +92,7 @@ All notable changes to the Virtual Airline Operations (**V-Ops**) platform are d
 ## [v1.1.24] - 2026-09-07
 
 ### 🏛️ Professional Homepage & Neutral Copy Refactoring
-- **Removal of Hardcoded Fake Statistics:** Replaced all hardcoded fake stats (`1,420+ Active Flights`, `38,500+ Registered Pilots`, `1.8M+ Block Hours`, `128 Flights in Air`) with a clean 4-pillar system capability grid (Multi-Simulator, SimBrief OFP, vPilot ACARS, Multi-Tenant Architecture) modeled after phpVMS and vAMSYS.
+- **Removal of Hardcoded Fake Statistics:** Replaced all hardcoded fake stats (`1,420+ Active Flights`, `38,500+ Registered Pilots`, `1.8M+ Block Hours`, `128 Flights in Air`) with a clean 4-pillar system capability grid (Multi-Simulator, SimBrief OFP, vPilot ACARS, Multi-Tenant Architecture) modeled after modern virtual airline management platforms.
 - **Professional & Neutral Copywriting:** Eliminated marketing hyperbole ("100% Free Forever", "PMDG Ready") in favor of clear, technical aviation descriptions.
 - **Refactored Pilot & Flight Metrics:** Replaced gamer slang ("Butter Average") with standard technical terms (*"Touchdown Sink Rate (-FPM) Analysis"*).
 - **Streamlined Graphics & Animations:** Removed sci-fi radar sweep animations (`animate-radar-sweep`) and gamer badges in favor of clean operations console previews.
@@ -284,7 +301,7 @@ All notable changes to the Virtual Airline Operations (**V-Ops**) platform are d
     - Flight Network (`VATSIM`, `IVAO`, `Offline`, `POSCON`)
 
 - **Active Flights Table:**
-  - Standardized vAMSYS-style table placed directly below the radar map.
+  - Standardized live flights table placed directly below the radar map.
   - Displays live active flight count badge, Zulu timestamp (`Updated: HH:MMz`), and manual refresh button.
   - Complete columns: `PILOT`, `CALLSIGN`, `DEPARTURE`, `ARRIVAL`, `AIRCRAFT`, `ETE/ETD`, `DISTANCE`, `STATUS`, `NETWORK`, and `ACTION`.
 

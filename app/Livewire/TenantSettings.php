@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\AirlineRole;
 use App\Models\AirlinePermission;
 use App\Models\UserAirlineRole;
+use App\Models\Rank;
+use App\Models\PilotProfile;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -70,6 +72,7 @@ class TenantSettings extends Component
     public $managingUserId = null;
     public $managingUserName = '';
     public $userAssignedRoleIds = [];
+    public $managingUserHonoraryRankId = null;
 
     // Custom Permissions Management Modal
     public $showPermissionModal = false;
@@ -621,6 +624,9 @@ class TenantSettings extends Component
         $this->managingUserName = $user->full_name;
         $this->userAssignedRoleIds = $user->getRolesForAirline($tenantId)->pluck('id')->map(fn($id) => (int)$id)->toArray();
 
+        $profile = PilotProfile::where('user_id', $user->id)->where('tenant_id', $tenantId)->first();
+        $this->managingUserHonoraryRankId = $profile?->honorary_rank_id;
+
         $this->showUserRolesModal = true;
     }
 
@@ -645,8 +651,15 @@ class TenantSettings extends Component
             }
         }
 
+        // Save honorary rank on pilot profile
+        $profile = PilotProfile::where('user_id', $user->id)->where('tenant_id', $tenantId)->first();
+        if ($profile) {
+            $profile->honorary_rank_id = $this->managingUserHonoraryRankId ? (int)$this->managingUserHonoraryRankId : null;
+            $profile->save();
+        }
+
         $this->showUserRolesModal = false;
-        session()->flash('user_message', "Roles updated for {$user->full_name} successfully.");
+        session()->flash('user_message', "Roles and honorary rank updated for {$user->full_name} successfully.");
     }
 
     public function removeQuickRole(int $userId, int $roleId)
@@ -1069,11 +1082,12 @@ class TenantSettings extends Component
         })->with([
             'airlineRoles' => fn($q) => $q->where('tenant_id', $tenantId),
             'userAirlines' => fn($q) => $q->where('tenant_id', $tenantId),
-            'pilotProfiles' => fn($q) => $q->where('tenant_id', $tenantId),
+            'pilotProfiles' => fn($q) => $q->where('tenant_id', $tenantId)->with(['rank', 'honoraryRank']),
         ])->get();
 
         $roles = AirlineRole::with(['permissions', 'users'])->where('tenant_id', $tenantId)->get();
         $hubs = \App\Models\TenantHub::with('airport')->where('tenant_id', $tenantId)->where('is_base', true)->get();
+        $honoraryRanks = Rank::where('tenant_id', $tenantId)->honorary()->orderBy('position')->orderBy('name')->get();
         
         $allPermissions = AirlinePermission::whereNull('tenant_id')
             ->orWhere('tenant_id', $tenantId)
@@ -1088,6 +1102,7 @@ class TenantSettings extends Component
             'users'             => $users,
             'roles'             => $roles,
             'hubs'              => $hubs,
+            'honoraryRanks'     => $honoraryRanks,
             'allPermissions'    => $allPermissions,
             'customPermissions' => $customPermissions,
             'categories'        => $this->getPermissionCategories(),

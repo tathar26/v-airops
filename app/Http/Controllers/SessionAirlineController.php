@@ -52,7 +52,7 @@ class SessionAirlineController extends Controller
         $user->tenant_id = $tenantId;
         $user->save();
 
-        // If JSON / AJAX request (from vAMSYS top right dropdown)
+        // If JSON / AJAX request (from top right dropdown)
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,

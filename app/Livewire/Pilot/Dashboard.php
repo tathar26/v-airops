@@ -38,13 +38,13 @@ class Dashboard extends Component
             ->whereIn('status', ['rejected', 'Rejected', 'invalidated', 'Invalidated'])
             ->count();
 
+        $currentRank = $profile->rank ?? Rank::where('tenant_id', $tenantId)->regular()->orderBy('position')->first();
+        $currentPosition = $currentRank?->position ?? 0;
+
         $nextRank = Rank::where('tenant_id', $tenantId)
-            ->where(function($query) use ($profile) {
-                $query->where('min_hours', '>', floor($profile->flight_time / 60))
-                      ->orWhere('min_points', '>', $profile->points);
-            })
-            ->orderBy('min_hours', 'asc')
-            ->orderBy('min_points', 'asc')
+            ->regular()
+            ->where('position', '>', $currentPosition)
+            ->orderBy('position', 'asc')
             ->first();
 
         return view('livewire.pilot.dashboard', [

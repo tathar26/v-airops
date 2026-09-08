@@ -607,13 +607,28 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
-                                            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-tenant-accent/20 text-tenant-accent border border-tenant-accent/30">
-                                                {{ $user->getDisplayRank() }}
-                                            </span>
-                                            @if($user->prefer_honorary_rank && $user->getHonoraryRankString())
-                                                <span class="text-[10px] text-purple-300 font-mono" title="Displaying honorary staff rank">(Staff)</span>
+                                        <div class="flex items-center gap-3">
+                                            @if($user->getDisplayRankImageUrl())
+                                                <img src="{{ $user->getDisplayRankImageUrl() }}" alt="{{ $user->getDisplayRank() }}" class="w-[70px] h-[30px] object-contain rounded border border-white/10 bg-slate-900/60 shadow-sm" />
                                             @endif
+                                            <div>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-tenant-accent/20 text-tenant-accent border border-tenant-accent/30">
+                                                        {{ $user->getDisplayRank() }}
+                                                    </span>
+                                                    @if($user->isDisplayingHonoraryRank())
+                                                        <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" title="Displaying honorary staff rank">Honorary</span>
+                                                    @endif
+                                                </div>
+                                                @php
+                                                    $profile = $user->getPilotProfile();
+                                                @endphp
+                                                @if($profile && $profile->rank && $profile->honoraryRank)
+                                                    <div class="text-[10px] text-slate-400 mt-1">
+                                                        Regular: {{ $profile->rank->name }}
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-normal">
@@ -1262,7 +1277,7 @@
                 Select the custom roles to grant to this pilot for this specific virtual airline. Permissions will be aggregated automatically.
             </p>
 
-            <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
                 @forelse($roles as $role)
                     <label class="flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition hover:border-white/20"
                         style="background-color: var(--tenant-card-bg, #141a24); border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
@@ -1285,6 +1300,29 @@
                         No custom airline roles created yet. Create roles in the "Roles &amp; Permissions" tab first.
                     </div>
                 @endforelse
+            </div>
+
+            <!-- Honorary Rank Assignment -->
+            <div class="mt-6 pt-5 border-t" style="border-color: var(--tenant-input-border, rgba(255,255,255,0.1));">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <span>🎖️</span> Honorary Rank Assignment
+                    </label>
+                    <span class="text-[10px] text-slate-400 font-mono">Manual Recognition</span>
+                </div>
+                <p class="text-xs text-slate-400 mb-3">
+                    Assign an honorary rank (e.g. Staff Team, Flight Instructor, Real-World Pilot). Pilots hold both regular and honorary ranks and can choose which to display.
+                </p>
+
+                <select wire:model="managingUserHonoraryRankId" class="w-full rounded-xl border border-white/10 text-white text-sm p-2.5 focus:border-amber-400 focus:ring-amber-400"
+                    style="background-color: var(--tenant-input-bg, #111827);">
+                    <option value="">-- No Honorary Rank Assigned (Standard Regular Progression) --</option>
+                    @foreach($honoraryRanks as $hRank)
+                        <option value="{{ $hRank->id }}">
+                            {{ $hRank->name }} ({{ $hRank->abbreviation }})
+                        </option>
+                    @endforeach
+                </select>
             </div>
         </x-slot>
 

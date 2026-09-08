@@ -40,7 +40,7 @@ class DemoDataSeeder extends Seeder
             'domain' => 'demo.vops.test',
         ], [
             'name' => 'Demo Virtual Airline',
-            'accent_color' => '#f97316' // Orange to match vAMSYS
+            'accent_color' => '#f97316' // Aviation Orange accent color
         ]);
 
         // 4. Create VA Owner

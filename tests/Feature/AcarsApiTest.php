@@ -18,7 +18,7 @@ class AcarsApiTest extends TestCase
     {
         parent::setUp();
         
-        $this->tenant = Tenant::create(['name' => 'Demo VA', 'domain' => 'demo.vamsys.test']);
+        $this->tenant = Tenant::create(['name' => 'Demo VA', 'domain' => 'demo.vops.test']);
         
         $this->user = User::factory()->create([
             'tenant_id' => $this->tenant->id,

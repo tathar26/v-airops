@@ -7,7 +7,7 @@
 
 @if ($user && $userAirlines->count() > 0)
     <div class="relative inline-block text-left" x-data="{ open: false }">
-        <!-- vAMSYS Top Right Header Airline Switcher Button -->
+        <!-- Top Right Header Airline Switcher Button -->
         <button @click="open = !open" @click.away="open = false" type="button"
             class="flex items-center gap-3 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 shadow-lg backdrop-blur-md transition-all duration-200 focus:outline-none group">
             
@@ -35,7 +35,7 @@
             </svg>
         </button>
 
-        <!-- Dropdown Menu (vAMSYS Style) -->
+        <!-- Dropdown Menu -->
         <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95"
             class="absolute right-0 mt-2 w-72 rounded-2xl bg-slate-900/95 border border-slate-700 shadow-2xl backdrop-blur-xl z-50 overflow-hidden divide-y divide-slate-800" style="display: none;">
             

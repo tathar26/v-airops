@@ -58,7 +58,6 @@ flowchart LR
 ### Creating a Booking
 1. Locate your desired flight on the **Schedules** page.
 2. Click **Book Flight**. The system verifies:
-   - Your pilot rank meets the minimum rank requirement for the chosen airframe.
    - The aircraft is currently stationed at the departure airport.
    - No conflicting active booking exists for that airframe.
 3. Once reserved, your booking will appear on your **Dispatch Dashboard**.
@@ -118,14 +117,36 @@ If offline or flying without the ACARS client (where allowed by airline rules):
 
 ## 6. Pilot Profile, Rank Progression & Preferences
 
-### Pilot Career Progression
-- **Flight Hours & Points**: Every accepted PIREP adds block hours and points to your pilot profile for that specific Virtual Airline.
-- **Automated Rank Promotions**: As your flight time meets rank thresholds (e.g. Cadet &rarr; First Officer &rarr; Captain &rarr; Senior Captain), the system automatically updates your rank and unlocks larger airframes.
+### Milestone Rank System Architecture
+V-Air Ops implements a comprehensive milestone rank system built on the foundational philosophy: **"Recognition, Not Restriction"**. Ranks serve strictly to celebrate pilot accomplishments, milestones, and community roles—never restricting aircraft types, routes, or airport bookings.
+
+#### Rank Types
+1. **Regular Ranks**:
+   - Awarded automatically when pilots fulfill all four milestone criteria simultaneously:
+     - **Flight Hours**: Accumulated flight time.
+     - **Total Flight Points**: Scoring points earned across all flights.
+     - **Cumulative Bonus Points**: Extra points earned from airline bonuses.
+     - **Filed PIREPs**: Count of accepted flights.
+   - Ordered strictly from lowest to highest. Pilots automatically hold the single highest regular rank they qualify for.
+   - Each virtual airline includes default **Cadet** (`Cdt`, Position 1, is_default=true) upon creation.
+
+2. **Honorary Ranks**:
+   - Conferred manually by VA staff to recognize specific roles or honors (e.g. Staff Team, Flight Instructors, Real-World Airline Pilots, Contest Winners).
+   - Have no automated milestone requirements.
+   - Each virtual airline includes default **Staff Team** (`ST`, Position 999, is_default=true).
+
+3. **Pilot Rank Preference**:
+   - Pilots can hold both a regular rank and an honorary rank at the same time.
+   - In **Pilot Preferences**, pilots choose whether their profile, roster entry, and ACARS client display their Honorary Rank or Regular Rank.
+
+4. **Custom 85×36 Epaulettes**:
+   - All ranks support standard 85×36 pixel epaulettes.
+   - VAs can select from built-in gold stripe presets (1–4 stripes, TRI, TRE, Staff Crest) or upload bespoke transparent PNG graphics.
 
 ### Customizing Pilot Preferences
 Navigate to **Preferences** in your user menu:
 - **Measurement Units**: Toggle between Metric (kg, km, meters) and Imperial (lbs, nm, feet).
 - **SimBrief OFP Layout**: Choose your favorite operational flight plan format (LIDO, Ryanair, American Airlines, British Airways, Delta, Lufthansa, easyJet, etc.).
 - **Online Networks**: Enter your VATSIM ID, IVAO VID, POSCON CID, or streaming channel handles.
-- **Display Rank Mode**: Choose between standard flight-hour ranks or honorary staff ranks (if assigned staff roles).
+- **Display Rank Mode**: Choose between standard regular ranks or honorary ranks (if assigned an honorary rank by staff).
 - **Delete / Leave Virtual Airline**: Safely delete your profile from an individual airline without losing your overall user account, or completely remove your account.

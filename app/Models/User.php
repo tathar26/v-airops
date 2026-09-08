@@ -340,12 +340,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        // Get total flight time for this airline in minutes -> hours
         $profile = $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
-        $totalHours = $profile ? floor($profile->flight_time / 60) : 0;
-        $totalPoints = $profile ? $profile->points : 0;
-
-        // 1. Check if profile has an explicitly locked rank_id
         if ($profile && $profile->rank_id) {
             $explicitRank = Rank::where('tenant_id', $airlineId)->find($profile->rank_id);
             if ($explicitRank) {
@@ -353,32 +348,62 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         }
 
-        // 2. Highest matching rank meeting min_hours & min_points
+        // 2. Highest matching regular rank meeting min_hours, min_points, min_bonus_points
+        $totalHours = $profile ? floor($profile->flight_time / 60) : 0;
+        $totalPoints = $profile ? $profile->points : 0;
+        $totalBonus = $profile ? ($profile->bonus_points ?? 0) : 0;
+
         $calculatedRank = Rank::where('tenant_id', $airlineId)
+            ->where('is_honorary', false)
             ->where('min_hours', '<=', $totalHours)
             ->where('min_points', '<=', $totalPoints)
+            ->where('min_bonus_points', '<=', $totalBonus)
+            ->orderBy('position', 'desc')
             ->orderBy('min_hours', 'desc')
-            ->orderBy('min_points', 'desc')
             ->first();
 
         if ($calculatedRank) {
             return $calculatedRank;
         }
 
-        // 3. Fallback: Base rank with the lowest hours
+        // 3. Fallback: Lowest regular rank
         return Rank::where('tenant_id', $airlineId)
+            ->where('is_honorary', false)
+            ->orderBy('position', 'asc')
             ->orderBy('min_hours', 'asc')
-            ->orderBy('min_points', 'asc')
             ->first();
     }
 
     /**
-     * Get the honorary staff rank string if user holds a staff role with one in this airline.
+     * Get the honorary rank model if assigned in this airline.
+     */
+    public function getHonoraryRank(int|Tenant|null $airline = null): ?Rank
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        if (!$airlineId) {
+            return null;
+        }
+
+        $profile = $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
+        if ($profile && $profile->honorary_rank_id) {
+            return Rank::where('tenant_id', $airlineId)->find($profile->honorary_rank_id);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the honorary rank string if user holds one in this airline.
      */
     public function getHonoraryRankString(int|Tenant|null $airline = null): ?string
     {
-        $roles = $this->getRolesForAirline($airline);
+        $honoraryRank = $this->getHonoraryRank($airline);
+        if ($honoraryRank) {
+            return $honoraryRank->name;
+        }
 
+        // Fallback to role-based honorary rank string if present
+        $roles = $this->getRolesForAirline($airline);
         foreach ($roles as $role) {
             if ($role->is_staff && !empty($role->honorary_rank_string)) {
                 return $role->honorary_rank_string;
@@ -390,25 +415,28 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Master Display Rank Logic:
-     * - Returns the Honorary Staff Rank if prefer_honorary_rank is TRUE and the user holds a staff role with an honorary rank in this airline.
-     * - Otherwise, returns the standard flight-hour auto-calculated rank name.
+     * - Returns the Honorary Rank if prefer_honorary_rank is TRUE and the pilot holds an honorary rank.
+     * - Otherwise, returns the standard regular rank name.
      */
     public function getDisplayRank(int|Tenant|null $airline = null): string
     {
         $airlineId = $this->resolveAirlineId($airline);
+        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
 
-        // 1. If user prefers honorary rank and has an assigned staff role with an honorary rank in this airline
-        if ($this->prefer_honorary_rank) {
+        $preferHonorary = $profile ? $profile->prefer_honorary_rank : $this->prefer_honorary_rank;
+
+        // 1. If user prefers honorary rank and has one assigned in this airline
+        if ($preferHonorary) {
             $honorary = $this->getHonoraryRankString($airlineId);
             if (!empty($honorary)) {
                 return $honorary;
             }
         }
 
-        // 2. Fallback to auto-calculated rank based on flight hours
-        $autoRank = $this->getAutoCalculatedRank($airlineId);
-        if ($autoRank) {
-            return $autoRank->name;
+        // 2. Fallback to regular rank
+        $regularRank = $this->getRankForAirline($airlineId);
+        if ($regularRank) {
+            return $regularRank->name;
         }
 
         // 3. Final default
@@ -418,6 +446,28 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return 'Cadet';
+    }
+
+    public function isDisplayingHonoraryRank(int|Tenant|null $airline = null): bool
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
+        $preferHonorary = $profile ? $profile->prefer_honorary_rank : $this->prefer_honorary_rank;
+
+        return (bool) ($preferHonorary && $this->getHonoraryRankString($airlineId));
+    }
+
+    public function getDisplayRankImageUrl(int|Tenant|null $airline = null): string
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
+
+        if ($profile) {
+            return $profile->getDisplayRankImageUrl();
+        }
+
+        $rank = $this->getRankForAirline($airlineId);
+        return $rank ? $rank->image_url : asset('images/epaulettes/epaulette-01.png');
     }
 
     /**

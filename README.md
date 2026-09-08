@@ -92,8 +92,10 @@ flowchart TD
    - Launch the **V-AirOps ACARS** desktop client and click **Fetch Flight**.
    - As you start engines, taxi, take off, cruise, and land, telemetry streams in real time to the **Live 3D Radar Map**.
    - Upon engine shutdown at the arrival gate, your PIREP is automatically compiled, scored (landing rate FPM, G-force), and filed to your permanent pilot logbook.
-5. **Career Progression**:
-   - Accumulate block flight hours and points to earn automated rank promotions, unlocking higher ranks and heavy widebody airframes.
+5. **Career Progression & Milestone Ranks**:
+   - Built on the core philosophy: **"Recognition, Not Restriction"**—ranks celebrate achievements and never restrict routes or airframes.
+   - Progress through Regular Ranks by fulfilling all 4 milestone criteria simultaneously: block flight hours, total flight points, bonus points, and accepted PIREPs.
+   - Earn bespoke 85×36 epaulettes and choose between displaying regular rank or honorary staff recognition in your preferences.
 
 ### 🏢 For Virtual Airline Owners & Operations Staff
 
@@ -104,11 +106,15 @@ flowchart TD
 3. **Manage Fleet & Schedules**:
    - Register airframes (A320, B738, B77W, etc.) with tail registrations, seating configs, and real-time maintenance statuses.
    - Create route networks manually or import thousands of real-world seasonal flights using CSV bulk import or the integrated **AirLabs API**.
-4. **Enforce Flight Safety & Review PIREPs**:
+4. **Configure Milestone Ranks & Epaulettes**:
+   - Set up milestone-based Regular Ranks with custom flight hour, points, bonus points, and PIREP thresholds.
+   - Assign Honorary Ranks for staff, flight instructors, or real-world pilots.
+   - Choose from built-in gold stripe epaulette presets or upload custom 85×36 pixel PNG graphics.
+5. **Enforce Flight Safety & Review PIREPs**:
    - Inspect incoming pilot reports in the **Review Queue**. Review flagged hard landings or overspeed events, leave feedback, and accept/reject PIREPs.
-5. **Issue Operations NOTAMs**:
+6. **Issue Operations NOTAMs**:
    - Publish high-, medium-, and low-priority notices to your pilots with expiration dates and track unread acknowledgments.
-6. **Delegate Staff Roles (RBAC)**:
+7. **Delegate Staff Roles (RBAC)**:
    - Create custom airline roles (e.g. *Chief Pilot*, *Dispatch Manager*, *Events Coordinator*) and assign airline-scoped permissions.
 
 ---

@@ -14,8 +14,10 @@ class PilotProfile extends Model
         'user_id',
         'tenant_id',
         'rank_id',
+        'honorary_rank_id',
         'flight_time',
         'points',
+        'bonus_points',
         'use_imperial_units',
         'prefer_honorary_rank',
         'preferred_network',
@@ -37,6 +39,9 @@ class PilotProfile extends Model
     protected function casts(): array
     {
         return [
+            'flight_time' => 'integer',
+            'points' => 'integer',
+            'bonus_points' => 'integer',
             'use_imperial_units' => 'boolean',
             'prefer_honorary_rank' => 'boolean',
         ];
@@ -55,6 +60,41 @@ class PilotProfile extends Model
     public function rank()
     {
         return $this->belongsTo(Rank::class);
+    }
+
+    public function honoraryRank()
+    {
+        return $this->belongsTo(Rank::class, 'honorary_rank_id');
+    }
+
+    /**
+     * Get the active display rank model (Honorary if preferred & assigned, else Regular rank).
+     */
+    public function getDisplayRank(): ?Rank
+    {
+        if ($this->prefer_honorary_rank && $this->honorary_rank_id) {
+            $honorary = $this->honoraryRank;
+            if ($honorary) {
+                return $honorary;
+            }
+        }
+
+        return $this->rank;
+    }
+
+    public function getDisplayRankName(): string
+    {
+        return $this->getDisplayRank()?->name ?? 'Cadet';
+    }
+
+    public function getDisplayRankAbbreviation(): string
+    {
+        return $this->getDisplayRank()?->abbreviation ?? 'Cdt';
+    }
+
+    public function getDisplayRankImageUrl(): string
+    {
+        return $this->getDisplayRank()?->image_url ?? asset('images/epaulettes/epaulette-01.png');
     }
 
     /**

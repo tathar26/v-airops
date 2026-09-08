@@ -95,18 +95,7 @@ class VirtualAirlineCreationService
             ]);
 
             // Create Default Ranks
-            Rank::firstOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => 'Cadet'],
-                ['min_hours' => 0, 'min_points' => 0]
-            );
-            Rank::firstOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => 'First Officer'],
-                ['min_hours' => 25, 'min_points' => 500]
-            );
-            Rank::firstOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => 'Captain'],
-                ['min_hours' => 100, 'min_points' => 2000]
-            );
+            \App\Services\RankProgressionService::seedDefaultRanks($tenant);
 
             // If a user is creating this VA
             if ($creator) {

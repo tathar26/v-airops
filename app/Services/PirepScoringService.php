@@ -63,17 +63,8 @@ class PirepScoringService
         $profile->flight_time += $flightTimeMinutes;
         $profile->points += $points;
 
-        // Check for Rank upgrade
-        $newRank = Rank::where('tenant_id', $tenantId)
-            ->where('min_hours', '<=', floor($profile->flight_time / 60))
-            ->where('min_points', '<=', $profile->points)
-            ->orderBy('min_hours', 'desc')
-            ->orderBy('min_points', 'desc')
-            ->first();
-
-        if ($newRank && $profile->rank_id !== $newRank->id) {
-            $profile->rank_id = $newRank->id;
-        }
+        // Check for Rank upgrade using 4-criteria progression
+        (new \App\Services\RankProgressionService())->evaluatePilotRank($profile);
 
         // Update Pilot Location to flight arrival airport
         if ($pirep->route && $pirep->route->arrival_icao) {

@@ -290,15 +290,8 @@ class RecalculatePilotStatistics implements ShouldQueue
             $profile->flight_time = $total_flight_time;
             $profile->points = $total_points;
 
-            // Automatically upgrade rank if qualified based on hours
-            $qualifyingRank = \App\Models\Rank::where('tenant_id', $tenantId)
-                ->where('min_hours', '<=', floor($total_flight_time / 60))
-                ->orderBy('min_hours', 'desc')
-                ->first();
-
-            if ($qualifyingRank) {
-                $profile->rank_id = $qualifyingRank->id;
-            }
+            // Automatically upgrade rank according to all 4 criteria (hours, points, bonus points, pireps)
+            (new \App\Services\RankProgressionService())->evaluatePilotRank($profile);
 
             // Sync pilot location to the arrival airport of the latest PIREP
             $latestPirep = $pireps->sortByDesc('created_at')->first();
