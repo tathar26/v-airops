@@ -681,6 +681,12 @@
                                 style="background-color: var(--tenant-button-secondary-bg, #374151); color: var(--tenant-button-secondary-text, #ffffff); border: 1px solid var(--tenant-input-border, rgba(255,255,255,0.15));">
                                 Reset to Defaults
                             </button>
+                            <button type="button" wire:click="recalculateAirlinePireps" wire:confirm="Are you sure you want to recalculate all past PIREPs for this airline against your current scoring criteria? This will update flight scores and statistics for all pilots."
+                                class="px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
+                                title="Re-evaluate all past airline flights against your current criteria">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                <span>Recalculate Past PIREPs</span>
+                            </button>
                             <button type="button" wire:click="saveScoringSettings"
                                 class="px-5 py-2 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition flex items-center gap-1.5"
                                 style="background-color: var(--tenant-button-bg, var(--tenant-accent)); color: var(--tenant-button-text, #ffffff);">
@@ -1080,6 +1086,11 @@
                             class="px-5 py-2.5 rounded-xl text-xs font-semibold transition"
                             style="background-color: var(--tenant-button-secondary-bg, #374151); color: var(--tenant-button-secondary-text, #ffffff); border: 1px solid var(--tenant-input-border, rgba(255,255,255,0.15));">
                             Reset to Defaults
+                        </button>
+                        <button type="button" wire:click="recalculateAirlinePireps" wire:confirm="Are you sure you want to recalculate all past PIREPs for this airline against your current scoring criteria? This will update flight scores and statistics for all pilots."
+                            class="px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <span>Recalculate Past PIREPs</span>
                         </button>
                         <button type="button" wire:click="saveScoringSettings"
                             class="px-6 py-2.5 rounded-xl text-xs font-bold shadow-md hover:opacity-90 transition flex items-center gap-2"

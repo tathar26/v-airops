@@ -12,6 +12,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Services\Acars\ScoringService;
 
 class TenantSettings extends Component
 {
@@ -907,6 +908,15 @@ class TenantSettings extends Component
         $this->loadScoringSettings($tenant);
 
         session()->flash('scoring_message', 'Scoring criteria have been reset to system defaults.');
+    }
+
+    public function recalculateAirlinePireps()
+    {
+        $tenantId = auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id;
+        $scoringService = new ScoringService();
+        $result = $scoringService->rescorePireps($tenantId, false);
+
+        session()->flash('scoring_message', "Successfully recalculate {$result['rescored_count']} past PIREPs and updated statistics for {$result['affected_pilots']} pilots against your airline's criteria.");
     }
 
     public function addHub()
