@@ -15,19 +15,19 @@
 ## 🏗️ High-Level Architecture
 
 ```mermaid
-graph TD
-    subgraph "Clients & Simulators"
-        PILOT["Pilot Browser (Web App)<br/>Livewire 3 / Tailwind CSS / Alpine.js"]
-        ACARS["ACARS Desktop Client<br/>SimConnect / FSUIPC Telemetry Feed"]
+flowchart TD
+    subgraph CLIENTS ["Clients and Simulators"]
+        PILOT["Pilot Browser Web App<br/>Livewire 3 / Tailwind CSS / Alpine.js"]
+        ACARS["V-AirOps ACARS Desktop Client<br/>SimConnect / FSUIPC Telemetry Feed"]
     end
 
-    subgraph "Edge & Reverse Proxy"
+    subgraph PROXY_LAYER ["Edge and Reverse Proxy"]
         PROXY["Nginx / Cloudflare / Caddy<br/>HTTPS / TLS 1.3 Termination (Port 80/443)"]
         PILOT -->|HTTPS / WebSocket| PROXY
         ACARS -->|REST API / TLS| PROXY
     end
 
-    subgraph "V-Air Ops Application Core"
+    subgraph CORE ["V-Air Ops Application Core"]
         APP["V-Air Ops Web Application<br/>(PHP 8.4-FPM + Nginx Engine)"]
         SCHED["Cron Scheduler Worker<br/>(php artisan schedule:work)"]
         QUEUE["Background Queue Workers<br/>(php artisan queue:work)"]
@@ -37,7 +37,7 @@ graph TD
         SCHED -->|Scheduled Maintenance| APP
     end
 
-    subgraph "Persistence & Caching"
+    subgraph PERSISTENCE ["Persistence and Caching"]
         MARIA["MariaDB 11 Database<br/>(Multi-Tenant Data, Routes, PIREPs)"]
         REDIS["Redis 7 In-Memory Broker<br/>(Sessions, Queues, Live Telemetry)"]
         STORAGE["Persistent Storage<br/>(Logos, Documents, OFPs)"]
@@ -49,10 +49,10 @@ graph TD
         QUEUE --> REDIS
     end
 
-    subgraph "External Aviation Services"
-        SB["SimBrief API<br/>(OFP & Navigation Data)"]
+    subgraph EXTERNAL ["External Aviation Services"]
+        SB["SimBrief API<br/>(OFP and Navigation Data)"]
         AL["AirLabs API<br/>(Real-World Flight Schedules)"]
-        MWGG["Airport Databases<br/>(Coordinates & Elevations)"]
+        MWGG["Airport Databases<br/>(Coordinates and Elevations)"]
         
         APP --> SB
         QUEUE --> AL
