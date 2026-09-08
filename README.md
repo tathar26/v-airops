@@ -74,6 +74,45 @@ flowchart TD
 
 ---
 
+## 🧭 How to Use the Platform
+
+### ✈️ For Flight Simulation Pilots
+
+1. **Join Virtual Airlines**:
+   - Register your account and verify your email.
+   - Browse public virtual airlines on the network and enroll. You can join and switch between multiple Virtual Airlines seamlessly without separate logins.
+2. **Book a Flight**:
+   - Navigate to **Flights & Schedules** to explore your airline's scheduled route network.
+   - Filter by departure/arrival ICAO, airframe type, or flight duration.
+   - Click **Book Flight** to reserve the aircraft for your flight session.
+3. **Generate SimBrief Dispatch Briefing**:
+   - On your active booking, click **Generate SimBrief OFP**.
+   - V-Air Ops auto-populates airframe weights, passenger load, cargo, and fuel reserves into SimBrief, embedding the full navigation log, METARs, TAFs, and route map into your dispatch board.
+4. **Fly with V-AirOps ACARS**:
+   - Launch the **V-AirOps ACARS** desktop client and click **Fetch Flight**.
+   - As you start engines, taxi, take off, cruise, and land, telemetry streams in real time to the **Live 3D Radar Map**.
+   - Upon engine shutdown at the arrival gate, your PIREP is automatically compiled, scored (landing rate FPM, G-force), and filed to your permanent pilot logbook.
+5. **Career Progression**:
+   - Accumulate block flight hours and points to earn automated rank promotions, unlocking higher ranks and heavy widebody airframes.
+
+### 🏢 For Virtual Airline Owners & Operations Staff
+
+1. **Brand & Configure Your Airline**:
+   - Customize your airline logo, icons, telephony callsign, minimum landing rates, and preferred SimBrief OFP layout.
+2. **Establish Operating Hubs**:
+   - Designate base airports and regional focus hubs with defined runway and terminal operations.
+3. **Manage Fleet & Schedules**:
+   - Register airframes (A320, B738, B77W, etc.) with tail registrations, seating configs, and real-time maintenance statuses.
+   - Create route networks manually or import thousands of real-world seasonal flights using CSV bulk import or the integrated **AirLabs API**.
+4. **Enforce Flight Safety & Review PIREPs**:
+   - Inspect incoming pilot reports in the **Review Queue**. Review flagged hard landings or overspeed events, leave feedback, and accept/reject PIREPs.
+5. **Issue Operations NOTAMs**:
+   - Publish high-, medium-, and low-priority notices to your pilots with expiration dates and track unread acknowledgments.
+6. **Delegate Staff Roles (RBAC)**:
+   - Create custom airline roles (e.g. *Chief Pilot*, *Dispatch Manager*, *Events Coordinator*) and assign airline-scoped permissions.
+
+---
+
 ## 🛠️ Technology Stack
 
 | Layer | Component | Version / Details |
@@ -128,10 +167,12 @@ Access your V-Air Ops instance by navigating to `http://your-server-ip` or your 
 
 ## 📚 Complete Wiki Documentation Suite
 
-For comprehensive setup guides, architectural references, and operations playbooks, visit the [V-Air Ops Wiki Documentation](wiki/Home.md):
+For detailed step-by-step user manuals, operations playbooks, and architectural references, visit the [V-Air Ops Wiki Documentation](wiki/Home.md):
 
-- 📖 **[Wiki Home](wiki/Home.md)** — Documentation index and repository structure.
-- 🌟 **[Features & System Capabilities](wiki/Features.md)** — In-depth breakdown of modules, scoring, dispatch, and branding.
+- 📖 **[Wiki Home](wiki/Home.md)** — Documentation index, roadmap, and repository architecture.
+- 🧑‍✈️ **[Pilot & Dispatcher User Guide](wiki/User-Guide.md)** — Step-by-step pilot manual for bookings, SimBrief OFP dispatch, live radar, and PIREPs.
+- 🏢 **[Airline Management Manual](wiki/Airline-Management.md)** — Complete staff guide for hubs, fleet, schedules, ranks, NOTAMs, and RBAC.
+- 🌟 **[Features & System Capabilities](wiki/Features.md)** — In-depth breakdown of modules, scoring, dispatch, and dynamic branding.
 - 🌐 **[Production Deployment Guide](wiki/Deployment.md)** — Bare-metal LEMP setup, Nginx reverse proxy, and SSL/TLS.
 - 🐳 **[Docker & Compose Installation](wiki/Docker-Install.md)** — Container topologies, volume mappings, port exposures, and staging stacks.
 - ⚙️ **[Configuration Reference](wiki/Configuration.md)** — Complete catalog of all `.env` variables and default values.

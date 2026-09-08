@@ -1,5 +1,7 @@
 # V-Air Ops — Wiki Documentation
 
+*Last Updated: September 2026 | Platform Version: v1.1.31*
+
 Welcome to the official technical documentation, architecture guide, and operational handbook for **V-Air Ops**—the next-generation Virtual Airline Operations SaaS Platform.
 
 ---
@@ -8,6 +10,8 @@ Welcome to the official technical documentation, architecture guide, and operati
 
 | Document | Description | Target Audience |
 |---|---|---|
+| **[Pilot & Dispatcher User Guide](User-Guide.md)** | Step-by-step pilot manual: multi-airline enrollment, flight booking, SimBrief OFP dispatch, live 3D radar tracking, and PIREP scoring. | Pilots, Dispatchers |
+| **[Airline Management Manual](Airline-Management.md)** | Comprehensive staff manual: hub creation, fleet airframes, route schedules, ranking rules, NOTAM publishing, and RBAC permissions. | VA Owners, Operations Staff |
 | **[Features & System Capabilities](Features.md)** | Detailed breakdown of multi-tenancy, telemetry ingestion, PIREP scoring, schedule management, and dynamic branding. | VA Owners, Staff, Developers |
 | **[Deployment Strategies](Deployment.md)** | Bare-metal LEMP setup, Nginx reverse proxy configuration, SSL certificates, and PHP 8.4 optimization. | System Administrators, DevOps |
 | **[Docker & Compose Installation](Docker-Install.md)** | Multi-container Docker orchestration (`app`, `scheduler`, `queue`, `mariadb`, `redis`), networking, and volumes. | DevOps Engineers |
