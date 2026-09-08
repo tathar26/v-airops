@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.30] - 2026-09-08
+
+### 🚀 GitHub Actions Workflows & V-AirOps ACARS Rebrand Alignment
+- **GitHub Actions Workflows:** Configured automated workflows (`.github/workflows/build-devel.yml` and `.github/workflows/build-prod.yml`) for continuous Docker builds and tag deployments on the GitHub mirror (`https://github.com/tathar26/v-airops.git`).
+- **ACARS Rebrand Integration:** Aligned all navigation menus, public landing page components, legal documents (Terms, Privacy, Security), and service configuration URLs to the newly rebranded **V-AirOps ACARS** desktop client.
+
+---
+
 ## [v1.1.29] - 2026-09-08
 
 ### 🐛 Account Deletion 500 Error Fix
