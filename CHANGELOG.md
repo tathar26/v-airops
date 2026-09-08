@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.31] - 2026-09-08
+
+### 🚀 Production CI/CD Build Trigger Fix
+- **Tag Matcher & Workflow Dispatch:** Broadened tag glob trigger in `build-prod.yml` to `v*` and enabled `workflow_dispatch` manual execution.
+- **Production Build Trigger:** Triggered production container build pipeline for Docker Hub (`tathar26/v-ops`).
+
+---
+
 ## [v1.1.30] - 2026-09-08
 
 ### 🚀 GitHub Actions Workflows & V-AirOps ACARS Rebrand Alignment
