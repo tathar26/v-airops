@@ -26,6 +26,7 @@ class RankManager extends Component
     public $min_bonus_points = 0;
     public $min_pireps = 0;
     public $is_honorary = false;
+    public $is_default = false;
     public $image_path = '';
     public $epaulette_upload = null;
     public $selected_builtin_epaulette = '';
@@ -83,6 +84,7 @@ class RankManager extends Component
         ]);
 
         $this->is_honorary = (bool) $isHonorary;
+        $this->is_default = false;
         $this->position = $nextPos;
         $this->selected_builtin_epaulette = $isHonorary ? 'epaulettes/epaulette-staff.png' : 'epaulettes/epaulette-01.png';
         $this->resetErrorBag();
@@ -103,6 +105,7 @@ class RankManager extends Component
         $this->min_bonus_points = $rank->min_bonus_points;
         $this->min_pireps = $rank->min_pireps;
         $this->is_honorary = (bool) $rank->is_honorary;
+        $this->is_default = (bool) $rank->is_default;
         $this->image_path = $rank->image_path ?? '';
         $this->selected_builtin_epaulette = $rank->image_path ?? '';
         $this->epaulette_upload = null;

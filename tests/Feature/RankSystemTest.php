@@ -185,4 +185,18 @@ class RankSystemTest extends TestCase
         $this->assertEquals('Cadet', $pilot->active_rank_name);
         $this->assertNotEmpty($pilot->getDisplayRankImageUrl($this->tenant->id));
     }
+
+    public function test_rank_manager_can_render_modal_for_default_rank(): void
+    {
+        RankProgressionService::seedDefaultRanks($this->tenant);
+        $cadet = Rank::where('tenant_id', $this->tenant->id)->where('name', 'Cadet')->first();
+
+        $this->actingAs($this->adminUser);
+
+        Livewire::test(RankManager::class)
+            ->call('editRank', $cadet->id)
+            ->assertSet('is_default', true)
+            ->assertSee('Cadet')
+            ->assertStatus(200);
+    }
 }

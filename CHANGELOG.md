@@ -2,6 +2,11 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.36] - 2026-09-08
+
+### 🐛 Bug Fix: Rank Manager Modal Model Resolution
+- **Rank Manager Modal Fix:** Replaced static Eloquent call `Rank::find($editingRankId)` in `rank-manager.blade.php` with component property `$is_default`, resolving `Error: Class "Rank" not found` during rank editing.
+
 ## [v1.1.35] - 2026-09-08
 
 ### 🐛 Bug Fix: Pilot Rank Resolution & Tenant Dashboard Epaulette Preview
