@@ -375,6 +375,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the pilot's regular rank in the specified airline.
+     */
+    public function getRankForAirline(int|Tenant|null $airline = null): ?Rank
+    {
+        return $this->getAutoCalculatedRank($airline);
+    }
+
+    /**
      * Get the honorary rank model if assigned in this airline.
      */
     public function getHonoraryRank(int|Tenant|null $airline = null): ?Rank

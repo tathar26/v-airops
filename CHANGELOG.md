@@ -2,6 +2,12 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.35] - 2026-09-08
+
+### 🐛 Bug Fix: Pilot Rank Resolution & Tenant Dashboard Epaulette Preview
+- **User Rank Resolution Method:** Added missing `getRankForAirline(?int $airline = null)` on `User` model, resolving `BadMethodCallException` during active rank name attribute access (`$user->active_rank_name`) and display rank image evaluation.
+- **Tenant Dashboard Current Rank Card:** Added live 85×36 epaulette graphic preview next to the active rank title.
+
 ## [v1.1.34] - 2026-09-08
 
 ### 🎖️ Milestone Rank System & Security Policy Documentation

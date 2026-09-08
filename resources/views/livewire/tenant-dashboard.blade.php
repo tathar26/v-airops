@@ -85,7 +85,12 @@
                 <span class="text-[9px] text-slate-600 font-mono uppercase tracking-wider">Pilot Classification</span>
             </div>
             <div class="va-card-body flex justify-between items-center">
-                <div class="text-xl font-bold text-tenant-accent">{{ $rankName }}</div>
+                <div class="flex items-center gap-3">
+                    @if($user->getDisplayRankImageUrl())
+                        <img src="{{ $user->getDisplayRankImageUrl() }}" alt="{{ $rankName }}" class="w-[70px] h-[30px] object-contain rounded border border-white/10 bg-slate-900/60 shadow-sm" />
+                    @endif
+                    <div class="text-xl font-bold text-tenant-accent">{{ $rankName }}</div>
+                </div>
                 <div class="text-sm font-mono text-sky-400 bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20">{{ $callsign }}</div>
             </div>
         </div>

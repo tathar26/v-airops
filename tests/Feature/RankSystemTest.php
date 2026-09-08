@@ -165,4 +165,24 @@ class RankSystemTest extends TestCase
             'name' => 'Cadet',
         ]);
     }
+
+    public function test_user_active_rank_name_accessor_and_get_rank_for_airline(): void
+    {
+        RankProgressionService::seedDefaultRanks($this->tenant);
+        $cadet = Rank::where('tenant_id', $this->tenant->id)->where('name', 'Cadet')->first();
+
+        $pilot = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+
+        PilotProfile::create([
+            'user_id' => $pilot->id,
+            'tenant_id' => $this->tenant->id,
+            'rank_id' => $cadet->id,
+        ]);
+
+        $this->assertEquals($cadet->id, $pilot->getRankForAirline($this->tenant->id)?->id);
+        $this->assertEquals('Cadet', $pilot->active_rank_name);
+        $this->assertNotEmpty($pilot->getDisplayRankImageUrl($this->tenant->id));
+    }
 }
