@@ -608,20 +608,20 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-3">
-                                            @if($user->getDisplayRankImageUrl())
-                                                <img src="{{ $user->getDisplayRankImageUrl() }}" alt="{{ $user->getDisplayRank() }}" class="w-[70px] h-[30px] object-contain rounded border border-white/10 bg-slate-900/60 shadow-sm" />
+                                            @if($user->getDisplayRankImageUrl($tenantId ?? null))
+                                                <img src="{{ $user->getDisplayRankImageUrl($tenantId ?? null) }}" alt="{{ $user->getDisplayRank($tenantId ?? null) }}" class="w-[70px] h-[30px] object-contain rounded border border-white/10 bg-slate-900/60 shadow-sm" />
                                             @endif
                                             <div>
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-tenant-accent/20 text-tenant-accent border border-tenant-accent/30">
-                                                        {{ $user->getDisplayRank() }}
+                                                        {{ $user->getDisplayRank($tenantId ?? null) }}
                                                     </span>
-                                                    @if($user->isDisplayingHonoraryRank())
+                                                    @if($user->isDisplayingHonoraryRank($tenantId ?? null))
                                                         <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" title="Displaying honorary staff rank">Honorary</span>
                                                     @endif
                                                 </div>
                                                 @php
-                                                    $profile = $user->getPilotProfile();
+                                                    $profile = $user->getPilotProfile($tenantId ?? null);
                                                 @endphp
                                                 @if($profile && $profile->rank && $profile->honoraryRank)
                                                     <div class="text-[10px] text-slate-400 mt-1">
@@ -634,7 +634,7 @@
                                     <td class="px-6 py-4 whitespace-normal">
                                         <div class="flex flex-wrap items-center gap-1.5">
                                             @php
-                                                $assignedRoles = $user->getRolesForAirline();
+                                                $assignedRoles = $user->getRolesForAirline($tenantId ?? null);
                                             @endphp
                                             @forelse($assignedRoles as $r)
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">

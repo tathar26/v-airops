@@ -331,6 +331,32 @@ class User extends Authenticatable implements MustVerifyEmail
      |======================================================================== */
 
     /**
+     * Get the pilot profile for an airline context.
+     * Checks relation cache first to optimize eager-loaded queries.
+     */
+    public function getPilotProfile(int|Tenant|null $airline = null): ?PilotProfile
+    {
+        $airlineId = $this->resolveAirlineId($airline);
+
+        if ($this->relationLoaded('pilotProfiles')) {
+            if ($airlineId) {
+                $matched = $this->pilotProfiles->firstWhere('tenant_id', $airlineId);
+                if ($matched) {
+                    return $matched;
+                }
+            } elseif ($this->pilotProfiles->isNotEmpty()) {
+                return $this->pilotProfiles->first();
+            }
+        }
+
+        if ($airlineId) {
+            return $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
+        }
+
+        return $this->pilotProfiles()->first();
+    }
+
+    /**
      * Auto-calculate the pilot's standard rank based on total flight hours for this airline.
      */
     public function getAutoCalculatedRank(int|Tenant|null $airline = null): ?Rank
@@ -340,8 +366,11 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        $profile = $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
+        $profile = $this->getPilotProfile($airlineId);
         if ($profile && $profile->rank_id) {
+            if ($profile->relationLoaded('rank') && $profile->rank) {
+                return $profile->rank;
+            }
             $explicitRank = Rank::where('tenant_id', $airlineId)->find($profile->rank_id);
             if ($explicitRank) {
                 return $explicitRank;
@@ -392,8 +421,11 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        $profile = $this->pilotProfiles()->where('tenant_id', $airlineId)->first();
+        $profile = $this->getPilotProfile($airlineId);
         if ($profile && $profile->honorary_rank_id) {
+            if ($profile->relationLoaded('honoraryRank') && $profile->honoraryRank) {
+                return $profile->honoraryRank;
+            }
             return Rank::where('tenant_id', $airlineId)->find($profile->honorary_rank_id);
         }
 
@@ -429,7 +461,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getDisplayRank(int|Tenant|null $airline = null): string
     {
         $airlineId = $this->resolveAirlineId($airline);
-        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
+        $profile = $this->getPilotProfile($airlineId);
 
         $preferHonorary = $profile ? $profile->prefer_honorary_rank : $this->prefer_honorary_rank;
 
@@ -459,7 +491,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isDisplayingHonoraryRank(int|Tenant|null $airline = null): bool
     {
         $airlineId = $this->resolveAirlineId($airline);
-        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
+        $profile = $this->getPilotProfile($airlineId);
         $preferHonorary = $profile ? $profile->prefer_honorary_rank : $this->prefer_honorary_rank;
 
         return (bool) ($preferHonorary && $this->getHonoraryRankString($airlineId));
@@ -468,7 +500,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getDisplayRankImageUrl(int|Tenant|null $airline = null): string
     {
         $airlineId = $this->resolveAirlineId($airline);
-        $profile = $airlineId ? $this->pilotProfiles()->where('tenant_id', $airlineId)->first() : null;
+        $profile = $this->getPilotProfile($airlineId);
 
         if ($profile) {
             return $profile->getDisplayRankImageUrl();
@@ -583,7 +615,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $tenantId = $this->getActiveTenantId() ?? $this->tenant_id;
         if ($tenantId) {
-            $profile = $this->pilotProfiles()->where('tenant_id', $tenantId)->first();
+            $profile = $this->getPilotProfile($tenantId);
             if ($profile) {
                 return $profile->current_location_icao;
             }

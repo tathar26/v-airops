@@ -199,4 +199,32 @@ class RankSystemTest extends TestCase
             ->assertSee('Cadet')
             ->assertStatus(200);
     }
+
+    public function test_user_get_pilot_profile_helper(): void
+    {
+        RankProgressionService::seedDefaultRanks($this->tenant);
+        $cadet = Rank::where('tenant_id', $this->tenant->id)->where('name', 'Cadet')->first();
+
+        $pilot = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+
+        $profile = PilotProfile::create([
+            'user_id' => $pilot->id,
+            'tenant_id' => $this->tenant->id,
+            'rank_id' => $cadet->id,
+        ]);
+
+        // Direct call with tenant id
+        $this->assertEquals($profile->id, $pilot->getPilotProfile($this->tenant->id)?->id);
+
+        // Direct call without arguments (resolves via tenant_id)
+        $this->assertEquals($profile->id, $pilot->getPilotProfile()?->id);
+
+        // Eager-loaded relation
+        $loadedUser = User::with(['pilotProfiles.rank', 'pilotProfiles.honoraryRank'])->find($pilot->id);
+        $this->assertTrue($loadedUser->relationLoaded('pilotProfiles'));
+        $this->assertEquals($profile->id, $loadedUser->getPilotProfile()?->id);
+        $this->assertEquals($profile->id, $loadedUser->getPilotProfile($this->tenant->id)?->id);
+    }
 }

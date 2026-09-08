@@ -1099,6 +1099,7 @@ class TenantSettings extends Component
             ->get();
 
         return view('livewire.tenant-settings', [
+            'tenantId'          => $tenantId,
             'users'             => $users,
             'roles'             => $roles,
             'hubs'              => $hubs,

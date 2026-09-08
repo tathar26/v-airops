@@ -2,6 +2,13 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.37] - 2026-09-08
+
+### 🐛 Bug Fix: Pilot Profile Resolution & Tenant Settings User Roster
+- **User Pilot Profile Helper:** Added `getPilotProfile(int|Tenant|null $airline = null): ?PilotProfile` helper method to the `User` model with relation cache checks (`relationLoaded('pilotProfiles')`) to resolve `BadMethodCallException: Call to undefined method App\Models\User::getPilotProfile()`.
+- **Tenant Settings User Table Scoping:** Scoped all rank, honorary rank, and profile calls in `tenant-settings.blade.php` to `$tenantId` with fallback support.
+- **Unified Profile Lookups:** Updated `getAutoCalculatedRank()`, `getHonoraryRank()`, `getDisplayRank()`, and `getCurrentLocationIcaoAttribute()` to utilize `getPilotProfile()`.
+
 ## [v1.1.36] - 2026-09-08
 
 ### 🐛 Bug Fix: Rank Manager Modal Model Resolution
