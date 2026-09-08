@@ -61,7 +61,7 @@ return [
     ],
 
     'vpilot_acars' => [
-        'releases_url' => env('VPILOT_ACARS_RELEASES_URL', 'https://gitea.artmex-hosting.com/tathar26/vops-acars/releases/latest'),
+        'releases_url' => env('VAIROPS_ACARS_RELEASES_URL', env('VPILOT_ACARS_RELEASES_URL', 'https://github.com/tathar26/v-airops-acars/releases/latest')),
     ],
 
     'google' => [

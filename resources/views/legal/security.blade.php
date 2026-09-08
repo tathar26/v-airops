@@ -192,10 +192,10 @@
                 <!-- Section 3 -->
                 <section class="space-y-3 pt-4 border-t border-navy-700">
                     <h2 class="font-heading font-bold text-xl text-white flex items-center gap-3">
-                        <span class="text-[#21A19D] font-mono text-base">03.</span> ACARS Telemetry &amp; vPilot Client Security
+                        <span class="text-[#21A19D] font-mono text-base">03.</span> ACARS Telemetry &amp; V-AirOps Client Security
                     </h2>
                     <p>
-                        The vPilot ACARS desktop client establishes secure, authenticated web-socket and REST connections to the V-Air Ops telemetry endpoint. Telemetry packets are validated for active user session tokens, rate-limited against DDoS or spoofing attempts, and sanitized before storage in flight log databases.
+                        The V-AirOps ACARS desktop client establishes secure, authenticated web-socket and REST connections to the V-Air Ops telemetry endpoint. Telemetry packets are validated for active user session tokens, rate-limited against DDoS or spoofing attempts, and sanitized before storage in flight log databases.
                     </p>
                 </section>
 
@@ -262,7 +262,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="hover:text-[#21A19D] transition">Documentation</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">REST API Access</a></li>
-                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">vPilot ACARS Client</a></li>
+                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">V-AirOps ACARS Client</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">System Status</a></li>
                     </ul>
                 </div>

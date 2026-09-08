@@ -136,7 +136,7 @@
                         <span class="text-[#21A19D] font-mono text-base">01.</span> Acceptance of Terms &amp; Platform Scope
                     </h2>
                     <p>
-                        Welcome to <strong class="text-white">V-Air Ops</strong> ("the Platform", "we", "us", or "our"). By registering an account, creating or managing a virtual airline, or connecting your flight simulator using the vPilot ACARS client, you agree to be bound by these Terms of Service.
+                        Welcome to <strong class="text-white">V-Air Ops</strong> ("the Platform", "we", "us", or "our"). By registering an account, creating or managing a virtual airline, or connecting your flight simulator using the V-AirOps ACARS client, you agree to be bound by these Terms of Service.
                     </p>
                     <p>
                         V-Air Ops is a software-as-a-service (SaaS) platform designed exclusively for flight simulation enthusiasts and virtual airline management communities. All operations, flight logging, schedules, aircraft telemetry, and pilot rosters managed on V-Air Ops are strictly for entertainment and educational virtual aviation purposes.
@@ -177,7 +177,7 @@
                         <span class="text-[#21A19D] font-mono text-base">04.</span> ACARS Client &amp; Telemetry Usage
                     </h2>
                     <p>
-                        The vPilot ACARS client logs flight telemetry (such as latitude, longitude, altitude, airspeed, vertical speed, fuel flow, and touchdown G-force) during active flight simulator sessions. By using the ACARS tracking software, you grant V-Air Ops authorization to process, display, and archive this telemetry data for leaderboards, PIREPs, and live radar tracking.
+                        The V-AirOps ACARS client logs flight telemetry (such as latitude, longitude, altitude, airspeed, vertical speed, fuel flow, and touchdown G-force) during active flight simulator sessions. By using the ACARS tracking software, you grant V-Air Ops authorization to process, display, and archive this telemetry data for leaderboards, PIREPs, and live radar tracking.
                     </p>
                 </section>
 
@@ -241,7 +241,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="hover:text-[#21A19D] transition">Documentation</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">REST API Access</a></li>
-                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">vPilot ACARS Client</a></li>
+                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">V-AirOps ACARS Client</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">System Status</a></li>
                     </ul>
                 </div>

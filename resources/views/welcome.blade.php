@@ -263,7 +263,7 @@
                     <span class="text-xs text-slate-400 block font-mono">LIDO OFP Flight Plans</span>
                 </div>
                 <div class="space-y-1 pl-4">
-                    <span class="font-heading font-bold text-lg text-teal-300 block">vPilot ACARS</span>
+                    <span class="font-heading font-bold text-lg text-teal-300 block">V-AirOps ACARS</span>
                     <span class="text-xs text-slate-400 block font-mono">Native Telemetry Client</span>
                 </div>
                 <div class="space-y-1 pl-4">
@@ -416,12 +416,12 @@
                     Live Fleet &amp; Position Tracking
                 </h2>
                 <p class="text-slate-400 text-base sm:text-lg">
-                    Monitor active flights across your virtual airline network with live map tracking and low-latency position updates via the vPilot ACARS client.
+                    Monitor active flights across your virtual airline network with live map tracking and low-latency position updates via the V-AirOps ACARS client.
                 </p>
                 <div class="pt-2 flex items-center justify-center gap-4">
                     <a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#21A19D] hover:bg-[#1C8C88] text-white font-heading font-bold text-xs shadow-md transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span>Download vPilot ACARS Client</span>
+                        <span>Download V-AirOps ACARS Client</span>
                         <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                     </a>
                 </div>
@@ -501,7 +501,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="hover:text-[#21A19D] transition">Documentation</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">REST API Access</a></li>
-                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">vPilot ACARS Client</a></li>
+                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">V-AirOps ACARS Client</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">System Status</a></li>
                     </ul>
                 </div>

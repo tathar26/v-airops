@@ -253,7 +253,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="hover:text-[#21A19D] transition">Documentation</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">REST API Access</a></li>
-                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">vPilot ACARS Client</a></li>
+                        <li><a href="{{ route('resources.vpilot-acars') }}" target="_blank" rel="noopener noreferrer" class="hover:text-[#21A19D] transition">V-AirOps ACARS Client</a></li>
                         <li><a href="#" class="hover:text-[#21A19D] transition">System Status</a></li>
                     </ul>
                 </div>
