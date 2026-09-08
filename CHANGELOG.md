@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.32] - 2026-09-08
+
+### 🎯 PIREP Scoring Overhaul, Dynamic Criteria Management, & Custom Permissions
+- **FPM Touchdown Rate Metric:** Replaced G-force as the scoring and failure metric with vertical touchdown velocity in feet per minute (FPM). Evaluates Butter ($\le 120$ FPM), Good ($\le 200$ FPM), Fair ($\le 350$ FPM), Firm ($\le 500$ FPM), Hard ($\le 650$ FPM), Rejection ($\ge 650$ FPM), and Invalidation ($\ge 800$ FPM). G-force is preserved strictly for telemetry logging.
+- **Dynamic VA Scoring Management View:** Added a dedicated **PIREP Scoring** tab in Virtual Airline Settings allowing airline owners to customize starting base points, FPM thresholds, engine/flaps operational tolerances, fuel penalties, and flight length bonuses with full adherence to dynamic VA theme tokens (`--tenant-card-bg`, `--tenant-input-bg`, `--tenant-accent`, etc.).
+- **Custom Permissions System:** Enabled virtual airline owners to create custom granular permissions and assign them to any airline role with Read or Read-Write permissions matrix integration.
+- **PIREP Display Score Cleanup:** Removed `/ 100 PTS` in the PIREP detail view so that points are cleanly displayed as `{{ $scoreVal }} PTS`.
+
+---
+
 ## [v1.1.31] - 2026-09-08
 
 ### 🚀 Production CI/CD Build Trigger Fix

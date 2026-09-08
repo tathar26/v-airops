@@ -5,178 +5,243 @@ namespace App\Services\Acars;
 use App\Models\Pirep;
 use App\Models\AcarsEvent;
 use App\Models\AcarsPosition;
+use App\Models\Tenant;
 
 class ScoringService
 {
     /**
      * Evaluate vertical touchdown speed against virtual airline tolerances.
      *
-     * @param float $fpm
+     * @param float $fpm Touchdown rate in feet per minute
+     * @param array|null $rules Custom scoring rules or null for defaults
      * @return array{grade: string, penalty: int}
      */
-    public function evaluateLandingGrade(float $fpm): array
+    public function evaluateLandingGrade(float $fpm, ?array $rules = null): array
     {
-        $absFpm = abs($fpm);
+        $rules = $rules ?? Tenant::defaultScoringSettings();
+        $absFpm = (int) round(abs($fpm));
 
-        if ($absFpm <= 124) {
-            return ['grade' => 'Perfect', 'penalty' => 0];
+        if ($absFpm <= ($rules['fpm_butter_threshold'] ?? 120)) {
+            return ['grade' => 'Butter / Perfect', 'penalty' => 0];
         }
-        if ($absFpm <= 180) {
-            return ['grade' => 'Butter / Good', 'penalty' => 0];
+        if ($absFpm <= ($rules['fpm_good_threshold'] ?? 200)) {
+            return ['grade' => 'Smooth / Good', 'penalty' => 0];
         }
-        if ($absFpm <= 350) {
-            return ['grade' => 'Fair', 'penalty' => 10];
+        if ($absFpm <= ($rules['fpm_fair_threshold'] ?? 350)) {
+            return ['grade' => 'Normal / Fair', 'penalty' => 0];
         }
-        if ($absFpm <= 500) {
-            return ['grade' => 'Firm', 'penalty' => 15];
+        if ($absFpm <= ($rules['fpm_firm_threshold'] ?? 500)) {
+            return ['grade' => 'Firm', 'penalty' => (int) ($rules['fpm_firm_penalty'] ?? 10)];
         }
-        if ($absFpm <= 800) {
-            return ['grade' => 'Hard', 'penalty' => 35];
+        if ($absFpm <= ($rules['fpm_hard_threshold'] ?? 650)) {
+            return ['grade' => 'Hard', 'penalty' => (int) ($rules['fpm_hard_penalty'] ?? 30)];
+        }
+        if ($absFpm <= ($rules['fpm_danger_threshold'] ?? 800)) {
+            return ['grade' => 'Very Hard', 'penalty' => (int) ($rules['fpm_reject_penalty'] ?? 60)];
         }
 
-        return ['grade' => 'Structural Danger', 'penalty' => 60];
+        return ['grade' => 'Structural Danger', 'penalty' => (int) ($rules['fpm_danger_penalty'] ?? 100)];
     }
 
     /**
      * Comprehensive PIREP scoring, failure rule evaluation, and status calculation engine.
      *
+     * Metric: Touchdown Rate (FPM) is used for landing evaluations, points, and failure rules.
+     *
      * @param array $data Flight parameters, telemetry summary, and OFP data
+     * @param int|null $tenantId Virtual airline context ID
      * @return array Result containing status, total_score, hours_awarded, points_awarded, failure_reasons, breakdown
      */
-    public function evaluatePirepData(array $data): array
+    public function evaluatePirepData(array $data, ?int $tenantId = null): array
     {
+        $tenantId = $tenantId ?? ($data['tenant_id'] ?? null);
+        $rules = Tenant::defaultScoringSettings();
+
+        if ($tenantId) {
+            $tenant = Tenant::find($tenantId);
+            if ($tenant) {
+                $rules = $tenant->getScoringSettings();
+            }
+        }
+
         $penalties = [];
         $bonuses = [];
         $failureReasons = [];
 
-        // Base Starting Points = 150
-        $startingPoints = 150;
+        // Base Starting Points
+        $startingPoints = (int) ($rules['base_points'] ?? 150);
         $totalScore = $startingPoints;
-        $bonuses[] = ['description' => 'Starting Base Points', 'points' => 150];
+        $bonuses[] = ['description' => 'Starting Base Points', 'points' => $startingPoints];
 
-        // 1. Landing Evaluation (G-Force)
-        $gForce = (float) ($data['touchdown_gforce'] ?? 1.0);
-        $landingGrade = 'Firm';
-        $gPoints = 0;
+        // 1. Landing Evaluation (Touchdown Rate in FPM - PRIMARY METRIC)
+        $rawFpm = (float) ($data['touchdown_fpm'] ?? ($data['touchdown_rate_fpm'] ?? 0.0));
+        $absFpm = (int) round(abs($rawFpm));
+        $landingGrade = 'Normal / Fair';
+        $fpmPoints = 0;
 
-        if ($gForce >= 2.00) {
-            $landingGrade = 'Extremely hard (Excessive G-Force)';
-            $gPoints = -50;
-            $failureReasons[] = 'Invalidated due to Excessive Landing G-Force (>= 2.00 G)';
-        } elseif ($gForce >= 1.70) {
-            $landingGrade = 'Very hard (Excessive G-Force)';
-            $gPoints = -25;
-            $failureReasons[] = 'Rejected due to Excessive Landing G-Force (1.70 G - 1.99 G)';
-        } elseif ($gForce >= 1.50) {
-            $landingGrade = 'Hard';
-            $gPoints = -10;
-        } elseif ($gForce >= 1.40) {
+        $butterThresh = (int) ($rules['fpm_butter_threshold'] ?? 120);
+        $goodThresh = (int) ($rules['fpm_good_threshold'] ?? 200);
+        $fairThresh = (int) ($rules['fpm_fair_threshold'] ?? 350);
+        $firmThresh = (int) ($rules['fpm_firm_threshold'] ?? 500);
+        $hardThresh = (int) ($rules['fpm_hard_threshold'] ?? 650);
+        $rejectThresh = (int) ($rules['fpm_reject_threshold'] ?? 650);
+        $dangerThresh = (int) ($rules['fpm_danger_threshold'] ?? 800);
+
+        if ($absFpm <= $butterThresh) {
+            $landingGrade = 'Butter / Perfect';
+            $fpmPoints = (int) ($rules['fpm_butter_points'] ?? 50);
+        } elseif ($absFpm <= $goodThresh) {
+            $landingGrade = 'Smooth / Good';
+            $fpmPoints = (int) ($rules['fpm_good_points'] ?? 30);
+        } elseif ($absFpm <= $fairThresh) {
+            $landingGrade = 'Normal / Fair';
+            $fpmPoints = (int) ($rules['fpm_fair_points'] ?? 15);
+        } elseif ($absFpm <= $firmThresh) {
             $landingGrade = 'Firm';
-            $gPoints = 0;
-        } elseif ($gForce >= 1.35) {
-            $landingGrade = 'Fair';
-            $gPoints = 10;
-        } elseif ($gForce >= 1.25) {
-            $landingGrade = 'Good';
-            $gPoints = 25;
-        } elseif ($gForce >= 1.20) {
-            $landingGrade = 'Perfect';
-            $gPoints = 50;
-        } elseif ($gForce >= 1.15) {
-            $landingGrade = 'Good';
-            $gPoints = 25;
-        } elseif ($gForce >= 1.10) {
-            $landingGrade = 'Fair';
-            $gPoints = 10;
-        } elseif ($gForce >= 1.05) {
-            $landingGrade = 'Soft';
-            $gPoints = -10;
+            $fpmPoints = -abs((int) ($rules['fpm_firm_penalty'] ?? 10));
+        } elseif ($absFpm <= $hardThresh) {
+            $landingGrade = 'Hard';
+            $fpmPoints = -abs((int) ($rules['fpm_hard_penalty'] ?? 30));
+        } elseif ($absFpm >= $dangerThresh) {
+            $landingGrade = 'Structural Danger';
+            $fpmPoints = -abs((int) ($rules['fpm_danger_penalty'] ?? 100));
+            $failureReasons[] = "Invalidated due to Extreme Landing Rate (-{$absFpm} FPM >= {$dangerThresh} FPM)";
         } else {
-            $landingGrade = 'Very soft';
-            $gPoints = -25;
+            // Between hard and danger (exceeds rejection threshold)
+            $landingGrade = 'Very Hard (Excessive Touchdown Rate)';
+            $fpmPoints = -abs((int) ($rules['fpm_reject_penalty'] ?? 60));
+            $failureReasons[] = "Rejected due to Hard Landing Rate (-{$absFpm} FPM >= {$rejectThresh} FPM)";
         }
 
-        $totalScore += $gPoints;
-        if ($gPoints >= 0) {
-            $bonuses[] = ['description' => "Landing Grade Evaluation ($landingGrade: {$gForce} G)", 'points' => $gPoints];
+        $totalScore += $fpmPoints;
+        $fpmDisplay = $absFpm > 0 ? "-{$absFpm}" : "0";
+        if ($fpmPoints >= 0) {
+            $bonuses[] = [
+                'description' => "Landing Evaluation ({$landingGrade}: {$fpmDisplay} FPM)",
+                'points' => $fpmPoints,
+            ];
         } else {
-            $penalties[] = ['category' => 'Landing Evaluation', 'description' => "Landing Grade ($landingGrade: {$gForce} G)", 'points_deducted' => abs($gPoints)];
+            $penalties[] = [
+                'category' => 'Landing Evaluation',
+                'description' => "Landing Evaluation ({$landingGrade}: {$fpmDisplay} FPM)",
+                'points_deducted' => abs($fpmPoints),
+            ];
         }
 
-        // 2. Engines (Airbus)
+        // 2. Engines Operations
         $startInterval = (int) ($data['engine_start_interval_seconds'] ?? 60);
-        if ($startInterval >= 60) {
-            $totalScore += 10;
-            $bonuses[] = ['description' => 'Engine Start Sequence (>= 00:01:00 between starts)', 'points' => 10];
+        $minStartInterval = (int) ($rules['engine_start_interval_seconds'] ?? 60);
+        if ($startInterval >= $minStartInterval) {
+            $bonusPts = (int) ($rules['engine_start_interval_bonus'] ?? 10);
+            $totalScore += $bonusPts;
+            $bonuses[] = ['description' => "Engine Start Sequence (>= 00:01:00 between starts)", 'points' => $bonusPts];
         }
 
         $enginesShutdownClean = (bool) ($data['engines_shutdown_clean'] ?? true);
         if ($enginesShutdownClean) {
-            $totalScore += 10;
-            $bonuses[] = ['description' => 'Engines Shutdown Properly', 'points' => 10];
+            $shutdownBonus = (int) ($rules['engines_shutdown_clean_bonus'] ?? 10);
+            $totalScore += $shutdownBonus;
+            $bonuses[] = ['description' => 'Engines Shutdown Properly', 'points' => $shutdownBonus];
         }
 
         $warmupSecs = (int) ($data['engine_warmup_seconds'] ?? 180);
-        if ($warmupSecs < 180) {
-            $totalScore -= 30;
-            $penalties[] = ['category' => 'Engine Wear & Tear', 'description' => 'Engines Not Warmed Up (< 00:03:00)', 'points_deducted' => 30];
+        $reqWarmup = (int) ($rules['engine_warmup_seconds'] ?? 180);
+        if ($warmupSecs < $reqWarmup) {
+            $warmupPenalty = (int) ($rules['engine_warmup_penalty'] ?? 30);
+            $totalScore -= $warmupPenalty;
+            $penalties[] = [
+                'category' => 'Engine Wear & Tear',
+                'description' => "Engines Not Warmed Up (< " . sprintf('%02d:%02d', floor($reqWarmup/60), $reqWarmup%60) . ")",
+                'points_deducted' => $warmupPenalty,
+            ];
         }
 
         $cooldownSecs = (int) ($data['engine_cooldown_seconds'] ?? 180);
-        if ($cooldownSecs < 180) {
-            $totalScore -= 30;
-            $penalties[] = ['category' => 'Engine Wear & Tear', 'description' => 'Engines Not Cooled Down (< 00:03:00)', 'points_deducted' => 30];
+        $reqCooldown = (int) ($rules['engine_cooldown_seconds'] ?? 180);
+        if ($cooldownSecs < $reqCooldown) {
+            $cooldownPenalty = (int) ($rules['engine_cooldown_penalty'] ?? 30);
+            $totalScore -= $cooldownPenalty;
+            $penalties[] = [
+                'category' => 'Engine Wear & Tear',
+                'description' => "Engines Not Cooled Down (< " . sprintf('%02d:%02d', floor($reqCooldown/60), $reqCooldown%60) . ")",
+                'points_deducted' => $cooldownPenalty,
+            ];
         }
 
-        // 3. Flaps
+        // 3. Flaps Operations
         $flapsRetractedParking = (bool) ($data['flaps_retracted_before_parking'] ?? true);
         $flapsRetractedEarly = (bool) ($data['flaps_retracted_too_early'] ?? false);
         if ($flapsRetractedParking && !$flapsRetractedEarly) {
-            $totalScore += 10;
-            $bonuses[] = ['description' => 'Flaps Retracted Before Parking', 'points' => 10];
+            $flapsBonus = (int) ($rules['flaps_parking_bonus'] ?? 10);
+            $totalScore += $flapsBonus;
+            $bonuses[] = ['description' => 'Flaps Retracted Before Parking', 'points' => $flapsBonus];
         } else {
-            $totalScore -= 10;
-            $penalties[] = ['category' => 'Flaps Violation', 'description' => 'Flaps retracted too early or not retracted after landing before parking', 'points_deducted' => 10];
+            $flapsPen = (int) ($rules['flaps_retracted_violation_penalty'] ?? 10);
+            $totalScore -= $flapsPen;
+            $penalties[] = [
+                'category' => 'Flaps Violation',
+                'description' => 'Flaps retracted too early or not retracted after landing before parking',
+                'points_deducted' => $flapsPen,
+            ];
         }
 
         $takeoffFlapsSet = (bool) ($data['takeoff_flaps_set'] ?? true);
         if (!$takeoffFlapsSet) {
-            $totalScore -= 10;
-            $penalties[] = ['category' => 'Flaps Violation', 'description' => 'Flaps not set for Takeoff (Min Level: 1+F)', 'points_deducted' => 10];
+            $toFlapsPen = (int) ($rules['takeoff_flaps_penalty'] ?? 10);
+            $totalScore -= $toFlapsPen;
+            $penalties[] = [
+                'category' => 'Flaps Violation',
+                'description' => 'Flaps not set for Takeoff (Min Level: 1+F)',
+                'points_deducted' => $toFlapsPen,
+            ];
         }
 
-        // 4. Flight Length
+        // 4. Flight Duration Bonuses
         $blockMins = (int) ($data['block_time_minutes'] ?? 0);
         $flightLengthPts = 0;
         if ($blockMins < 60) {
-            $flightLengthPts = 10;
+            $flightLengthPts = (int) ($rules['flight_time_bonus_under_1h'] ?? 10);
         } elseif ($blockMins <= 120) {
-            $flightLengthPts = 25;
+            $flightLengthPts = (int) ($rules['flight_time_bonus_1_to_2h'] ?? 25);
         } elseif ($blockMins <= 180) {
-            $flightLengthPts = 50;
+            $flightLengthPts = (int) ($rules['flight_time_bonus_2_to_3h'] ?? 50);
         } elseif ($blockMins <= 240) {
-            $flightLengthPts = 75;
+            $flightLengthPts = (int) ($rules['flight_time_bonus_3_to_4h'] ?? 75);
         } else {
-            $flightLengthPts = 100;
+            $flightLengthPts = (int) ($rules['flight_time_bonus_over_4h'] ?? 100);
         }
         $totalScore += $flightLengthPts;
-        $bonuses[] = ['description' => "Flight Length Bonus ({$blockMins} mins)", 'points' => $flightLengthPts];
+        $bonuses[] = ['description' => "Flight Duration Bonus ({$blockMins} mins)", 'points' => $flightLengthPts];
 
         // 5. Preparation Time (Between 00:20:00 and 00:40:00)
         $prepMins = (int) ($data['prep_time_minutes'] ?? 25);
         if ($prepMins >= 20 && $prepMins <= 40) {
-            $totalScore += 25;
-            $bonuses[] = ['description' => "Preparation Time Bonus ({$prepMins} mins)", 'points' => 25];
+            $prepPts = (int) ($rules['prep_time_bonus'] ?? 25);
+            $totalScore += $prepPts;
+            $bonuses[] = ['description' => "Realistic Preparation Time Bonus ({$prepMins} mins)", 'points' => $prepPts];
         }
 
-        // 6. Fuel - Landing
+        // 6. Fuel Operations
         $landingFuelKg = (float) ($data['landing_fuel_kg'] ?? ($data['fuel_used_kg'] > 0 ? 3000 : 3000));
-        if ($landingFuelKg < 1000) {
-            $totalScore -= 50;
-            $penalties[] = ['category' => 'Fuel Violation', 'description' => 'Landing with too little Fuel (< 1,000 kg)', 'points_deducted' => 50];
-        } elseif ($landingFuelKg > 5000) {
-            $totalScore -= 25;
-            $penalties[] = ['category' => 'Fuel Violation', 'description' => 'Landing with too much Fuel (> 5,000 kg)', 'points_deducted' => 25];
+        $minFuel = (float) ($rules['min_landing_fuel_kg'] ?? 1000);
+        $maxFuel = (float) ($rules['max_landing_fuel_kg'] ?? 5000);
+
+        if ($landingFuelKg < $minFuel) {
+            $lowFuelPen = (int) ($rules['low_fuel_penalty'] ?? 50);
+            $totalScore -= $lowFuelPen;
+            $penalties[] = [
+                'category' => 'Fuel Violation',
+                'description' => "Landing with too little Fuel (< " . number_format($minFuel) . " kg)",
+                'points_deducted' => $lowFuelPen,
+            ];
+        } elseif ($landingFuelKg > $maxFuel) {
+            $excessFuelPen = (int) ($rules['excess_fuel_penalty'] ?? 25);
+            $totalScore -= $excessFuelPen;
+            $penalties[] = [
+                'category' => 'Fuel Violation',
+                'description' => "Landing with too much Fuel (> " . number_format($maxFuel) . " kg)",
+                'points_deducted' => $excessFuelPen,
+            ];
         }
 
         // 7. Diversion Check
@@ -189,22 +254,28 @@ class ScoringService
             $completionPct = (float) ($data['route_completion_pct'] ?? 0.80);
             $deduction = (int) round(150 * (1.0 - $completionPct));
             $totalScore -= $deduction;
-            $penalties[] = ['category' => 'Diversion', 'description' => "Diversion Detected (Landed at {$actualDestIcao} instead of {$destIcao})", 'points_deducted' => $deduction];
+            $penalties[] = [
+                'category' => 'Diversion',
+                'description' => "Diversion Detected (Landed at {$actualDestIcao} instead of {$destIcao})",
+                'points_deducted' => $deduction,
+            ];
             $failureReasons[] = "Diversion Detected: Landed at {$actualDestIcao} instead of {$destIcao}";
         }
 
         // 8. Network Connectivity
         $network = strtoupper($data['network_connected'] ?? 'OFFLINE');
         if (in_array($network, ['VATSIM', 'IVAO', 'POSCON'])) {
-            $totalScore += 50;
-            $bonuses[] = ['description' => "Online Network Bonus ($network)", 'points' => 50];
+            $netBonus = (int) ($rules['online_network_bonus'] ?? 50);
+            $totalScore += $netBonus;
+            $bonuses[] = ['description' => "Online Network Bonus ($network)", 'points' => $netBonus];
         }
 
         // 9. Social (Shared Cockpit)
         $sharedCockpit = (bool) ($data['shared_cockpit'] ?? false);
         if ($sharedCockpit) {
-            $totalScore += 50;
-            $bonuses[] = ['description' => 'Shared Cockpit Flight Bonus', 'points' => 50];
+            $sharedBonus = (int) ($rules['shared_cockpit_bonus'] ?? 50);
+            $totalScore += $sharedBonus;
+            $bonuses[] = ['description' => 'Shared Cockpit Flight Bonus', 'points' => $sharedBonus];
         }
 
         // --- FAILURE RULES EVALUATION ---
@@ -221,13 +292,15 @@ class ScoringService
         }
 
         $simRateMax = (float) ($data['sim_rate_max'] ?? 1.0);
-        if ($simRateMax > 1.0) {
-            $failureReasons[] = "Time Acceleration Detected (Sim Rate: {$simRateMax}x)";
+        $maxAllowedSimRate = (float) ($rules['max_sim_rate'] ?? 1.0);
+        if ($simRateMax > $maxAllowedSimRate) {
+            $failureReasons[] = "Time Acceleration Detected (Sim Rate: {$simRateMax}x > allowed {$maxAllowedSimRate}x)";
         }
 
         $bounceCount = (int) ($data['bounce_count'] ?? 0);
-        if ($bounceCount > 1) {
-            $failureReasons[] = "Multiple Landings or Bounce Detected ({$bounceCount} bounces)";
+        $maxAllowedBounces = (int) ($rules['max_bounces'] ?? 1);
+        if ($bounceCount > $maxAllowedBounces) {
+            $failureReasons[] = "Multiple Landings or Bounce Detected ({$bounceCount} bounces > max {$maxAllowedBounces})";
         }
 
         $schedMins = (int) ($data['scheduled_time_minutes'] ?? $blockMins);
@@ -254,7 +327,8 @@ class ScoringService
             $failureReasons[] = 'Random PIREP Review Sampled';
         }
 
-        if ($totalScore < 0) {
+        $invalidateOnNegative = (bool) ($rules['invalidate_on_negative_score'] ?? true);
+        if ($totalScore < 0 && $invalidateOnNegative) {
             $failureReasons[] = "Negative Points Awarded ({$totalScore} pts)";
         }
 
@@ -269,15 +343,16 @@ class ScoringService
 
         foreach ($failureReasons as $reason) {
             if (
-                str_contains($reason, '>= 2.00 G') ||
+                str_contains($reason, 'Extreme Landing Rate') ||
                 str_contains($reason, 'Gear Up') ||
                 str_contains($reason, 'Mid-air Refueling') ||
                 str_contains($reason, 'Livery is Rejected') ||
                 str_contains($reason, 'permitted scheduled Flight Length') ||
-                str_contains($reason, 'Negative Points')
+                str_contains($reason, 'Negative Points') ||
+                str_contains($reason, 'Time Acceleration Detected')
             ) {
                 $isInvalidated = true;
-            } elseif (str_contains($reason, '1.70 G')) {
+            } elseif (str_contains($reason, 'Hard Landing Rate')) {
                 $isRejected = true;
             } else {
                 $isAwaitingReview = true;

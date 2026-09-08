@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AirlinePermission extends Model
@@ -10,11 +11,28 @@ class AirlinePermission extends Model
     protected $table = 'airline_permissions';
 
     protected $fillable = [
+        'tenant_id',
         'name',
         'slug',
         'group',
         'description',
     ];
+
+    /**
+     * Virtual Airline owning this custom permission (null for global defaults).
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    /**
+     * Check if this is an airline-specific custom permission.
+     */
+    public function isCustom(): bool
+    {
+        return !is_null($this->tenant_id);
+    }
 
     /**
      * Roles holding this permission.
@@ -62,6 +80,7 @@ class AirlinePermission extends Model
             // Operations & Settings
             ['name' => 'View VA Settings', 'slug' => 'view_settings', 'group' => 'Settings', 'description' => 'View virtual airline configuration and details'],
             ['name' => 'Manage Airline Settings', 'slug' => 'manage_airline_settings', 'group' => 'Settings', 'description' => 'Update branding, theme colors, and SimBrief defaults'],
+            ['name' => 'Manage Scoring Criteria', 'slug' => 'manage_scoring', 'group' => 'Settings', 'description' => 'Configure PIREP scoring rules and landing thresholds'],
             ['name' => 'Manage Ranks', 'slug' => 'manage_ranks', 'group' => 'Ranks & Roles', 'description' => 'Configure flight-hour rank criteria and points'],
             ['name' => 'Manage Roles & Staff', 'slug' => 'manage_roles', 'group' => 'Ranks & Roles', 'description' => 'Create custom roles, assign permissions and honorary ranks'],
             ['name' => 'Manage Pilots', 'slug' => 'manage_pilots', 'group' => 'Pilots', 'description' => 'Manage enrolled pilots and callsign assignments'],
@@ -76,7 +95,10 @@ class AirlinePermission extends Model
     {
         foreach (static::defaultPermissions() as $item) {
             static::firstOrCreate(
-                ['slug' => $item['slug']],
+                [
+                    'slug' => $item['slug'],
+                    'tenant_id' => null,
+                ],
                 [
                     'name'        => $item['name'],
                     'group'       => $item['group'],

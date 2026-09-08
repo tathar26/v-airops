@@ -415,7 +415,7 @@
             <div class="bg-[#12161F] border border-white/10 rounded-xl overflow-hidden shadow-xl">
                 <div class="px-5 py-3 bg-[#181D29] border-b border-tenant-accent/40 border-t-2 text-xs text-gray-400 font-bold tracking-wider flex justify-between items-center">
                     <span>POINTS &amp; SCORING</span>
-                    <span class="text-xs font-mono font-bold {{ $scoreVal >= 90 ? 'text-green-400' : ($scoreVal >= 70 ? 'text-yellow-400' : 'text-red-400') }}">{{ $scoreVal }} / 100 PTS</span>
+                    <span class="text-xs font-mono font-bold {{ $scoreVal >= 90 ? 'text-green-400' : ($scoreVal >= 70 ? 'text-yellow-400' : 'text-red-400') }}">{{ $scoreVal }} PTS</span>
                 </div>
                 <div class="p-6 bg-[#12161F] space-y-4 text-xs font-mono">
                     <div class="flex justify-between items-center">

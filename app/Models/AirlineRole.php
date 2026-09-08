@@ -88,11 +88,17 @@ class AirlineRole extends Model
     public function syncPermissions(array $permissionSlugsOrIds): void
     {
         $ids = [];
+        $tenantId = $this->tenant_id;
+
         foreach ($permissionSlugsOrIds as $item) {
             if (is_numeric($item)) {
                 $ids[] = (int) $item;
             } else {
-                $perm = AirlinePermission::where('slug', $item)->first();
+                $perm = AirlinePermission::where(function ($q) use ($tenantId) {
+                    $q->whereNull('tenant_id')
+                      ->orWhere('tenant_id', $tenantId);
+                })->where('slug', $item)->first();
+
                 if ($perm) {
                     $ids[] = $perm->id;
                 }

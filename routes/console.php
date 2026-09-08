@@ -65,7 +65,7 @@ Artisan::command('pireps:rescore-all', function () {
             'average_time_minutes' => (int) ($fLog['block_time_minutes'] ?? $pirep->flight_time ?? 0),
         ];
 
-        $res = $scoringService->evaluatePirepData($evalData);
+        $res = $scoringService->evaluatePirepData($evalData, $pirep->tenant_id);
 
         // Keep manual staff acceptances/invalidations if status was already staff-reviewed
         $currentStatus = strtolower($pirep->status);

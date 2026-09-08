@@ -35,10 +35,20 @@ class PirepController extends Controller
             return response()->json(['detail' => 'PIREP already submitted for this flight'], 400);
         }
 
+        // Find active booking and resolve tenant context
+        $booking = Booking::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
+            ->latest('id')
+            ->first();
+
+        $tenantId = $booking?->tenant_id ?? ($user->getActiveTenantId() ?? $user->tenant_id);
+
         // 1. Evaluate flight performance through comprehensive Scoring Engine & Failure Rules
         $dbEvents = AcarsEvent::where('flight_id', $flightId)->get();
 
         $evalData = [
+            'tenant_id' => $tenantId,
             'touchdown_fpm' => (float) $request->input('touchdown_fpm'),
             'touchdown_gforce' => (float) $request->input('touchdown_gforce', 1.0),
             'gear_up_landing' => (bool) $request->input('gear_up_landing', false),
@@ -65,10 +75,10 @@ class PirepController extends Controller
             'average_time_minutes' => (int) ($flight->average_time_minutes ?? $request->input('block_time_minutes')),
         ];
 
-        $evalResult = $this->scoringService->evaluatePirepData($evalData);
+        $evalResult = $this->scoringService->evaluatePirepData($evalData, $tenantId);
 
         // 2. Atomically persist PIREP, update flight status, clean up booking, and update pilot stats
-        $pirep = DB::transaction(function () use ($request, $flight, $user, $evalResult, $dbEvents) {
+        $pirep = DB::transaction(function () use ($request, $flight, $user, $evalResult, $dbEvents, $booking, $tenantId) {
             $aircraftTitle = $request->input('aircraft_title') 
                 ?? ($request->input('livery') 
                 ?? ($flight->aircraft_title ?? ($flight->aircraft_type ?? 'Aircraft')));
@@ -107,15 +117,6 @@ class PirepController extends Controller
 
             // Mark active flight as completed so it is removed from active radar
             $flight->update(['status' => 'completed']);
-
-            // Find and clean up active booking for this user
-            $booking = Booking::withoutGlobalScopes()
-                ->where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'dispatched', 'in_flight'])
-                ->latest('id')
-                ->first();
-
-            $tenantId = $booking?->tenant_id ?? ($user->getActiveTenantId() ?? $user->tenant_id);
 
             // Also create main VA Pirep record for tenant statistics
             if ($tenantId) {
