@@ -325,7 +325,11 @@ class CustomAuthController extends Controller
 
         // 1. Verification Guard
         if (!$user->email_verified_at) {
-            Auth::logout();
+            if (Auth::guard() instanceof \Illuminate\Contracts\Auth\StatefulGuard) {
+                Auth::guard()->logout();
+            } else {
+                Auth::guard('web')->logout();
+            }
             return redirect()->route('auth.verify-notice')->withErrors([
                 'verification' => 'Your email address is unverified. Please check your inbox for the verification link.',
             ]);

@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.29] - 2026-09-08
+
+### 🐛 Account Deletion 500 Error Fix
+- **Safe Authentication Guard Logout:** Fixed a 500 Server Error (`BadMethodCallException: Method Illuminate\Auth\RequestGuard::logout does not exist`) when pilots delete their account by checking guard statefulness and explicitly targeting `Auth::guard('web')->logout()`.
+- **Session & Pivot Cleanup:** Added explicit session invalidation (`request()->session()->invalidate()`, `regenerateToken()`) and `UserAirline` pivot cleanup during pilot account deletion.
+
+---
+
 ## [v1.1.28] - 2026-09-08
 
 ### 📸 Authentic Live Site Screenshots (No AI Mockups)

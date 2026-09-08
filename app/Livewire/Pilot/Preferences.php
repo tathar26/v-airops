@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\PilotProfile;
 use App\Models\Pirep;
 use App\Models\UserStatistic;
+use App\Models\UserAirline;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -189,17 +190,32 @@ class Preferences extends Component
             ->where('tenant_id', $tenantId)
             ->delete();
 
+        // Delete UserAirline pivot for this VA
+        UserAirline::where('user_id', $user->id)
+            ->where('tenant_id', $tenantId)
+            ->delete();
+
         // Check if user has any other profiles
         $otherProfiles = PilotProfile::where('user_id', $user->id)->count();
 
         if ($otherProfiles === 0) {
             // Completely delete user if they are in no other VAs
-            Auth::logout();
+            if (Auth::guard() instanceof \Illuminate\Contracts\Auth\StatefulGuard) {
+                Auth::guard()->logout();
+            } else {
+                Auth::guard('web')->logout();
+            }
+
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
             $user->delete();
+
             return redirect('/');
         } else {
             $newProfile = PilotProfile::where('user_id', $user->id)->first();
             $user->update(['tenant_id' => $newProfile->tenant_id]);
+            session(['active_airline_id' => $newProfile->tenant_id]);
             $this->showDeleteModal = false;
             session()->flash('message', 'Pilot account deleted for this Virtual Airline.');
             return redirect()->route('dashboard');
