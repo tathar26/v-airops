@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+      - develop
+  workflow_dispatch:
 
 jobs:
   build:
@@ -33,7 +35,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: tathar26/v-ops:devel
+          tags: |
+            tathar26/v-ops:develop
+            tathar26/v-ops:devel
           build-args: |
             APP_VERSION=${{ env.GIT_VER }}
           cache-from: type=registry,ref=tathar26/v-ops:buildcache
