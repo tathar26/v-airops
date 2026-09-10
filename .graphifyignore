@@ -1,0 +1,4 @@
+# Ignore compiled/bundled vendor assets and node_modules from AST graph
+public/vendor/
+node_modules/
+vendor/

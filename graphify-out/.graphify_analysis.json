@@ -4108,11 +4108,22 @@
       "why": "connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "cleanup()",
-      "target": "effect3()",
+      "source": "[attribute]()",
+      "target": "el()",
       "source_files": [
-        "public/vendor/livewire/livewire.js",
-        "public/vendor/livewire/livewire.esm.js"
+        "public/vendor/livewire/livewire.esm.js",
+        "public/vendor/livewire/livewire.min.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "indirect_call",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "set()",
+      "target": "el()",
+      "source_files": [
+        "public/vendor/livewire/livewire.esm.js",
+        "public/vendor/livewire/livewire.min.js"
       ],
       "confidence": "INFERRED",
       "relation": "indirect_call",
@@ -4122,18 +4133,7 @@
       "source": "_next()",
       "target": "r()",
       "source_files": [
-        "public/vendor/livewire/livewire.esm.js",
-        "public/vendor/livewire/livewire.min.js"
-      ],
-      "confidence": "INFERRED",
-      "relation": "indirect_call",
-      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
-    },
-    {
-      "source": "_throw()",
-      "target": "r()",
-      "source_files": [
-        "public/vendor/livewire/livewire.esm.js",
+        "public/vendor/livewire/livewire.js",
         "public/vendor/livewire/livewire.min.js"
       ],
       "confidence": "INFERRED",
@@ -4141,8 +4141,41 @@
       "why": "inferred connection - not explicitly stated in source; bridges separate communities"
     }
   ],
-  "tokens": {
-    "input": 0,
-    "output": 0
-  }
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `el()` connect `el` to `.patchChildren`, `livewire.esm.js`, `livewire.min.js`, `\"node_modules/@alpinejs/anchor/dist/module.cjs.js\"`, `call`, `t`, `call`, `call`, `push`?",
+      "why": "High betweenness centrality (0.151) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `\"node_modules/alpinejs/dist/module.cjs.js\"()` connect `\"node_modules/alpinejs/dist/module.cjs.js\"` to `livewire.esm.js`, `navigate_default`, `createGetter`, `\"node_modules/@alpinejs/anchor/dist/module.cjs.js\"`, `dispatchEvent`, `call`, `trim`, `push`, `\"node_modules/@alpinejs/morph/dist/module.cjs.js\"`, `i`?",
+      "why": "High betweenness centrality (0.070) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `get()` connect `call` to `livewire.esm.js`, `\"node_modules/alpinejs/dist/module.cjs.js\"`, `createGetter`, `el`, `\"node_modules/@alpinejs/anchor/dist/module.cjs.js\"`, `dispatchEvent`, `push`, `i`, `\"node_modules/@alpinejs/morph/dist/module.cjs.js\"`?",
+      "why": "High betweenness centrality (0.046) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 61 inferred relationships involving `\"node_modules/alpinejs/dist/module.cjs.js\"()` (e.g. with `evaluate()` and `setStyles()`) actually correct?",
+      "why": "`\"node_modules/alpinejs/dist/module.cjs.js\"()` has 61 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 18 inferred relationships involving `t()` (e.g. with `au()` and `cu()`) actually correct?",
+      "why": "`t()` has 18 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 8 inferred relationships involving `\"node_modules/@alpinejs/anchor/dist/module.cjs.js\"()` (e.g. with `convertOffsetParentRelativeRectToViewportRelativeRect()` and `getClientRects()`) actually correct?",
+      "why": "`\"node_modules/@alpinejs/anchor/dist/module.cjs.js\"()` has 8 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `acknowledgeNotam({{ $selectedNotam->id }})`, `closeModal`, `openNotam({{ $notam->id }})` to the rest of the system?",
+      "why": "210 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
 }

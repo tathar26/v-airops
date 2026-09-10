@@ -28,4 +28,5 @@ Thumbs.db
 
 # Graphify
 graphify-out/cost.json
-# graphify-out/cache/
+graphify-out/cache/
+graphify-out/202*/

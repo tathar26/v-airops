@@ -384,10 +384,10 @@
     "semantic_hash": "ef08857ccb88d6dd1560dad76dd8b572"
   },
   "app/Livewire/TenantSettings.php": {
-    "mtime": 1788868603.8610663,
-    "seen": 1789045085.9180758,
-    "ast_hash": "448486db636050061f05d107c48ae8c1",
-    "semantic_hash": "448486db636050061f05d107c48ae8c1"
+    "mtime": 1789046716.675194,
+    "seen": 1789047050.41085,
+    "ast_hash": "a7487556ccf047fe4e523c6440d4f6bc",
+    "semantic_hash": ""
   },
   "app/Models/AcarsActiveFlight.php": {
     "mtime": 1787166654.586443,
@@ -528,10 +528,10 @@
     "semantic_hash": "fa62f7ab900b1f3bd73ed2c91c02ef67"
   },
   "app/Models/Tenant.php": {
-    "mtime": 1788861081.1572614,
-    "seen": 1789045085.9180758,
-    "ast_hash": "85da9f2426d41232be167e50336a9ee6",
-    "semantic_hash": "85da9f2426d41232be167e50336a9ee6"
+    "mtime": 1789046546.147885,
+    "seen": 1789047050.41085,
+    "ast_hash": "bae03c2923b64da44be7a715f1dc9f55",
+    "semantic_hash": ""
   },
   "app/Models/TenantHub.php": {
     "mtime": 1786566395.3700376,
@@ -540,10 +540,10 @@
     "semantic_hash": "f5e52e614116d6362698412aed4edbde"
   },
   "app/Models/User.php": {
-    "mtime": 1788868595.512242,
-    "seen": 1789045085.9180758,
-    "ast_hash": "b840c89da7b2b59b43d2d40627f615fc",
-    "semantic_hash": "b840c89da7b2b59b43d2d40627f615fc"
+    "mtime": 1789046492.348475,
+    "seen": 1789047050.41085,
+    "ast_hash": "f71b94402e0be37b8bad9aa5d9127e2f",
+    "semantic_hash": ""
   },
   "app/Models/UserAirline.php": {
     "mtime": 1786965481.4754386,
@@ -1235,30 +1235,6 @@
     "ast_hash": "d8eda274115af5fd2aaa8230af329ef7",
     "semantic_hash": "d8eda274115af5fd2aaa8230af329ef7"
   },
-  "public/vendor/livewire/livewire.esm.js": {
-    "mtime": 1786572729.8542652,
-    "seen": 1789045085.9180758,
-    "ast_hash": "60b5d365bb707262ea2b0e3fcede1509",
-    "semantic_hash": "60b5d365bb707262ea2b0e3fcede1509"
-  },
-  "public/vendor/livewire/livewire.js": {
-    "mtime": 1786572729.9948995,
-    "seen": 1789045085.9180758,
-    "ast_hash": "d5c497158668300d904c7e78efeabff0",
-    "semantic_hash": "d5c497158668300d904c7e78efeabff0"
-  },
-  "public/vendor/livewire/livewire.min.js": {
-    "mtime": 1786572730.0481086,
-    "seen": 1789045085.9180758,
-    "ast_hash": "6649018180471b81527d5ccdaa8889af",
-    "semantic_hash": "6649018180471b81527d5ccdaa8889af"
-  },
-  "public/vendor/livewire/manifest.json": {
-    "mtime": 1786572730.1581435,
-    "seen": 1789045085.9180758,
-    "ast_hash": "4c4e902851779815c0ba02ef60af59cf",
-    "semantic_hash": "4c4e902851779815c0ba02ef60af59cf"
-  },
   "resources/js/app.js": {
     "mtime": 1779750712.0,
     "seen": 1789045085.9180758,
@@ -1770,10 +1746,10 @@
     "semantic_hash": "a314ff0b83547134e6ff89cb318d791d"
   },
   "resources/views/livewire/tenant-settings.blade.php": {
-    "mtime": 1788868615.4002593,
-    "seen": 1789045085.9180758,
-    "ast_hash": "0720b72a32d03d3c58477d205d443923",
-    "semantic_hash": "0720b72a32d03d3c58477d205d443923"
+    "mtime": 1789046978.6413672,
+    "seen": 1789047050.411851,
+    "ast_hash": "5fbdce78c56869d71a79677903f35a83",
+    "semantic_hash": ""
   },
   "resources/views/navigation-menu.blade.php": {
     "mtime": 1788858577.5919821,
@@ -1990,5 +1966,317 @@
     "seen": 1789045085.9180758,
     "ast_hash": "d3719c59643645fd882c0e053a6e66fb",
     "semantic_hash": "d3719c59643645fd882c0e053a6e66fb"
+  },
+  "app/Livewire/Concerns/WithTenantGeneralSettings.php": {
+    "mtime": 1789046682.2422743,
+    "seen": 1789047050.41085,
+    "ast_hash": "a02c78e6ffddf123d60d9d74ba73e918",
+    "semantic_hash": ""
+  },
+  "app/Livewire/Concerns/WithTenantRolesAndPermissions.php": {
+    "mtime": 1789046588.723346,
+    "seen": 1789047050.41085,
+    "ast_hash": "e802baa74cf1822fa7bdd127dc9e742b",
+    "semantic_hash": ""
+  },
+  "app/Livewire/Concerns/WithTenantScoringSettings.php": {
+    "mtime": 1789046657.0153449,
+    "seen": 1789047050.41085,
+    "ast_hash": "817dd630ecded6224146585ce1ef5588",
+    "semantic_hash": ""
+  },
+  "app/Livewire/Concerns/WithTenantUserManagement.php": {
+    "mtime": 1789046612.7766485,
+    "seen": 1789047050.41085,
+    "ast_hash": "3aa84cc50cdf93aa8a2b400041e3d118",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasAirlineNotams.php": {
+    "mtime": 1789046393.1186633,
+    "seen": 1789047050.41085,
+    "ast_hash": "ff9322b1bc057d126502393ad7f0b1ea",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasAirlineRolesAndPermissions.php": {
+    "mtime": 1789046380.3746116,
+    "seen": 1789047050.41085,
+    "ast_hash": "3ebe42a88bd247faa977b2d93815a69b",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasCallsignMappings.php": {
+    "mtime": 1789046519.997494,
+    "seen": 1789047050.41085,
+    "ast_hash": "fe5bf51962c71691899526c8fe099ca9",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasPilotRanks.php": {
+    "mtime": 1789046405.1307714,
+    "seen": 1789047050.41085,
+    "ast_hash": "201a431d08bfadd171e38bbce30119d2",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasTenantContext.php": {
+    "mtime": 1789046455.6014967,
+    "seen": 1789047050.41085,
+    "ast_hash": "ee3836736ec859124713a66bc586a651",
+    "semantic_hash": ""
+  },
+  "app/Models/Concerns/HasTenantScoring.php": {
+    "mtime": 1789046536.367405,
+    "seen": 1789047050.41085,
+    "ast_hash": "d7ef68e65eac24a75630618602168234",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/general-tab.blade.php": {
+    "mtime": 1789046950.0087569,
+    "seen": 1789047050.411851,
+    "ast_hash": "3aa3e74404c23142eaffb03d6408a794",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/hubs-tab.blade.php": {
+    "mtime": 1789046950.0228174,
+    "seen": 1789047050.411851,
+    "ast_hash": "2db0cce88896409c371e1c426884bba6",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/modals.blade.php": {
+    "mtime": 1789046950.0490258,
+    "seen": 1789047050.411851,
+    "ast_hash": "a5f48ec99f144283eb1a7b2353fefb94",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/roles-tab.blade.php": {
+    "mtime": 1789046950.0273545,
+    "seen": 1789047050.411851,
+    "ast_hash": "d0948aa3646d248d76c89a624f8f52d8",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/scoring-tab.blade.php": {
+    "mtime": 1789046950.0410256,
+    "seen": 1789047050.411851,
+    "ast_hash": "6b94982b58b18478e4000b4defb237c2",
+    "semantic_hash": ""
+  },
+  "resources/views/livewire/tenant-settings/partials/users-tab.blade.php": {
+    "mtime": 1789046950.0348601,
+    "seen": 1789047050.411851,
+    "ast_hash": "c95f86ffcdf23e0971de989e656f8b88",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1789044969.927229,
+    "seen": 1789047050.411851,
+    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1789044969.9402359,
+    "seen": 1789047050.411851,
+    "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
+    "semantic_hash": ""
+  },
+  ".gitea/workflows/build-devel.yml": {
+    "mtime": 1787696345.6967776,
+    "seen": 1789047050.411851,
+    "ast_hash": "f700165a14b65e1a4bd6f40185319a32",
+    "semantic_hash": ""
+  },
+  ".gitea/workflows/build-prod.yml": {
+    "mtime": 1788859009.2950437,
+    "seen": 1789047050.411851,
+    "ast_hash": "67ed30ea297b15153836af54bef4885e",
+    "semantic_hash": ""
+  },
+  ".github/workflows/build-devel.yml": {
+    "mtime": 1788858450.7887094,
+    "seen": 1789047050.411851,
+    "ast_hash": "f700165a14b65e1a4bd6f40185319a32",
+    "semantic_hash": ""
+  },
+  ".github/workflows/build-prod.yml": {
+    "mtime": 1788859015.8235362,
+    "seen": 1789047050.411851,
+    "ast_hash": "67ed30ea297b15153836af54bef4885e",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1788868637.7557242,
+    "seen": 1789047050.411851,
+    "ast_hash": "4ab7707201cd6925c8d79acd340f52e3",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1788867579.0656295,
+    "seen": 1789047050.411851,
+    "ast_hash": "9f07d0d5198bed2f42821edb61552dd3",
+    "semantic_hash": ""
+  },
+  "docker-compose.local.yml": {
+    "mtime": 1788524905.83125,
+    "seen": 1789047050.411851,
+    "ast_hash": "b4f8f9b91ca4182ca92a6095dfccce96",
+    "semantic_hash": ""
+  },
+  "docker-compose.prod.yml": {
+    "mtime": 1788524918.4395308,
+    "seen": 1789047050.411851,
+    "ast_hash": "1f98cefd2c9d36cc2ea00435b42bf9cf",
+    "semantic_hash": ""
+  },
+  "docker-compose.staging.yml": {
+    "mtime": 1788524912.2505891,
+    "seen": 1789047050.411851,
+    "ast_hash": "81a66de025653a502db3193f196674fb",
+    "semantic_hash": ""
+  },
+  "public/robots.txt": {
+    "mtime": 1787177919.091451,
+    "seen": 1789047050.411851,
+    "ast_hash": "e20b47e40897ffe0880a28f6ca4cd9f1",
+    "semantic_hash": ""
+  },
+  "resources/markdown/policy.md": {
+    "mtime": 1786452518.3044212,
+    "seen": 1789047050.411851,
+    "ast_hash": "1076df2a46c70636274b5f195695c2b2",
+    "semantic_hash": ""
+  },
+  "resources/markdown/terms.md": {
+    "mtime": 1786452518.2725878,
+    "seen": 1789047050.411851,
+    "ast_hash": "2db3fecb7a4eb9ca6775307837a2368e",
+    "semantic_hash": ""
+  },
+  "wiki/Airline-Management.md": {
+    "mtime": 1788859887.64968,
+    "seen": 1789047050.411851,
+    "ast_hash": "fe242ea0e377b8f051bdec35b44b49fa",
+    "semantic_hash": ""
+  },
+  "wiki/Configuration.md": {
+    "mtime": 1788524965.8636632,
+    "seen": 1789047050.411851,
+    "ast_hash": "8f0853df2d636cb7aa4f199273b1ec9c",
+    "semantic_hash": ""
+  },
+  "wiki/Deployment.md": {
+    "mtime": 1787211547.7252803,
+    "seen": 1789047050.411851,
+    "ast_hash": "0e41d26a36bad14459784ffa6d4b2abe",
+    "semantic_hash": ""
+  },
+  "wiki/Docker-Install.md": {
+    "mtime": 1787211556.5997505,
+    "seen": 1789047050.411851,
+    "ast_hash": "e700af5b62e015e4081f646b2bf3dcd8",
+    "semantic_hash": ""
+  },
+  "wiki/Features.md": {
+    "mtime": 1787211539.7707584,
+    "seen": 1789047050.411851,
+    "ast_hash": "ef057d9670239e895b0e16aef89af254",
+    "semantic_hash": ""
+  },
+  "wiki/Home.md": {
+    "mtime": 1788859910.2835007,
+    "seen": 1789047050.411851,
+    "ast_hash": "78979c1e92c9230e31a23f705e381509",
+    "semantic_hash": ""
+  },
+  "wiki/Troubleshooting.md": {
+    "mtime": 1787211569.6006436,
+    "seen": 1789047050.411851,
+    "ast_hash": "39b9a43739649259e960ae0b6a300bbb",
+    "semantic_hash": ""
+  },
+  "wiki/User-Guide.md": {
+    "mtime": 1788867588.7305346,
+    "seen": 1789047050.411851,
+    "ast_hash": "c82dbaba5049ba9e56968d10028642ff",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-01.png": {
+    "mtime": 1788867002.995226,
+    "seen": 1789047050.411851,
+    "ast_hash": "9236f2d17f529e9acdd9801b6afc44f3",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-02.png": {
+    "mtime": 1788867002.998216,
+    "seen": 1789047050.411851,
+    "ast_hash": "b8acb34067e27cc41c5d02adf99af24c",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-03.png": {
+    "mtime": 1788867003.0022733,
+    "seen": 1789047050.411851,
+    "ast_hash": "44d3ca1431c570ded0059da436c7df88",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-04.png": {
+    "mtime": 1788867003.0058146,
+    "seen": 1789047050.411851,
+    "ast_hash": "6031823017c93bc893f6d1299b4f35a1",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-staff.png": {
+    "mtime": 1788867003.016004,
+    "seen": 1789047050.411851,
+    "ast_hash": "367d9b4bf2530f3c07a8caed2407950a",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-tre.png": {
+    "mtime": 1788867003.0134902,
+    "seen": 1789047050.411851,
+    "ast_hash": "bd3a382139c3fefcb3c5163d49d48647",
+    "semantic_hash": ""
+  },
+  "public/images/epaulettes/epaulette-tri.png": {
+    "mtime": 1788867003.0090518,
+    "seen": 1789047050.411851,
+    "ast_hash": "d949b75bedbbe849554c54bcc28c4905",
+    "semantic_hash": ""
+  },
+  "public/images/logo.png": {
+    "mtime": 1787313387.5704908,
+    "seen": 1789047050.411851,
+    "ast_hash": "d0e461d5607193e88c33e8e08c26bf2d",
+    "semantic_hash": ""
+  },
+  "public/images/screenshots/console-dashboard.png": {
+    "mtime": 1788818520.5520768,
+    "seen": 1789047050.411851,
+    "ast_hash": "0d5a98f027e8e31892a59d98ae692344",
+    "semantic_hash": ""
+  },
+  "public/images/screenshots/live-radar-map.png": {
+    "mtime": 1788818520.7649508,
+    "seen": 1789047050.411851,
+    "ast_hash": "f635783a23f9497beebc16481601ff77",
+    "semantic_hash": ""
+  },
+  "public/images/screenshots/pilot-portal.png": {
+    "mtime": 1788818520.6418667,
+    "seen": 1789047050.411851,
+    "ast_hash": "79d06e47a708ae888923dad7b7fdf368",
+    "semantic_hash": ""
+  },
+  "public/images/v-air-ops-logo-cropped.png": {
+    "mtime": 1787313641.1178753,
+    "seen": 1789047050.411851,
+    "ast_hash": "e749ae15702a8d87a6fae13b3c41ddf9",
+    "semantic_hash": ""
+  },
+  "public/images/v-air-ops-logo.png": {
+    "mtime": 1787313387.5704908,
+    "seen": 1789047050.411851,
+    "ast_hash": "d0e461d5607193e88c33e8e08c26bf2d",
+    "semantic_hash": ""
+  },
+  "public/images/v-air-ops-mark.png": {
+    "mtime": 1787313641.135451,
+    "seen": 1789047050.411851,
+    "ast_hash": "d70446bb185c01127b1ef219671d7304",
+    "semantic_hash": ""
   }
 }
