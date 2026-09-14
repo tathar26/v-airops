@@ -112,13 +112,19 @@
 
         <!-- Activities -->
         @php
-            $activeActivitiesCount = auth()->check() && auth()->user()->tenant_id
-                ? \App\Models\Activity::where('tenant_id', auth()->user()->tenant_id)
-                    ->where('status', 'active')
-                    ->where('is_published', true)
+            $tenantId = auth()->check() ? (auth()->user()->getActiveTenantId() ?? auth()->user()->tenant_id) : null;
+            $activeActivitiesCount = 0;
+            if ($tenantId && \Illuminate\Support\Facades\Schema::hasTable('activities')) {
+                $nowUtc = \Carbon\Carbon::now('UTC');
+                $activeActivitiesCount = \App\Models\Activity::where('tenant_id', $tenantId)
+                    ->where('is_active', true)
                     ->where('type', '!=', 'curated_roster')
-                    ->count()
-                : 0;
+                    ->where('end_at', '>=', $nowUtc)
+                    ->where(function ($q) use ($nowUtc) {
+                        $q->whereNull('show_from')->orWhere('show_from', '<=', $nowUtc);
+                    })
+                    ->count();
+            }
         @endphp
         <li>
             <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}">
