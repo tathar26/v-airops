@@ -2,6 +2,12 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.40] - 2026-09-14
+
+### 🐛 Hotfix: PHP Array Syntax & Blade Directive Encapsulation in Homepage JSON-LD
+- **PHP Array Key-Value Syntax Fix:** Resolved fatal PHP parser syntax error caused by stray JSON colons (`:`) in nested array keys by converting all attributes (`@id`, `name`, `applicationCategory`, `operatingSystem`, `url`, `offers`, `price`, `priceCurrency`, `description`) to standard PHP array syntax (`=>`).
+- **Directive Compiler Isolation:** Encapsulated `$schemaData` inside an isolated `@php ... @endphp` block so Blade's statement compiler ignores Schema.org `@context` directives completely.
+
 ## [v1.1.39] - 2026-09-14
 
 ### 🐛 Hotfix: Blade Directive Parse Error in Homepage JSON-LD

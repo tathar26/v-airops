@@ -29,43 +29,47 @@
     <meta name="twitter:description" content="Next-generation virtual airline operations platform featuring live ACARS radar tracking, SimBrief dispatch, and pilot analytics.">
     <meta name="twitter:image" content="https://v-airops.artmex-hosting.com/images/screenshots/console-dashboard.png">
 
-    <!-- Schema.org JSON-LD Structured Data for Search Engines -->
-    <script type="application/ld+json">
-    {!! json_encode([
-        "@context" => "https://schema.org",
-        "@graph" => [
+@php
+    $schemaData = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
             [
-                "@type" => "WebSite",
-                "@id" => "https://v-airops.artmex-hosting.com/#website",
-                "url" => "https://v-airops.artmex-hosting.com/",
-                "name" => "V-Air Ops",
-                "description" => "Virtual Airline Operations Management System & ACARS Live Flight Tracking Platform.",
-                "publisher" => [
-                    "@type" => "Organization",
-                    "name" => "V-Air Ops",
-                    "url" => "https://v-airops.artmex-hosting.com/",
-                    "logo" => [
-                        "@type" => "ImageObject",
-                        "url" => "https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png"
-                    ]
-                ]
+                '@type' => 'WebSite',
+                '@id' => 'https://v-airops.artmex-hosting.com/#website',
+                'url' => 'https://v-airops.artmex-hosting.com/',
+                'name' => 'V-Air Ops',
+                'description' => 'Virtual Airline Operations Management System & ACARS Live Flight Tracking Platform.',
+                'publisher' => [
+                    '@type' => 'Organization',
+                    'name' => 'V-Air Ops',
+                    'url' => 'https://v-airops.artmex-hosting.com/',
+                    'logo' => [
+                        '@type' => 'ImageObject',
+                        'url' => 'https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png',
+                    ],
+                ],
             ],
             [
-                "@type" => "SoftwareApplication",
-                "@id": "https://v-airops.artmex-hosting.com/#software",
-                "name": "V-Air Ops Platform",
-                "applicationCategory": "BusinessApplication",
-                "operatingSystem": "Web, Windows",
-                "url": "https://v-airops.artmex-hosting.com/",
-                "offers" => [
-                    "@type": "Offer",
-                    "price" => "0",
-                    "priceCurrency" => "USD"
+                '@type' => 'SoftwareApplication',
+                '@id' => 'https://v-airops.artmex-hosting.com/#software',
+                'name' => 'V-Air Ops Platform',
+                'applicationCategory' => 'BusinessApplication',
+                'operatingSystem' => 'Web, Windows',
+                'url' => 'https://v-airops.artmex-hosting.com/',
+                'offers' => [
+                    '@type' => 'Offer',
+                    'price' => '0',
+                    'priceCurrency' => 'USD',
                 ],
-                "description": "Cloud-native SaaS flight operations system for virtual aviation communities, featuring SimBrief dispatch, real-time ACARS telemetry, pilot roster management, and live radar tracking."
-            ]
-        ]
-    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+                'description' => 'Cloud-native SaaS flight operations system for virtual aviation communities, featuring SimBrief dispatch, real-time ACARS telemetry, pilot roster management, and live radar tracking.',
+            ],
+        ],
+    ];
+@endphp
+
+    <!-- Schema.org JSON-LD Structured Data for Search Engines -->
+    <script type="application/ld+json">
+    {!! json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 
     <!-- Google Fonts -->
