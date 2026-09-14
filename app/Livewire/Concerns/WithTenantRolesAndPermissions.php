@@ -100,6 +100,17 @@ trait WithTenantRolesAndPermissions
                     'manage_notams' => 'Create, Edit & Delete NOTAMs',
                 ],
             ],
+            'activities' => [
+                'name' => 'Activities & Events',
+                'description' => 'Events, tours, scheduled rosters, and community challenges',
+                'icon' => '🎯',
+                'read' => ['view_activities'],
+                'write' => ['view_activities', 'manage_activities'],
+                'all' => [
+                    'view_activities' => 'View Events & Activities',
+                    'manage_activities' => 'Create, Edit, Reprocess & Delete Activities',
+                ],
+            ],
             'settings' => [
                 'name' => 'Administration & Configuration',
                 'description' => 'Airline identity, scoring rules, roles, and ranks',

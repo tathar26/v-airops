@@ -77,6 +77,10 @@ class AirlinePermission extends Model
             ['name' => 'View NOTAMs', 'slug' => 'view_notams', 'group' => 'NOTAMs', 'description' => 'View airline notices and operational bulletins'],
             ['name' => 'Manage NOTAMs', 'slug' => 'manage_notams', 'group' => 'NOTAMs', 'description' => 'Create, edit, publish, and delete airline NOTAMs'],
 
+            // Activities & Events
+            ['name' => 'View Activities', 'slug' => 'view_activities', 'group' => 'Activities', 'description' => 'View airline events, tours, and challenges'],
+            ['name' => 'Manage Activities', 'slug' => 'manage_activities', 'group' => 'Activities', 'description' => 'Create, edit, reprocess, and delete airline activities'],
+
             // Operations & Settings
             ['name' => 'View VA Settings', 'slug' => 'view_settings', 'group' => 'Settings', 'description' => 'View virtual airline configuration and details'],
             ['name' => 'Manage Airline Settings', 'slug' => 'manage_airline_settings', 'group' => 'Settings', 'description' => 'Update branding, theme colors, and SimBrief defaults'],

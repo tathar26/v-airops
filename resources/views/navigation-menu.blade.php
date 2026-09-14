@@ -105,8 +105,31 @@
                     <li><a href="{{ route('flight-centre.book') }}" class="block px-2.5 py-1.5 rounded text-xs font-medium transition-colors {{ request()->routeIs('flight-centre.book') ? 'bg-black/25 font-bold' : 'opacity-80 hover:opacity-100 hover:bg-black/10' }}">Book a Flight</a></li>
                 @endif
                 <li><a href="{{ route('flight-centre.flights') }}" class="block px-2.5 py-1.5 rounded text-xs font-medium transition-colors {{ request()->routeIs('flight-centre.flights') ? 'bg-black/25 font-bold' : 'opacity-80 hover:opacity-100 hover:bg-black/10' }}">Flights List</a></li>
+                <li><a href="{{ route('flight-centre.curated-rosters') }}" class="block px-2.5 py-1.5 rounded text-xs font-medium transition-colors {{ request()->routeIs('flight-centre.curated-rosters') ? 'bg-black/25 font-bold' : 'opacity-80 hover:opacity-100 hover:bg-black/10' }}">Curated Rosters</a></li>
                 <li><a href="{{ route('flight-centre.destinations') }}" class="block px-2.5 py-1.5 rounded text-xs font-medium transition-colors {{ request()->routeIs('flight-centre.destinations') ? 'bg-black/25 font-bold' : 'opacity-80 hover:opacity-100 hover:bg-black/10' }}">Destination Map</a></li>
             </ul>
+        </li>
+
+        <!-- Activities -->
+        @php
+            $activeActivitiesCount = auth()->check() && auth()->user()->tenant_id
+                ? \App\Models\Activity::where('tenant_id', auth()->user()->tenant_id)
+                    ->where('status', 'active')
+                    ->where('is_published', true)
+                    ->where('type', '!=', 'curated_roster')
+                    ->count()
+                : 0;
+        @endphp
+        <li>
+            <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                <span>Activities</span>
+                @if($activeActivitiesCount > 0)
+                    <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-sky-500/30 text-sky-300 border border-sky-400/30 shadow-sm">
+                        {{ $activeActivitiesCount }}
+                    </span>
+                @endif
+            </a>
         </li>
 
         <!-- NOTAMs -->
@@ -166,8 +189,9 @@
             $canViewAirports = $user && ($user->hasAirlinePermission('view_airports') || $user->hasAirlinePermission('manage_airports'));
             $canViewPireps = $user && ($user->hasAirlinePermission('view_pireps') || $user->hasAirlinePermission('review_pireps'));
             $canManageNotams = $user && ($user->hasAirlinePermission('manage_notams') || $user->hasAirlinePermission('view_notams'));
+            $canViewActivities = $user && ($user->hasAirlinePermission('view_activities') || $user->hasAirlinePermission('manage_activities'));
             $canViewSettings = $user && ($user->hasAirlinePermission('view_settings') || $user->hasAirlinePermission('manage_airline_settings') || $user->hasAirlinePermission('manage_roles') || $user->hasAirlinePermission('manage_ranks') || $user->hasAirlinePermission('manage_pilots'));
-            $showAirlineManagement = $user && ($user->isSystemAdmin() || $user->hasRole('VA Owner') || $canViewFleet || $canViewRoutes || $canViewAirports || $canViewPireps || $canManageNotams || $canViewSettings);
+            $showAirlineManagement = $user && ($user->isSystemAdmin() || $user->hasRole('VA Owner') || $canViewFleet || $canViewRoutes || $canViewAirports || $canViewPireps || $canManageNotams || $canViewActivities || $canViewSettings);
         @endphp
 
         @if ($showAirlineManagement)
@@ -206,6 +230,15 @@
             <a href="{{ route('airports') }}" class="nav-link {{ request()->routeIs('airports') ? 'active' : '' }}">
                 <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Airport Management</span>
+            </a>
+        </li>
+        @endif
+
+        @if ($user->isSystemAdmin() || $canViewActivities)
+        <li>
+            <a href="{{ route('admin.activities') }}" class="nav-link {{ request()->routeIs('admin.activities*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Activities & Events</span>
             </a>
         </li>
         @endif

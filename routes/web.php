@@ -169,6 +169,17 @@ Route::middleware([
         ->middleware('airline.can:manage_notams')
         ->name('admin.notams');
 
+    // Activities & Events (Pilot Hub & Operations Management)
+    Route::get('/activities', \App\Livewire\Pilot\ActivitiesList::class)
+        ->name('activities.index');
+
+    Route::get('/activities/{activity}', \App\Livewire\Pilot\ActivityDetail::class)
+        ->name('activities.show');
+
+    Route::get('/admin/activities', \App\Livewire\Admin\ActivityManager::class)
+        ->middleware('airline.can:view_activities|manage_activities')
+        ->name('admin.activities');
+
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Pilot\Dashboard::class)->name('dashboard');
         Route::get('/map', \App\Livewire\Pilot\Map::class)->name('map');
@@ -186,6 +197,7 @@ Route::middleware([
         Route::get('/book', [\App\Http\Controllers\FlightCentreController::class, 'bookFlightMap'])->name('book');
         Route::get('/flights', [\App\Http\Controllers\FlightCentreController::class, 'flightsTable'])->name('flights');
         Route::get('/destinations', [\App\Http\Controllers\FlightCentreController::class, 'destinationMap'])->name('destinations');
+        Route::get('/curated-rosters', \App\Livewire\Pilot\CuratedRosters::class)->name('curated-rosters');
     });
 
     Route::prefix('api/flight-centre')->group(function () {

@@ -3,15 +3,18 @@
 namespace App\Observers;
 
 use App\Models\Pirep;
+use App\Services\ActivityService;
 use App\Services\PirepScoringService;
 
 class PirepObserver
 {
     protected $scoringService;
+    protected $activityService;
 
-    public function __construct(PirepScoringService $scoringService)
+    public function __construct(PirepScoringService $scoringService, ActivityService $activityService)
     {
         $this->scoringService = $scoringService;
+        $this->activityService = $activityService;
     }
 
     /**
@@ -23,6 +26,7 @@ class PirepObserver
 
         if (in_array(strtolower($pirep->status), ['accepted', 'complete', 'approved'])) {
             $this->scoringService->processPirep($pirep);
+            $this->activityService->evaluatePirep($pirep);
         }
     }
 
@@ -36,6 +40,7 @@ class PirepObserver
         // If the status was just changed to Accepted or Complete, score it
         if ($pirep->isDirty('status') && in_array(strtolower($pirep->status), ['accepted', 'complete', 'approved'])) {
             $this->scoringService->processPirep($pirep);
+            $this->activityService->evaluatePirep($pirep);
         }
     }
 

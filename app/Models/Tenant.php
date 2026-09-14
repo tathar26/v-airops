@@ -114,4 +114,12 @@ class Tenant extends Model
     {
         return $this->hasMany(AirlinePermission::class, 'tenant_id');
     }
+
+    /**
+     * Activities created for this virtual airline.
+     */
+    public function activities()
+    {
+        return $this->hasMany(Activity::class, 'tenant_id');
+    }
 }
