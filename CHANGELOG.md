@@ -2,6 +2,12 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.39] - 2026-09-14
+
+### 🐛 Hotfix: Blade Directive Parse Error in Homepage JSON-LD
+- **Safe JSON-LD Encoding:** Wrapped Schema.org structured data in `{!! json_encode([...], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}` to prevent Blade compiler from misinterpreting `@context`, `@type`, `@id`, and `@graph` as custom Blade directives.
+- **Alpine.js v3 Click Directive Alignment:** Updated mobile navigation container trigger from deprecated `@click.away` to `@click.outside`.
+
 ## [v1.1.38] - 2026-09-14
 
 ### 🌐 Production Domain Sitemap Migration, Robots Alignment & SEO Enhancements

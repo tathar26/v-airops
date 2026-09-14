@@ -31,41 +31,41 @@
 
     <!-- Schema.org JSON-LD Structured Data for Search Engines -->
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "WebSite",
-                "@id": "https://v-airops.artmex-hosting.com/#website",
-                "url": "https://v-airops.artmex-hosting.com/",
-                "name": "V-Air Ops",
-                "description": "Virtual Airline Operations Management System & ACARS Live Flight Tracking Platform.",
-                "publisher": {
-                    "@type": "Organization",
-                    "name": "V-Air Ops",
-                    "url": "https://v-airops.artmex-hosting.com/",
-                    "logo": {
-                        "@type": "ImageObject",
-                        "url": "https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png"
-                    }
-                }
-            },
-            {
-                "@type": "SoftwareApplication",
+    {!! json_encode([
+        "@context" => "https://schema.org",
+        "@graph" => [
+            [
+                "@type" => "WebSite",
+                "@id" => "https://v-airops.artmex-hosting.com/#website",
+                "url" => "https://v-airops.artmex-hosting.com/",
+                "name" => "V-Air Ops",
+                "description" => "Virtual Airline Operations Management System & ACARS Live Flight Tracking Platform.",
+                "publisher" => [
+                    "@type" => "Organization",
+                    "name" => "V-Air Ops",
+                    "url" => "https://v-airops.artmex-hosting.com/",
+                    "logo" => [
+                        "@type" => "ImageObject",
+                        "url" => "https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png"
+                    ]
+                ]
+            ],
+            [
+                "@type" => "SoftwareApplication",
                 "@id": "https://v-airops.artmex-hosting.com/#software",
                 "name": "V-Air Ops Platform",
                 "applicationCategory": "BusinessApplication",
                 "operatingSystem": "Web, Windows",
                 "url": "https://v-airops.artmex-hosting.com/",
-                "offers": {
+                "offers" => [
                     "@type": "Offer",
-                    "price": "0",
-                    "priceCurrency": "USD"
-                },
+                    "price" => "0",
+                    "priceCurrency" => "USD"
+                ],
                 "description": "Cloud-native SaaS flight operations system for virtual aviation communities, featuring SimBrief dispatch, real-time ACARS telemetry, pilot roster management, and live radar tracking."
-            }
+            ]
         ]
-    }
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 
     <!-- Google Fonts -->
@@ -212,7 +212,7 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             @click.away="mobileMenuOpen = false"
+             @click.outside="mobileMenuOpen = false"
              class="md:hidden bg-navy-950 border-b border-navy-700 px-4 pt-3 pb-6 space-y-4 shadow-2xl"
              style="display: none;">
             
