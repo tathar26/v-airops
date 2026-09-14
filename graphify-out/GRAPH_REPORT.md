@@ -1,16 +1,16 @@
-# Graph Report - v-ops  (2026-09-10)
+# Graph Report - v-ops  (2026-09-14)
 
 ## Corpus Check
-- 358 files · ~199,406 words
+- 358 files · ~199,926 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1776 nodes · 3095 edges · 283 communities (77 shown, 75 thin omitted)
+- 1778 nodes · 3097 edges · 277 communities (72 shown, 72 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0e99fc47`
+- Built from commit: `20f1b227`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -27,7 +27,7 @@
 - V-Air Ops — Airline Management & Staff Operations Manual
 - AircraftType
 - Docker & Docker Compose Installation Guide
-- UserStatistic
+- UserAirlineRole
 - Pirep
 - Tenant
 - Illuminate\Database\Eloquent\Relations\HasMany
@@ -40,58 +40,54 @@
 - Production Deployment Guide
 - HasCallsignMappings
 - Features & System Capabilities
-- FortifyServiceProvider.php
+- Preferences.php
 - Dispatch
 - RankProgressionService
 - EmailQueueManager
 - Route
 - 2. 🔍 Common Issues & Quick Resolutions
 - AcarsPosition
-- PirepsList
+- Livewire\WithPagination
 - Changelog
 - Notam
 - modals.blade.php
-- Livewire\WithPagination
+- SimBriefService
 - package.json
 - HasTenantContext
 - Airport
 - ScheduleImportService
 - tenant-settings.blade.php
 - PirepController.php
-- Booking
+- Dispatch.php
 - HasAirlineRolesAndPermissions
 - PasswordResetTest.php
 - Illuminate\Http\Request
 - Configuration & Environment Variables Reference
 - Illuminate\Support\ServiceProvider
-- UpdateUserProfileInformation.php
+- NotamsList
 - flight-map.js
 - Illuminate\Database\Eloquent\Builder
 - roles-tab.blade.php
 - GlobalNetworkImport
 - MasterAdminDashboard
 - UserAirline
-- Illuminate\Support\Str
+- WithTenantGeneralSettings
 - dispatch.blade.php
 - Illuminate\Support\Facades\Schema
-- Illuminate\Database\Migrations\Migration
 - Illuminate\Database\Schema\Blueprint
-- AccountSettings
+- Illuminate\Database\Migrations\Migration
+- TenantDashboard.php
 - users-tab.blade.php
 - AcarsActiveFlight
 - fleet-manager.blade.php
-- UpdatePasswordTest.php
+- Illuminate\Support\Facades\DB
 - general-tab.blade.php
-- Closure
+- PirepDetail
 - DemoDashboardSeeder.php
-- Controller
-- Api/AcarsController.php
-- AcarsPirep
+- ProfileInformationTest.php
 - route-manager.blade.php
-- AuthenticationTest
 - airport-manager.blade.php
-- Livewire\WithFileUploads
-- Illuminate\Http\JsonResponse
+- Illuminate\Foundation\Http\FormRequest
 - composer.json
 - require-dev
 - scripts
@@ -106,29 +102,28 @@
 - api-token-manager.blade.php
 - preferences.blade.php
 - notam-manager.blade.php
-- FlightCentreController
 - global-network-import.blade.php
 - pirep-detail-view.blade.php
 - master-admin-dashboard.blade.php
-- bootstrap/app.php
 - psr-4
 - logging.php
 - sanctum.php
 - notams-list.blade.php
-- SessionAirlineController.php
 - logout-other-browser-sessions-form.blade.php
 - delete-user-form.blade.php
 - 2026_08_11_124524_create_passkeys_table.php
 - ExampleTest
 - AcarsApiTest.php
-- PasswordValidationRules.php
 - autoload-dev
 - extra
 - confirms-password.blade.php
 - V-Air Ops — Wiki Documentation
 - [v1.1.12] - 2026-09-07
 - [v1.1.13] - 2026-09-07
-- Illuminate\Support\Facades\DB
+- [v1.1.22] - 2026-09-07
+- [v1.1.7] - 2026-09-04
+- [v1.1.25] - 2026-09-07
+- [v1.1.19] - 2026-09-07
 - deleteProfilePhoto
 - start.sh
 - legal.privacy
@@ -144,14 +139,11 @@
 - [v1.1.37] - 2026-09-08
 - [v1.1.35] - 2026-09-08
 - [v1.1.36] - 2026-09-08
-- [v1.1.11] - 2026-09-06
 - [v1.1.10] - 2026-09-04
-- [v1.1.8] - 2026-09-04
 - [v1.1.18] - 2026-09-07
 - [v1.1.17] - 2026-09-07
 - [v1.1.20] - 2026-09-07
 - [v1.1.30] - 2026-09-08
-- [v1.1.23] - 2026-09-07
 - [v1.1.9] - 2026-09-04
 - [v1.1.34] - 2026-09-08
 - [v1.0.9] - 2026-08-19
@@ -177,7 +169,7 @@
 6. `TestCase` - 38 edges
 7. `Dispatch` - 36 edges
 8. `Route` - 35 edges
-9. `Changelog` - 33 edges
+9. `Changelog` - 34 edges
 10. `Airframe` - 32 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -188,50 +180,42 @@
 - `AirlineOnboardingController` --inherits--> `Controller`  [EXTRACTED]
   app/Http/Controllers/AirlineOnboardingController.php → app/Http/Controllers/Controller.php
 - `AcarsController` --inherits--> `Controller`  [EXTRACTED]
-  app/Http/Controllers/Api/AcarsController.php → app/Http/Controllers/Controller.php
-- `FlightCentreApiController` --inherits--> `Controller`  [EXTRACTED]
-  app/Http/Controllers/Api/FlightCentreApiController.php → app/Http/Controllers/Controller.php
+  app/Http/Controllers/Api/V1/AcarsController.php → app/Http/Controllers/Controller.php
+- `FlightController` --inherits--> `Controller`  [EXTRACTED]
+  app/Http/Controllers/Api/V1/FlightController.php → app/Http/Controllers/Controller.php
 
 ## Import Cycles
 - None detected.
 
-## Communities (283 total, 75 thin omitted)
+## Communities (277 total, 72 thin omitted)
 
 ### Community 0 - "V-Air Ops — Pilot & Dispatcher User Guide"
 Cohesion: 0.10
 Nodes (21): 1. Account Setup & Multi-Airline Enrollment, 2. Exploring Routes & Fleet, 3. Booking Flights & Dispatching with SimBrief, 4. In-Flight Tracking & Live 3D Radar, 5. PIREPs, Touchdown Analysis & Scoring, 6. Pilot Profile, Rank Progression & Preferences, Automated PIREP Ingestion, Creating a Booking (+13 more)
 
-### Community 1 - "TenantHub"
-Cohesion: 0.13
-Nodes (7): TenantHub, VersionService, Illuminate\Http\UploadedFile, Illuminate\Support\Facades\Cache, Illuminate\Support\Facades\Http, Illuminate\Support\Facades\Storage, Illuminate\Validation\ValidationException
-
-### Community 2 - "PilotProfile"
-Cohesion: 0.14
-Nodes (4): Dashboard, TenantDashboard, PilotProfile, Illuminate\Support\Facades\Auth
-
 ### Community 3 - "Illuminate\Database\Eloquent\Relations\BelongsTo"
-Cohesion: 0.15
-Nodes (4): NotamUserRead, PirepComment, Illuminate\Database\Eloquent\Relations\BelongsTo, Illuminate\Database\Eloquent\Relations\BelongsToMany
+Cohesion: 0.17
+Nodes (4): AcarsPirep, NotamUserRead, PirepComment, Illuminate\Database\Eloquent\Relations\BelongsTo
 
 ### Community 4 - "User"
 Cohesion: 0.07
-Nodes (11): User, RoutePolicy, Illuminate\Foundation\Auth\User, Illuminate\Notifications\Notifiable, Laravel\Fortify\TwoFactorAuthenticatable, Laravel\Jetstream\HasProfilePhoto, Laravel\Sanctum\HasApiTokens, Spatie\Permission\Traits\HasRoles (+3 more)
+Nodes (10): User, RoutePolicy, Illuminate\Foundation\Auth\User, Illuminate\Notifications\Notifiable, Laravel\Fortify\TwoFactorAuthenticatable, Laravel\Jetstream\HasProfilePhoto, Laravel\Sanctum\HasApiTokens, Spatie\Permission\Traits\HasRoles (+2 more)
 
 ### Community 5 - "TestCase"
-Cohesion: 0.09
-Nodes (18): Illuminate\Foundation\Testing\RefreshDatabase, Illuminate\Foundation\Testing\TestCase, Laravel\Jetstream\Features, Laravel\Jetstream\Http\Livewire\ApiTokenManager, Laravel\Jetstream\Http\Livewire\DeleteUserForm, Laravel\Jetstream\Http\Livewire\LogoutOtherBrowserSessionsForm, Laravel\Jetstream\Http\Livewire\UpdateProfileInformationForm, Laravel\Jetstream\Http\Middleware\AuthenticateSession (+10 more)
+Cohesion: 0.07
+Nodes (20): Illuminate\Foundation\Testing\RefreshDatabase, Illuminate\Foundation\Testing\TestCase, Laravel\Jetstream\Features, Laravel\Jetstream\Http\Livewire\ApiTokenManager, Laravel\Jetstream\Http\Livewire\DeleteUserForm, Laravel\Jetstream\Http\Livewire\LogoutOtherBrowserSessionsForm, Laravel\Jetstream\Http\Livewire\UpdatePasswordForm, Laravel\Jetstream\Http\Middleware\AuthenticateSession (+12 more)
 
 ### Community 6 - "EmailVerificationTest.php"
 Cohesion: 0.12
-Nodes (7): Illuminate\Auth\Events\Verified, Illuminate\Support\Facades\Event, Illuminate\Support\Facades\URL, Laravel\Fortify\Features, Laravel\Jetstream\Http\Livewire\TwoFactorAuthenticationForm, RegistrationTest, TwoFactorAuthenticationSettingsTest
+Nodes (6): Illuminate\Auth\Events\Verified, Illuminate\Support\Facades\Event, Laravel\Fortify\Features, Laravel\Jetstream\Http\Livewire\TwoFactorAuthenticationForm, RegistrationTest, TwoFactorAuthenticationSettingsTest
 
 ### Community 7 - "Illuminate\Database\Eloquent\Model"
 Cohesion: 0.15
 Nodes (9): ScoringCriteria, SystemGlobalAircraft, SystemGlobalAirframe, SystemGlobalAirline, SystemGlobalAirport, SystemGlobalFlight, BelongsToTenant, Illuminate\Database\Eloquent\Factories\HasFactory (+1 more)
 
 ### Community 8 - "Livewire\Component"
-Cohesion: 0.16
-Nodes (5): Awards, Map, PirepDetail, PirepsList, Livewire\Component
+Cohesion: 0.14
+Nodes (6): AccountSettings, Awards, Map, TenantSettings, Livewire\Component, Livewire\WithFileUploads
 
 ### Community 9 - "V-Air Ops — Airline Management & Staff Operations Manual"
 Cohesion: 0.13
@@ -241,25 +225,29 @@ Nodes (15): 1. Airline Configuration & Branding, 2. Hub & Airport Management, 3.
 Cohesion: 0.14
 Nodes (14): 1. 🐳 Container Ecosystem Overview, 2. 📦 Container Specifications & Port Mapping, 3. 💾 Persistent Volumes & Mount Points, 4. 🛠️ Step-by-Step Production Deployment, 5. 🔄 Staging & Local Development Stacks, 6. 📋 Routine Container Management Commands, Docker & Docker Compose Installation Guide, Local Development Environment (`docker-compose.local.yml`) (+6 more)
 
+### Community 12 - "UserAirlineRole"
+Cohesion: 0.21
+Nodes (3): WithTenantUserManagement, UserAirlineRole, Illuminate\Database\Eloquent\Relations\Pivot
+
 ### Community 13 - "Pirep"
-Cohesion: 0.23
-Nodes (3): Pirep, PirepObserver, PirepScoringService
+Cohesion: 0.18
+Nodes (4): PirepsList, Pirep, PirepObserver, PirepScoringService
 
 ### Community 15 - "Illuminate\Database\Eloquent\Relations\HasMany"
-Cohesion: 0.19
+Cohesion: 0.21
 Nodes (4): HasAirlineNotams, Collection, Illuminate\Database\Eloquent\Collection, Illuminate\Database\Eloquent\Relations\HasMany
 
 ### Community 17 - "WithTenantRolesAndPermissions"
-Cohesion: 0.05
-Nodes (8): WithTenantGeneralSettings, WithTenantRolesAndPermissions, WithTenantUserManagement, TenantSettings, AirlinePermission, AirlineRole, UserAirlineRole, Illuminate\Database\Eloquent\Relations\Pivot
+Cohesion: 0.06
+Nodes (9): WithTenantRolesAndPermissions, AirlinePermission, AirlineRole, App\Models\Team, UserFactory, Illuminate\Database\Eloquent\Factories\Factory, Illuminate\Support\Str, Pdo\Mysql (+1 more)
 
 ### Community 19 - "V-Air Ops"
 Cohesion: 0.15
 Nodes (13): 1. Prerequisites, 2. Setup & Configuration, 3. Launch Services, 📚 Complete Wiki Documentation Suite, 🌟 Core System Capabilities, ✈️ For Flight Simulation Pilots, 🏢 For Virtual Airline Owners & Operations Staff, 🏗️ High-Level Architecture (+5 more)
 
 ### Community 20 - "RecalculatePilotStatistics"
-Cohesion: 0.07
-Nodes (30): AssignMissingCallsignsCommand, ImportGlobalSchedules, PurgeUnflownBookingsCommand, VerifyUserCommand, AssignMissingCallsignsJob, ImportAirlineSchedulesJob, ProcessPirepsAndRecalculateStatsJob, ProcessTelemetryPingJob (+22 more)
+Cohesion: 0.05
+Nodes (34): AssignMissingCallsignsCommand, ImportGlobalSchedules, ImportOperatorFleet, PurgeUnflownBookingsCommand, VerifyUserCommand, AssignMissingCallsignsJob, ImportAirlineSchedulesJob, ProcessPirepsAndRecalculateStatsJob (+26 more)
 
 ### Community 22 - "Production Deployment Guide"
 Cohesion: 0.15
@@ -269,13 +257,9 @@ Nodes (13): 1. 🖥️ System Requirements & Prerequisites, 2. 🚀 Bare-Metal L
 Cohesion: 0.17
 Nodes (12): 1. 🏢 Multi-Tenant Virtual Airline Cloud, 2. 📡 Real-Time ACARS Telemetry & Flight Tracking, 3. 🛬 Precision PIREP Scoring & Evaluation Engine, 4. 🗺️ Global Network Import & Schedule Hub, 5. 🎛️ Interactive Search Selection & Management Hubs, 6. ✈️ SimBrief Integration & Dispatch Console, Airport Management, Features & System Capabilities (+4 more)
 
-### Community 25 - "FortifyServiceProvider.php"
-Cohesion: 0.12
-Nodes (13): CreateNewUser, PasswordValidationRules, ResetUserPassword, UpdateUserPassword, Illuminate\Cache\RateLimiting\Limit, Illuminate\Support\Facades\Hash, Illuminate\Support\Facades\RateLimiter, Illuminate\Support\Facades\Validator (+5 more)
-
-### Community 28 - "EmailQueueManager"
-Cohesion: 0.14
-Nodes (4): EmailQueueManager, Illuminate\Foundation\Inspiring, Illuminate\Support\Facades\Artisan, Illuminate\Support\Facades\Schedule
+### Community 25 - "Preferences.php"
+Cohesion: 0.09
+Nodes (18): CreateNewUser, PasswordValidationRules, ResetUserPassword, UpdateUserPassword, UpdateUserProfileInformation, Illuminate\Cache\RateLimiting\Limit, Illuminate\Contracts\Auth\MustVerifyEmail, Illuminate\Support\Facades\Hash (+10 more)
 
 ### Community 30 - "2. 🔍 Common Issues & Quick Resolutions"
 Cohesion: 0.18
@@ -283,51 +267,47 @@ Nodes (11): 1. 📂 Critical Log Locations, 1. HTTP 500 Internal Server Error, 2
 
 ### Community 33 - "Changelog"
 Cohesion: 0.20
-Nodes (9): Changelog, 📈 Google Analytics Integration, 📦 Maintenance & Version Synchronization, 🖼️ Real Application Screenshots on Homepage, 🗺️ Route Map Waypoints & VATSIM Pre-File Completion, [v1.1.19] - 2026-09-07, [v1.1.22] - 2026-09-07, [v1.1.25] - 2026-09-07 (+1 more)
+Nodes (9): 🛠️ Bug Fixes & Improvements, 🗺️ CARTO Basemaps API Key Support, Changelog, ⚖️ Legal & Support Pages, 🌐 Production Domain Sitemap Migration, Robots Alignment & SEO Enhancements, [v1.1.11] - 2026-09-06, [v1.1.23] - 2026-09-07, [v1.1.38] - 2026-09-14 (+1 more)
 
 ### Community 35 - "modals.blade.php"
 Cohesion: 0.20
 Nodes (9): clearPermissions, $set(, saveCustomPermission, saveRole, saveUser, saveUserRoles, selectAllPermissions, selectAllReadPermissions (+1 more)
-
-### Community 36 - "Livewire\WithPagination"
-Cohesion: 0.25
-Nodes (4): NotamManager, Illuminate\Pagination\LengthAwarePaginator, Illuminate\Support\Facades\Bus, Livewire\WithPagination
 
 ### Community 37 - "package.json"
 Cohesion: 0.07
 Nodes (25): devDependencies, autoprefixer, concurrently, laravel-vite-plugin, postcss, tailwindcss, @tailwindcss/forms, @tailwindcss/typography (+17 more)
 
 ### Community 40 - "ScheduleImportService"
-Cohesion: 0.13
-Nodes (5): ImportOperatorFleet, ScheduleImportService, Generator, Illuminate\Http\Client\PendingRequest, RuntimeException
+Cohesion: 0.15
+Nodes (4): ScheduleImportService, Generator, Illuminate\Http\Client\PendingRequest, RuntimeException
 
 ### Community 41 - "tenant-settings.blade.php"
 Cohesion: 0.22
 Nodes (8): livewire.tenant-settings.partials.general-tab, livewire.tenant-settings.partials.hubs-tab, livewire.tenant-settings.partials.modals, livewire.tenant-settings.partials.roles-tab, livewire.tenant-settings.partials.scoring-tab, livewire.tenant-settings.partials.users-tab, rank-manager, $set(
 
 ### Community 42 - "PirepController.php"
-Cohesion: 0.17
+Cohesion: 0.16
 Nodes (4): PirepController, PirepSubmitRequest, AcarsEvent, ScoringService
+
+### Community 44 - "Dispatch.php"
+Cohesion: 0.22
+Nodes (4): VersionService, Illuminate\Support\Facades\Cache, Illuminate\Support\Facades\Http, Illuminate\Support\Facades\Storage
 
 ### Community 46 - "PasswordResetTest.php"
 Cohesion: 0.25
 Nodes (3): Illuminate\Auth\Notifications\ResetPassword, Illuminate\Support\Facades\Notification, PasswordResetTest
 
 ### Community 47 - "Illuminate\Http\Request"
-Cohesion: 0.20
-Nodes (3): FlightCentreApiController, CustomAuthController, Illuminate\Http\Request
+Cohesion: 0.05
+Nodes (22): AcarsController, FleetController, FlightCentreApiController, RouteController, AuthController, CustomAuthController, Controller, FlightCentreController (+14 more)
 
 ### Community 48 - "Configuration & Environment Variables Reference"
 Cohesion: 0.25
 Nodes (8): 1. ⚙️ Application & Core Settings, 2. 🗄️ Database Configuration, 3. 🚀 Cache, Session & Queue Drivers, 4. ✉️ Email & Notification Services, 5. 🌍 Aviation APIs & External Integrations, 6. 📦 Storage & File System (Optional S3 / Cloud Storage), 7. 🔒 Production Security Example (`.env`), Configuration & Environment Variables Reference
 
 ### Community 49 - "Illuminate\Support\ServiceProvider"
-Cohesion: 0.14
-Nodes (7): DeleteUser, AppServiceProvider, FortifyServiceProvider, JetstreamServiceProvider, Illuminate\Support\ServiceProvider, Laravel\Jetstream\Contracts\DeletesUsers, Laravel\Jetstream\Jetstream
-
-### Community 50 - "UpdateUserProfileInformation.php"
-Cohesion: 0.38
-Nodes (4): UpdateUserProfileInformation, Illuminate\Contracts\Auth\MustVerifyEmail, Illuminate\Validation\Rule, Laravel\Fortify\Contracts\UpdatesUserProfileInformation
+Cohesion: 0.13
+Nodes (8): DeleteUser, AppServiceProvider, FortifyServiceProvider, JetstreamServiceProvider, Illuminate\Support\Facades\URL, Illuminate\Support\ServiceProvider, Laravel\Jetstream\Contracts\DeletesUsers, Laravel\Jetstream\Jetstream
 
 ### Community 51 - "flight-map.js"
 Cohesion: 0.20
@@ -338,16 +318,16 @@ Cohesion: 0.29
 Nodes (6): deleteCustomPermission({{ $cp->id }}), deleteRole({{ $role->id }}), editCustomPermission({{ $cp->id }}), editRole({{ $role->id }}), openCreatePermissionModal, openCreateRoleModal
 
 ### Community 56 - "UserAirline"
-Cohesion: 0.18
+Cohesion: 0.20
 Nodes (4): AirlineOnboardingController, UserAirline, CallsignGeneratorService, VirtualAirlineCreationService
-
-### Community 57 - "Illuminate\Support\Str"
-Cohesion: 0.14
-Nodes (6): App\Models\Team, UserFactory, Illuminate\Database\Eloquent\Factories\Factory, Illuminate\Support\Str, Pdo\Mysql, static
 
 ### Community 58 - "dispatch.blade.php"
 Cohesion: 0.12
 Nodes (15): cancelAndRebook, cancelBooking, cancelLoadingState, clearHoldBags, clearPassengers, createBooking, dispatchSimbriefPopup, downloadFmsFile (+7 more)
+
+### Community 62 - "TenantDashboard.php"
+Cohesion: 0.29
+Nodes (3): Dashboard, TenantDashboard, Illuminate\Support\Facades\Auth
 
 ### Community 63 - "users-tab.blade.php"
 Cohesion: 0.33
@@ -355,27 +335,23 @@ Nodes (5): deleteUser({{ $user->id }}), editUser({{ $user->id }}), openManageUse
 
 ### Community 64 - "AcarsActiveFlight"
 Cohesion: 0.12
-Nodes (6): AcarsController, FlightEventRequest, TelemetryPingRequest, AcarsActiveFlight, Illuminate\Database\Eloquent\Relations\HasOne, Illuminate\Foundation\Http\FormRequest
+Nodes (6): AcarsController, FlightController, AcarsActiveFlight, Booking, Illuminate\Database\Eloquent\Relations\HasOne, Illuminate\Http\JsonResponse
 
 ### Community 65 - "fleet-manager.blade.php"
 Cohesion: 0.13
 Nodes (14): deleteAirframe({{ $airframe->id }}), editAirframe({{ $airframe->id }}), fetchApiFleet, importAllApiAirframes, importGlobalAirframes, importSelectedApiAirframes, importSelectedRealWorldAirframes, downloadTemplate (+6 more)
 
+### Community 66 - "Illuminate\Support\Facades\DB"
+Cohesion: 0.33
+Nodes (4): Illuminate\Foundation\Inspiring, Illuminate\Support\Facades\Artisan, Illuminate\Support\Facades\DB, Illuminate\Support\Facades\Schedule
+
 ### Community 67 - "general-tab.blade.php"
 Cohesion: 0.40
 Nodes (4): addCallsignMapping, addSecondaryIcao, removeCallsignMapping({{ $index }}), removeSecondaryIcao({{ $index }})
 
-### Community 68 - "Closure"
-Cohesion: 0.26
-Nodes (6): EnsureActiveAirlineSelected, EnsureAirlinePermission, EnsureNotamsAcknowledged, EnsureSystemAdmin, Closure, Symfony\Component\HttpFoundation\Response
-
 ### Community 69 - "DemoDashboardSeeder.php"
 Cohesion: 0.17
 Nodes (8): DatabaseSeeder, DemoDashboardSeeder, DemoDataSeeder, Illuminate\Database\Console\Seeds\WithoutModelEvents, Illuminate\Database\Seeder, Spatie\Permission\DefaultTeamResolver, Spatie\Permission\Models\Permission, Spatie\Permission\Models\Role
-
-### Community 70 - "Controller"
-Cohesion: 0.19
-Nodes (4): FleetController, RouteController, Controller, Illuminate\Support\Facades\Route
 
 ### Community 73 - "route-manager.blade.php"
 Cohesion: 0.17
@@ -385,9 +361,9 @@ Nodes (11): applyMassUpdate, deleteRoute({{ $route->id }}), editRoute({{ $route-
 Cohesion: 0.20
 Nodes (9): addMetadataField, deleteAirport({{ $airport->id }}), editAirport({{ $airport->id }}), fetchAirportData, openModal, removeMetadataField({{ $index }}), resetFilters, $set( (+1 more)
 
-### Community 77 - "Illuminate\Http\JsonResponse"
-Cohesion: 0.15
-Nodes (5): AuthController, FlightController, DispatchFlightRequest, LoginRequest, Illuminate\Http\JsonResponse
+### Community 77 - "Illuminate\Foundation\Http\FormRequest"
+Cohesion: 0.12
+Nodes (5): DispatchFlightRequest, FlightEventRequest, LoginRequest, TelemetryPingRequest, Illuminate\Foundation\Http\FormRequest
 
 ### Community 78 - "composer.json"
 Cohesion: 0.22
@@ -457,10 +433,6 @@ Nodes (4): accept, invalidate, reject, requestReply
 Cohesion: 0.40
 Nodes (4): approveVirtualAirline({{ $pending->id }}), closeCreateVaModal, openCreateVaModal, rejectVirtualAirline({{ $pending->id }})
 
-### Community 96 - "bootstrap/app.php"
-Cohesion: 0.40
-Nodes (3): Illuminate\Foundation\Application, Illuminate\Foundation\Configuration\Exceptions, Illuminate\Foundation\Configuration\Middleware
-
 ### Community 97 - "psr-4"
 Cohesion: 0.40
 Nodes (5): autoload, psr-4, App\\, Database\\Factories\\, Database\\Seeders\\
@@ -506,24 +478,24 @@ Cohesion: 0.67
 Nodes (3): 📊 Pilot Statistics & Logbook Overhaul, [v1.1.13] - 2026-09-07, 📡 vPilot ACARS Telemetry Enhancements
 
 ## Knowledge Gaps
-- **335 isolated node(s):** `$schema`, `name`, `type`, `description`, `keywords` (+330 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 821 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **75 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **336 isolated node(s):** `$schema`, `name`, `type`, `description`, `keywords` (+331 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 822 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **72 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `User` connect `User` to `TenantHub`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `TestCase`, `EmailVerificationTest.php`, `Illuminate\Database\Eloquent\Model`, `Tenant`, `Illuminate\Database\Eloquent\Relations\HasMany`, `WithTenantRolesAndPermissions`, `HasPilotRanks`, `RecalculatePilotStatistics`, `FortifyServiceProvider.php`, `Dispatch`, `RankProgressionService`, `Notam`, `Livewire\WithPagination`, `HasTenantContext`, `HasAirlineRolesAndPermissions`, `PasswordResetTest.php`, `Illuminate\Http\Request`, `Illuminate\Support\ServiceProvider`, `UpdateUserProfileInformation.php`, `MasterAdminDashboard`, `UserAirline`, `Illuminate\Support\Str`, `AcarsActiveFlight`, `UpdatePasswordTest.php`, `DemoDashboardSeeder.php`, `AuthenticationTest`, `Livewire\WithFileUploads`, `Illuminate\Http\JsonResponse`, `AcarsApiTest.php`?**
-  _High betweenness centrality (0.142) - this node is a cross-community bridge._
-- **Why does `Tenant` connect `Tenant` to `TenantHub`, `User`, `TestCase`, `Illuminate\Database\Eloquent\Model`, `Illuminate\Database\Eloquent\Relations\HasMany`, `Rank`, `WithTenantRolesAndPermissions`, `HasPilotRanks`, `RecalculatePilotStatistics`, `HasCallsignMappings`, `RankProgressionService`, `AcarsPosition`, `Livewire\WithPagination`, `HasTenantContext`, `ScheduleImportService`, `PirepController.php`, `HasAirlineRolesAndPermissions`, `Illuminate\Database\Eloquent\Builder`, `GlobalNetworkImport`, `MasterAdminDashboard`, `UserAirline`, `DemoDashboardSeeder.php`, `Livewire\WithFileUploads`, `SessionAirlineController.php`, `AcarsApiTest.php`?**
-  _High betweenness centrality (0.070) - this node is a cross-community bridge._
-- **Why does `Pirep` connect `Pirep` to `PirepsList`, `TenantHub`, `PilotProfile`, `DemoDashboardSeeder.php`, `Api/AcarsController.php`, `Livewire\Component`, `Illuminate\Database\Eloquent\Model`, `PirepController.php`, `UserStatistic`, `Livewire\WithFileUploads`, `HasAirlineRolesAndPermissions`, `Rank`, `RecalculatePilotStatistics`, `MasterAdminDashboard`, `RankProgressionService`, `AcarsPosition`?**
+- **Why does `User` connect `User` to `TenantHub`, `Illuminate\Database\Eloquent\Relations\BelongsTo`, `TestCase`, `EmailVerificationTest.php`, `Illuminate\Database\Eloquent\Model`, `Livewire\Component`, `UserAirlineRole`, `Tenant`, `Illuminate\Database\Eloquent\Relations\HasMany`, `Rank`, `WithTenantRolesAndPermissions`, `HasPilotRanks`, `RecalculatePilotStatistics`, `Preferences.php`, `Dispatch`, `RankProgressionService`, `Livewire\WithPagination`, `Notam`, `HasTenantContext`, `Dispatch.php`, `HasAirlineRolesAndPermissions`, `PasswordResetTest.php`, `Illuminate\Http\Request`, `Illuminate\Support\ServiceProvider`, `Illuminate\Database\Eloquent\Builder`, `MasterAdminDashboard`, `UserAirline`, `AcarsActiveFlight`, `DemoDashboardSeeder.php`, `ProfileInformationTest.php`, `Illuminate\Foundation\Http\FormRequest`, `AcarsApiTest.php`?**
+  _High betweenness centrality (0.139) - this node is a cross-community bridge._
+- **Why does `Tenant` connect `Tenant` to `TenantHub`, `User`, `TestCase`, `Illuminate\Database\Eloquent\Model`, `Livewire\Component`, `Illuminate\Database\Eloquent\Relations\HasMany`, `Rank`, `WithTenantRolesAndPermissions`, `HasPilotRanks`, `RecalculatePilotStatistics`, `HasCallsignMappings`, `RankProgressionService`, `AcarsPosition`, `HasTenantContext`, `ScheduleImportService`, `PirepController.php`, `Dispatch.php`, `HasAirlineRolesAndPermissions`, `Illuminate\Http\Request`, `Illuminate\Database\Eloquent\Builder`, `GlobalNetworkImport`, `MasterAdminDashboard`, `UserAirline`, `WithTenantGeneralSettings`, `DemoDashboardSeeder.php`, `AcarsApiTest.php`?**
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
+- **Why does `Pirep` connect `Pirep` to `Livewire\WithPagination`, `TenantHub`, `PilotProfile`, `PirepDetail`, `DemoDashboardSeeder.php`, `Illuminate\Database\Eloquent\Model`, `Livewire\Component`, `PirepController.php`, `HasAirlineRolesAndPermissions`, `Illuminate\Http\Request`, `RecalculatePilotStatistics`, `MasterAdminDashboard`, `Preferences.php`, `RankProgressionService`, `TenantDashboard.php`, `AcarsPosition`?**
   _High betweenness centrality (0.026) - this node is a cross-community bridge._
 - **What connects `$schema`, `name`, `type` to the rest of the system?**
-  _335 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _336 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `V-Air Ops — Pilot & Dispatcher User Guide` be split into smaller, more focused modules?**
   _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
-- **Should `TenantHub` be split into smaller, more focused modules?**
-  _Cohesion score 0.1286549707602339 - nodes in this community are weakly interconnected._
 - **Should `PilotProfile` be split into smaller, more focused modules?**
-  _Cohesion score 0.14035087719298245 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1437908496732026 - nodes in this community are weakly interconnected._
+- **Should `User` be split into smaller, more focused modules?**
+  _Cohesion score 0.07200929152148665 - nodes in this community are weakly interconnected._

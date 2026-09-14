@@ -8,6 +8,9 @@
     <x-google-analytics />
 
     <title>Terms of Service &bull; {{ config('app.name', 'V-Air Ops') }}</title>
+    <link rel="canonical" href="https://v-airops.artmex-hosting.com/terms">
+    <meta name="description" content="Terms of Service and conditions of use for the V-Air Ops Virtual Airline Management System and ACARS flight tracking platform.">
+    <meta name="robots" content="index, follow">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

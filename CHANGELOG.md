@@ -2,6 +2,16 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.38] - 2026-09-14
+
+### 🌐 Production Domain Sitemap Migration, Robots Alignment & SEO Enhancements
+- **Production Host Sitemap Migration:** Migrated XML sitemap to the primary domain `https://v-airops.artmex-hosting.com` with updated W3C lastmod timestamps.
+- **Indexable Public Coverage:** Added comprehensive sitemap routing for registration (`/register`), authentication (`/login`), Terms of Service (`/terms`), Privacy Policy (`/privacy`), and Security Policy (`/security`).
+- **Google Image XML Extension:** Integrated `xmlns:image` schema extensions into the root URL to index the official branding logo and authentic application screenshots (Operations Dashboard, Live Radar Tracking, Pilot Portal).
+- **Robots.txt Crawl Policy Alignment:** Synchronized `robots.txt` with `sitemap.xml`, eliminating crawl conflicts by permitting public routes while shielding protected internal modules (`/admin/`, `/api/`, `/profile/`, `/dispatch/`, `/livewire/`, etc.).
+- **Canonical Tags & Schema.org JSON-LD:** Implemented `<link rel="canonical">` across the homepage and legal views, comprehensive Open Graph / Twitter Card social previews, and structured `WebSite` and `SoftwareApplication` JSON-LD entities for search engines and AI bots.
+- **Tenant Settings & Architecture Refactoring:** Modularized `TenantSettings` into dedicated sub-components and updated knowledge graph analysis.
+
 ## [v1.1.37] - 2026-09-08
 
 ### 🐛 Bug Fix: Pilot Profile Resolution & Tenant Settings User Roster

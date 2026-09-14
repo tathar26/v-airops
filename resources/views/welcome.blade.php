@@ -8,6 +8,65 @@
     <x-google-analytics />
 
     <title>{{ config('app.name', 'V-Air Ops') }} &bull; Virtual Airline Management System</title>
+    <link rel="canonical" href="https://v-airops.artmex-hosting.com/">
+    <meta name="description" content="V-Air Ops is a next-generation Virtual Airline Operations Management System and SaaS platform featuring real-time ACARS telemetry tracking, SimBrief OFP dispatch integration, live 3D radar maps, and automated PIREP processing.">
+    <meta name="keywords" content="virtual airline, vatsim, ivao, acars flight tracking, simbrief dispatch, virtual airline management system, flight simulation, pilot roster, pirep">
+    <meta name="author" content="V-Air Ops">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook / Discord Embeds -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://v-airops.artmex-hosting.com/">
+    <meta property="og:title" content="V-Air Ops &bull; Virtual Airline Management System">
+    <meta property="og:description" content="Next-generation virtual airline operations platform featuring live ACARS radar tracking, SimBrief dispatch, and pilot analytics.">
+    <meta property="og:image" content="https://v-airops.artmex-hosting.com/images/screenshots/console-dashboard.png">
+    <meta property="og:site_name" content="V-Air Ops">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://v-airops.artmex-hosting.com/">
+    <meta name="twitter:title" content="V-Air Ops &bull; Virtual Airline Management System">
+    <meta name="twitter:description" content="Next-generation virtual airline operations platform featuring live ACARS radar tracking, SimBrief dispatch, and pilot analytics.">
+    <meta name="twitter:image" content="https://v-airops.artmex-hosting.com/images/screenshots/console-dashboard.png">
+
+    <!-- Schema.org JSON-LD Structured Data for Search Engines -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "@id": "https://v-airops.artmex-hosting.com/#website",
+                "url": "https://v-airops.artmex-hosting.com/",
+                "name": "V-Air Ops",
+                "description": "Virtual Airline Operations Management System & ACARS Live Flight Tracking Platform.",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "V-Air Ops",
+                    "url": "https://v-airops.artmex-hosting.com/",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png"
+                    }
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "@id": "https://v-airops.artmex-hosting.com/#software",
+                "name": "V-Air Ops Platform",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Web, Windows",
+                "url": "https://v-airops.artmex-hosting.com/",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                },
+                "description": "Cloud-native SaaS flight operations system for virtual aviation communities, featuring SimBrief dispatch, real-time ACARS telemetry, pilot roster management, and live radar tracking."
+            }
+        ]
+    }
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

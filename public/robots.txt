@@ -6,18 +6,23 @@
 # 1. Standard Search Engine Crawlers (Google, Bing, DuckDuckGo, Yahoo)
 User-agent: *
 Allow: /
-Allow: /welcome
-Allow: /features
-Allow: /pricing
+Allow: /register
+Allow: /login
+Allow: /terms
+Allow: /privacy
+Allow: /security
 Allow: /sitemap.xml
 Disallow: /admin/
 Disallow: /api/
 Disallow: /profile/
 Disallow: /dispatch/
 Disallow: /livewire/
-Disallow: /login
-Disallow: /register
+Disallow: /onboarding/
+Disallow: /session/
+Disallow: /flight-centre/
 Disallow: /password/
+Disallow: /verify-
+Disallow: /email/
 
 # 2. AI Discovery & LLM Search Crawlers (OpenAI, Anthropic, Google, Perplexity, Apple)
 User-agent: GPTBot
@@ -54,4 +59,4 @@ User-agent: Diffbot
 Allow: /
 
 # 3. XML Sitemap Index
-Sitemap: https://vops-dev.artmex-hosting.com/sitemap.xml
+Sitemap: https://v-airops.artmex-hosting.com/sitemap.xml

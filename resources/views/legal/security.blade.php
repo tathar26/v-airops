@@ -9,6 +9,9 @@
     <x-google-analytics />
 
     <title>Security Policy &bull; {{ config('app.name', 'V-Air Ops') }}</title>
+    <link rel="canonical" href="https://v-airops.artmex-hosting.com/security">
+    <meta name="description" content="Security policy, infrastructure controls, encryption standards, and responsible vulnerability disclosure for V-Air Ops.">
+    <meta name="robots" content="index, follow">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

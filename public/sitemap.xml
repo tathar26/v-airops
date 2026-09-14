@@ -1,24 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
+        http://www.google.com/schemas/sitemap-image/1.1
+        http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
+
+    <!-- Homepage / Platform Overview -->
     <url>
-        <loc>https://vops-dev.artmex-hosting.com/</loc>
-        <lastmod>2026-08-19</lastmod>
+        <loc>https://v-airops.artmex-hosting.com/</loc>
+        <lastmod>2026-09-14</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
+        <image:image>
+            <image:loc>https://v-airops.artmex-hosting.com/images/v-air-ops-logo.png</image:loc>
+            <image:title>V-Air Ops Virtual Airline Management System</image:title>
+            <image:caption>V-Air Ops - Next-generation flight operations and ACARS tracking platform</image:caption>
+        </image:image>
+        <image:image>
+            <image:loc>https://v-airops.artmex-hosting.com/images/screenshots/console-dashboard.png</image:loc>
+            <image:title>V-Air Ops Operations Dashboard</image:title>
+            <image:caption>Real-time virtual airline operations console and dispatch monitoring</image:caption>
+        </image:image>
+        <image:image>
+            <image:loc>https://v-airops.artmex-hosting.com/images/screenshots/live-radar-map.png</image:loc>
+            <image:title>V-Air Ops Live ACARS Radar Tracking</image:title>
+            <image:caption>Interactive 3D radar map tracking active flights and pilot telemetry in real time</image:caption>
+        </image:image>
+        <image:image>
+            <image:loc>https://v-airops.artmex-hosting.com/images/screenshots/pilot-portal.png</image:loc>
+            <image:title>V-Air Ops Pilot Portal and Statistics</image:title>
+            <image:caption>Pilot roster, logbook telemetry, and career performance statistics</image:caption>
+        </image:image>
     </url>
+
+    <!-- Pilot & Airline Registration -->
     <url>
-        <loc>https://vops-dev.artmex-hosting.com/login</loc>
-        <lastmod>2026-08-19</lastmod>
-        <changefreq>monthly</changefreq>
+        <loc>https://v-airops.artmex-hosting.com/register</loc>
+        <lastmod>2026-09-14</lastmod>
+        <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
+
+    <!-- Authentication Portal -->
     <url>
-        <loc>https://vops-dev.artmex-hosting.com/register</loc>
-        <lastmod>2026-08-19</lastmod>
+        <loc>https://v-airops.artmex-hosting.com/login</loc>
+        <lastmod>2026-09-14</lastmod>
         <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <priority>0.6</priority>
     </url>
+
+    <!-- Legal: Terms of Service -->
+    <url>
+        <loc>https://v-airops.artmex-hosting.com/terms</loc>
+        <lastmod>2026-09-14</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <!-- Legal: Privacy Policy -->
+    <url>
+        <loc>https://v-airops.artmex-hosting.com/privacy</loc>
+        <lastmod>2026-09-14</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <!-- Legal & Security Policy -->
+    <url>
+        <loc>https://v-airops.artmex-hosting.com/security</loc>
+        <lastmod>2026-09-14</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
 </urlset>

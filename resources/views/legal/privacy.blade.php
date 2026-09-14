@@ -8,6 +8,9 @@
     <x-google-analytics />
 
     <title>Privacy Policy &bull; {{ config('app.name', 'V-Air Ops') }}</title>
+    <link rel="canonical" href="https://v-airops.artmex-hosting.com/privacy">
+    <meta name="description" content="Privacy Policy detailing data processing, telemetry handling, and pilot privacy protection on the V-Air Ops platform.">
+    <meta name="robots" content="index, follow">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
