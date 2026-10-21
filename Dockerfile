@@ -9,7 +9,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Install Composer Dependencies
-FROM composer:2.7 AS vendor
+FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs --no-scripts
@@ -18,7 +18,11 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 # Stage 3: Production Image
+# Floating 8.4 tag: every build picks up the latest 8.4 patch release.
 FROM php:8.4-fpm-alpine
+
+# Refuse to build on a PHP older than 8.4.27 (CVE-2026-109618 / CVE-2026-109619, CERT-EU SA 2026-018)
+RUN php -r 'exit(version_compare(PHP_VERSION, "8.4.27", "<") ? 1 : 0);' || (echo "PHP $(php -r 'echo PHP_VERSION;') is vulnerable, pull a newer base image" && exit 1)
 
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \

@@ -2,6 +2,14 @@
 
 All notable changes to the Virtual Airline Operations (**V-Ops**) platform are documented in this file.
 
+## [v1.1.41] - 2026-10-21
+
+### 🔒 Security: Critical PHP RCE Fixes (CVE-2026-109618, CVE-2026-109619)
+- **Patched PHP Runtime:** Production image builds on the floating `php:8.4-fpm-alpine` tag (currently 8.4.27), which fixes the unauthenticated RCE vulnerabilities via OOM corruption and stale global state (CERT-EU SA 2026-018, GHSA-w8hw-w9fx-j79w, GHSA-6wmf-4rv5-p3rp). A build-time guard fails the build on any PHP older than 8.4.27.
+- **Always-Fresh Base Images:** CI builds now use `pull: true` so the registry build cache can never reuse a stale, unpatched base layer.
+- **Build Stage Refresh:** Updated the Composer build stage from `composer:2.7` to `composer:2`.
+- **Activity Management System:** Includes the activity models, migrations, Livewire components and navigation updates merged since v1.1.40.
+
 ## [v1.1.40] - 2026-09-14
 
 ### 🐛 Hotfix: PHP Array Syntax & Blade Directive Encapsulation in Homepage JSON-LD
